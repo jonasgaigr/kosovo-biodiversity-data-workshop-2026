@@ -1,0 +1,170 @@
+/*-- scss:defaults --*/
+
+// A restrained, institutional palette. Deep teal reads as authoritative in
+// print and on screen, and keeps sufficient contrast against white for the
+// accessibility standards expected of government publications.
+$primary:   #14556b !default;
+$secondary: #4d7c8a !default;
+$success:   #2e7d54 !default;
+$body-color: #21282d !default;
+$link-color: #14556b !default;
+
+$font-family-sans-serif: "Source Sans Pro", -apple-system, BlinkMacSystemFont,
+  "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !default;
+$font-size-root: 16px !default;
+$h1-font-size: 2.1rem !default;
+$h2-font-size: 1.55rem !default;
+$h3-font-size: 1.2rem !default;
+
+/*-- scss:rules --*/
+
+body {
+  line-height: 1.65;
+}
+
+h2 {
+  border-bottom: 2px solid rgba(20, 85, 107, 0.15);
+  padding-bottom: 0.3rem;
+  margin-top: 2.4rem;
+}
+
+/* --- Key-figure cards ---------------------------------------------------- */
+
+.keyfigures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 0.9rem;
+  margin: 1.6rem 0 2rem;
+}
+
+.keyfigure {
+  border: 1px solid #dde3e7;
+  border-left: 4px solid $primary;
+  border-radius: 5px;
+  padding: 0.85rem 1rem;
+  background: #fbfcfd;
+}
+
+.keyfigure .value {
+  font-size: 1.75rem;
+  font-weight: 650;
+  color: $primary;
+  line-height: 1.15;
+  display: block;
+}
+
+.keyfigure .label {
+  font-size: 0.82rem;
+  color: #5d6b73;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* --- Download buttons ---------------------------------------------------- */
+
+.download-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 0.85rem;
+  margin: 1.5rem 0;
+}
+
+.download-card {
+  border: 1px solid #dde3e7;
+  border-radius: 6px;
+  padding: 0.9rem 1rem;
+  background: #fff;
+}
+
+.download-card h4 {
+  font-size: 0.98rem;
+  margin: 0 0 0.15rem;
+  color: $primary;
+}
+
+.download-card .meta {
+  font-size: 0.8rem;
+  color: #6b7880;
+  margin-bottom: 0.7rem;
+}
+
+.download-card a.btn {
+  font-size: 0.82rem;
+  padding: 0.28rem 0.7rem;
+  margin-right: 0.35rem;
+  text-decoration: none;
+}
+
+/* --- Notes and citation -------------------------------------------------- */
+
+.citation-box {
+  background: #f2f6f8;
+  border-left: 4px solid $secondary;
+  padding: 0.9rem 1.1rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  margin: 1.2rem 0;
+}
+
+.citation-box code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  word-break: break-word;
+}
+
+/* Leaflet maps need a little breathing room from the surrounding text. */
+.leaflet-container {
+  border: 1px solid #dde3e7;
+  border-radius: 5px;
+  margin-bottom: 0.6rem;
+}
+
+/* --- Occurrence popups ---------------------------------------------------
+   Styling lives here rather than inline, because the popup markup is repeated
+   once per marker and inline styles would multiply the page size several-fold.
+   `build_popup()` in R/functions.R emits the matching structure:
+   <div class="occ-popup"><i>species</i><b>vernacular</b>
+     <span>label</span>value ...</div>
+   ------------------------------------------------------------------------- */
+
+.occ-popup {
+  font-size: 13px;
+  line-height: 1.45;
+  min-width: 190px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 0.6rem;
+  row-gap: 0.1rem;
+}
+
+.occ-popup i,
+.occ-popup b {
+  grid-column: 1 / -1;
+}
+
+.occ-popup i {
+  font-style: italic;
+  font-weight: 600;
+  font-size: 14px;
+  color: $primary;
+}
+
+.occ-popup b {
+  font-weight: 400;
+  color: #555;
+  margin-bottom: 0.35rem;
+}
+
+.occ-popup span {
+  color: #8a959c;
+  font-size: 0.82em;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  align-self: center;
+}
+
+/* Keep wide tables scrollable rather than letting the page scroll sideways. */
+.dataTables_wrapper {
+  overflow-x: auto;
+}

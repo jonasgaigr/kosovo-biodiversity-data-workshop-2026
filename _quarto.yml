@@ -1,0 +1,68 @@
+project:
+  type: website
+  output-dir: docs
+  # The exported data files are copied into the rendered site so that the
+  # download buttons resolve on GitHub Pages.
+  resources:
+    # Ensures GitHub Pages serves Quarto's site_libs/ directory verbatim.
+    - .nojekyll
+    - data_exports/**
+
+website:
+  title: "Biodiversity of Kosovo"
+  description: >-
+    Analysis of Global Biodiversity Information Facility (GBIF) occurrence data
+    for the territory of Kosovo, prepared to support conservation planning and
+    reporting under the EU Nature Directives.
+  site-url: "https://jonasgaigr.github.io/kosovo-biodiversity-data-workshop-2026/"
+  page-navigation: true
+  back-to-top-navigation: true
+
+  navbar:
+    background: primary
+    search: true
+    left:
+      - href: index.qmd
+        text: Report
+    right:
+      - href: https://www.gbif.org
+        text: GBIF
+      - icon: github
+        href: https://github.com/jonasgaigr/kosovo-biodiversity-data-workshop-2026
+        aria-label: Source code on GitHub
+
+  page-footer:
+    left: >-
+      Occurrence data provided by the Global Biodiversity Information Facility
+      (GBIF) and its publishing institutions.
+    right: >-
+      Built with [Quarto](https://quarto.org) &middot; Analysis code on
+      [GitHub](https://github.com/jonasgaigr/kosovo-biodiversity-data-workshop-2026)
+
+format:
+  html:
+    theme:
+      - flatly
+      - custom.scss
+    toc: true
+    toc-depth: 3
+    toc-title: "On this page"
+    number-sections: false
+    code-fold: true
+    code-tools: true
+    code-summary: "Show the code"
+    fig-responsive: true
+    link-external-newwindow: true
+    lang: en-GB
+    # Deliberately NOT embed-resources: the report carries tens of thousands of
+    # mapped points, and inlining every library would make a single page of
+    # well over 10 MB. Shared libraries are served from site_libs instead.
+    embed-resources: false
+
+execute:
+  echo: false
+  warning: false
+  message: false
+  freeze: auto
+
+lang: en-GB

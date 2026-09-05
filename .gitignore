@@ -1,0 +1,46 @@
+# ------------------------------------------------------------------------------
+# Credentials — never commit these
+# ------------------------------------------------------------------------------
+.Renviron
+.Rprofile.local
+
+# ------------------------------------------------------------------------------
+# R and RStudio session files
+# ------------------------------------------------------------------------------
+.Rhistory
+.RData
+.Rproj.user/
+*.Rproj
+
+# ------------------------------------------------------------------------------
+# Quarto working files
+# ------------------------------------------------------------------------------
+/.quarto/
+/_freeze/
+**/*.quarto_ipynb
+pipeline_run.log
+
+# ------------------------------------------------------------------------------
+# Raw GBIF archives
+#
+# These are large and fully reproducible from the DOI recorded in
+# data/run_metadata.rds, so they are not tracked. The download key IS tracked,
+# so that a fresh clone re-uses the same DOI rather than minting a new one.
+# ------------------------------------------------------------------------------
+/data/gbif_download/*
+!/data/gbif_download/download_key.txt
+
+# GBIF archives anywhere under data/ (older runs left some at the top level).
+/data/*.zip
+
+# ------------------------------------------------------------------------------
+# Deliberately NOT ignored
+#
+# data/eu_directives_species.csv  — the annex list is a project input
+# data/vernacular_cache.csv       — cache; avoids thousands of API calls on a
+#                                   fresh clone
+# data/kosovo_boundary.gpkg       — small reference polygon
+# data/run_metadata.rds           — required to render the report
+# data_exports/                   — published outputs, served by GitHub Pages
+# docs/                           — the rendered website itself
+# ------------------------------------------------------------------------------

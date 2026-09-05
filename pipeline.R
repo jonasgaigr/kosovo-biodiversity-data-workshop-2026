@@ -1,0 +1,725 @@
+# ==============================================================================
+# pipeline.R
+#
+# Kosovo biodiversity data pipeline — GBIF occurrence acquisition, taxonomic
+# matching against the EU Nature Directives, coordinate cleaning, subsetting
+# and export.
+#
+# Run with:  Rscript pipeline.R
+#
+# The script is idempotent. A completed GBIF download is recorded in
+# `data/gbif_download/download_key.txt` and re-used on subsequent runs, so
+# re-running does not create a new download or a new DOI. Delete that file to
+# force a fresh download.
+#
+# GBIF credentials must be present in `.Renviron` — see README.md.
+# ==============================================================================
+
+suppressPackageStartupMessages({
+  library(rgbif)
+  library(dplyr)
+  library(tidyr)
+  library(readr)
+  library(stringr)
+  library(sf)
+  library(CoordinateCleaner)
+})
+
+source("R/functions.R")
+
+
+# ==============================================================================
+# 1. CONFIGURATION
+# ==============================================================================
+
+config <- list(
+
+  # --- Spatial extent -------------------------------------------------------
+  #
+  # Kosovo is queried through the GADM predicate rather than the ISO country
+  # code, because GADM's boundary also captures records whose publisher left
+  # `countryCode` blank or misassigned.
+  #
+  # NOTE ON THE CODE: GADM's GID for Kosovo is "XKO". The code "XKX" is the
+  # World Bank / ISO-3166 alpha-3 style code for Kosovo and is NOT recognised
+  # by GADM — `pred("gadm", "XKX")` returns zero records. Verified against the
+  # GBIF occurrence API:
+  #     gadmGid=XKO -> 52,290 records
+  #     gadmGid=XKX ->      0 records
+  #     country=XK  -> 48,947 records
+  gadm_gid = "XKO",
+
+  # ISO3-style code stamped onto the records and onto the reference polygon,
+  # used by the country-coordinate mismatch test.
+  iso3 = "XKX",
+
+  # --- Paths ----------------------------------------------------------------
+  dir_download   = "data/gbif_download",
+  dir_exports    = "data_exports",
+  path_directives= "data/eu_directives_species.csv",
+  path_boundary  = "data/kosovo_boundary.gpkg",
+  path_vernacular= "data/vernacular_cache.csv",
+  path_metadata  = "data/run_metadata.rds",
+  path_key       = "data/gbif_download/download_key.txt",
+
+  # --- Cleaning -------------------------------------------------------------
+  #
+  # The tests required by the brief: zero coordinates, country-coordinate
+  # mismatches, GBIF headquarters, and biodiversity institutions. "equal" is
+  # added as a cheap sanity test for transposed/identical lat==lon values.
+  #
+  # DELIBERATELY EXCLUDED: "capitals" and "centroids". Both remove records
+  # within a radius of a capital city or a country/province centroid. Kosovo is
+  # small and Pristina falls inside it, so those tests would discard large
+  # numbers of legitimate urban and national records. Set `use_capitals_test`
+  # to TRUE if you accept that trade-off.
+  cleaning_tests    = c("zeros", "countries", "gbif", "institutions", "equal"),
+  use_capitals_test = FALSE,
+  country_buffer    = NULL,   # metres; NULL = strict boundary test
+
+  # --- Vernacular names -----------------------------------------------------
+  # Common names are not part of the GBIF SIMPLE_CSV download and must be
+  # fetched from the species API (~0.3 s per taxon, cached between runs).
+  # Set to Inf to resolve every taxon in the dataset.
+  vernacular_max_lookups = Inf,
+
+  # --- Export ---------------------------------------------------------------
+  # A lean column set keeps the published files small enough to serve from
+  # GitHub Pages while retaining everything needed for conservation use.
+  export_columns = c(
+    "gbifID", "scientificName", "species", "vernacularName",
+    "kingdom", "phylum", "class", "order", "family", "genus",
+    "taxonRank", "taxonKey", "speciesKey",
+    "eventDate", "year", "month", "day",
+    "decimalLatitude", "decimalLongitude", "coordinateUncertaintyInMeters",
+    "elevation", "locality", "basisOfRecord", "individualCount",
+    "recordedBy", "identifiedBy",
+    "institutionCode", "collectionCode", "catalogNumber",
+    "datasetKey", "license", "issue",
+    "directive", "annex"
+  )
+)
+
+dir.create(config$dir_download, recursive = TRUE, showWarnings = FALSE)
+dir.create(config$dir_exports,  recursive = TRUE, showWarnings = FALSE)
+
+run_meta <- list(run_date = Sys.time(), config = config)
+
+
+# ==============================================================================
+# 2. DATA ACQUISITION — asynchronous GBIF download
+# ==============================================================================
+#
+# `occ_download()` is used rather than `occ_search()` / `occ_data()` because
+# only the asynchronous download service mints a DOI. The DOI is what makes the
+# analysis citable and the underlying data permanently retrievable, which is a
+# requirement for evidence used in policy.
+
+check_gbif_credentials <- function() {
+  needed <- c("GBIF_USER", "GBIF_PWD", "GBIF_EMAIL")
+  missing <- needed[!nzchar(Sys.getenv(needed))]
+  if (length(missing)) {
+    stop(
+      "Missing GBIF credentials: ", paste(missing, collapse = ", "), ".\n",
+      "Add them to your .Renviron file and restart R. See README.md.",
+      call. = FALSE
+    )
+  }
+  invisible(TRUE)
+}
+
+#' Request (or re-use) the GBIF download for Kosovo
+#'
+#' @return A list with the download key, DOI, citation and local zip path.
+acquire_gbif_download <- function(cfg) {
+
+  # Re-use a previous download where one exists, so that re-running the
+  # pipeline does not mint a new DOI or re-queue work on the GBIF servers.
+  if (file.exists(cfg$path_key)) {
+    key <- readLines(cfg$path_key, warn = FALSE)[1]
+    say("Re-using existing GBIF download: ", key)
+  } else {
+    check_gbif_credentials()
+    say("Requesting a new GBIF download for GADM GID '", cfg$gadm_gid, "' ...")
+
+    req <- occ_download(
+      pred("gadm", cfg$gadm_gid),
+      pred("hasCoordinate", TRUE),
+      pred("hasGeospatialIssue", FALSE),
+      pred("occurrenceStatus", "PRESENT"),
+      format = "SIMPLE_CSV",
+      user   = Sys.getenv("GBIF_USER"),
+      pwd    = Sys.getenv("GBIF_PWD"),
+      email  = Sys.getenv("GBIF_EMAIL")
+    )
+
+    key <- as.character(req)
+    say("Download requested (key ", key, "). Waiting for GBIF to prepare it ...")
+    occ_download_wait(req, curlopts = list(), quiet = FALSE)
+
+    writeLines(key, cfg$path_key)
+  }
+
+  zip_path <- file.path(cfg$dir_download, paste0(key, ".zip"))
+  if (!file.exists(zip_path)) {
+    say("Downloading archive from GBIF ...")
+    occ_download_get(key, path = cfg$dir_download, overwrite = TRUE)
+  } else {
+    say("Archive already present locally.")
+  }
+
+  meta <- occ_download_meta(key)
+  citation <- tryCatch(
+    gbif_citation(key)$download,
+    error = function(e) NA_character_
+  )
+
+  list(
+    key       = key,
+    doi       = meta$doi %||% NA_character_,
+    created   = meta$created %||% NA_character_,
+    n_records = meta$totalRecords %||% NA_integer_,
+    citation  = citation,
+    zip_path  = zip_path
+  )
+}
+
+download <- acquire_gbif_download(config)
+run_meta$download <- download
+
+say("DOI: ", download$doi)
+say("Records in download: ", fmt_int(download$n_records))
+
+say("Importing occurrence records ...")
+raw_data <- occ_download_import(key = download$key, path = config$dir_download)
+say("Imported ", fmt_int(nrow(raw_data)), " records with ",
+    ncol(raw_data), " fields.")
+
+
+# ==============================================================================
+# 3. TAXONOMIC MATCHING — EU Birds and Habitats Directives
+# ==============================================================================
+#
+# Species names on the directive annexes are matched to the GBIF backbone so
+# that occurrence records can be selected by numeric key rather than by string,
+# which is robust to synonymy and to authorship variation.
+
+#' Match a directive species list to the GBIF backbone taxonomy
+#'
+#' Returns one row per input name, carrying both the matched `usageKey` and the
+#' `speciesKey` of the accepted species.
+#'
+#' Matching on BOTH keys matters. Where an annex lists a subspecies — for
+#' example *Rupicapra rupicapra balcanica* — the backbone returns the
+#' subspecies `usageKey`, but occurrence records identified only to species
+#' level carry the species-level key. Matching on `usageKey` alone would miss
+#' every such record. This is deliberately inclusive: for a conservation
+#' screening exercise a false positive is far cheaper than a missed protected
+#' species, and the `annex` column preserves the listing for expert review.
+#'
+#' @param path CSV with columns `scientific_name`, `directive`, `annex`, and
+#'   optionally the pre-resolved `gbif_usage_key` / `gbif_species_key` written
+#'   by `R/build_directive_list.R`.
+#' @return A tibble of the input list with GBIF keys and match diagnostics.
+match_directive_species <- function(path) {
+
+  if (!file.exists(path)) {
+    stop("Species list not found: ", path,
+         "\nExpected columns: scientific_name, directive, annex.\n",
+         "Generate it with: Rscript R/build_directive_list.R", call. = FALSE)
+  }
+
+  species_list <- readr::read_csv(path, show_col_types = FALSE)
+
+  required <- c("scientific_name", "directive", "annex")
+  missing  <- setdiff(required, names(species_list))
+  if (length(missing)) {
+    stop("Species list is missing column(s): ", paste(missing, collapse = ", "),
+         call. = FALSE)
+  }
+
+  pre_resolved <- all(c("gbif_usage_key", "gbif_species_key") %in%
+                        names(species_list))
+
+  if (pre_resolved) {
+    # `R/build_directive_list.R` has already done the matching, including the
+    # kingdom hints that resolve cross-kingdom homonyms and the retries for
+    # subspecies notation. Re-matching here would discard that work and give a
+    # worse result, so the stored keys are used as they are.
+    say("Using pre-resolved GBIF keys from ", basename(path), ".")
+
+    out <- species_list |>
+      dplyr::mutate(
+        usageKey   = suppressWarnings(as.integer(.data$gbif_usage_key)),
+        speciesKey = suppressWarnings(as.integer(.data$gbif_species_key)),
+        matchType  = if ("match_type" %in% names(species_list))
+                       .data$match_type else NA_character_
+      )
+
+  } else {
+    # A plain three-column list still works: resolve the names here.
+    say("Matching ", nrow(species_list),
+        " directive taxa to the GBIF backbone ...")
+
+    matched <- rgbif::name_backbone_checklist(species_list$scientific_name)
+    stopifnot(nrow(matched) == nrow(species_list))
+
+    out <- species_list |>
+      dplyr::bind_cols(
+        matched |>
+          dplyr::select(dplyr::any_of(c(
+            "usageKey", "acceptedUsageKey", "scientificName", "canonicalName",
+            "rank", "status", "matchType", "confidence", "speciesKey",
+            "species", "class", "family", "kingdom"
+          )))
+      ) |>
+      dplyr::mutate(
+        usageKey   = suppressWarnings(as.integer(.data$usageKey)),
+        speciesKey = suppressWarnings(as.integer(.data$speciesKey))
+      )
+  }
+
+  # Genus- and family-level listings ("Alosa spp.") carry no species key and are
+  # matched by name instead; they are not failures.
+  if (!"listing_type" %in% names(out)) out$listing_type <- "taxon"
+
+  unresolved <- out |>
+    dplyr::filter(.data$listing_type == "taxon", is.na(.data$usageKey))
+
+  if (nrow(unresolved) > 0) {
+    say("NOTE: ", nrow(unresolved), " of ", nrow(out),
+        " listings have no GBIF key and cannot be matched to occurrences.")
+    say("      These are mostly names superseded since the directives were ",
+        "adopted; see R/build_directive_list.R.")
+  }
+
+  say("Directive listings: ", fmt_int(nrow(out)), " rows, ",
+      fmt_int(dplyr::n_distinct(out$scientific_name)), " distinct taxa, ",
+      fmt_int(sum(!is.na(out$usageKey))), " with a GBIF key.")
+
+  out
+}
+
+directive_matches <- match_directive_species(config$path_directives)
+run_meta$directive_matches <- directive_matches
+
+#' Collect every GBIF key associated with a directive selection
+#'
+#' @param x The matched directive table.
+#' @param ... Filter expressions applied to `x`.
+#' @return An integer vector of unique GBIF keys.
+directive_keys <- function(x, ...) {
+  sel <- dplyr::filter(x, ...)
+  unique(stats::na.omit(c(sel$usageKey, sel$speciesKey, sel$acceptedUsageKey)))
+}
+
+
+# ==============================================================================
+# 4. DATA CLEANING — CoordinateCleaner
+# ==============================================================================
+
+#' Clean occurrence coordinates
+#'
+#' Applies the CoordinateCleaner test battery and returns only the records that
+#' pass every test, together with a per-test summary of what was removed.
+#'
+#' @param x Raw occurrence data frame.
+#' @param cfg The pipeline configuration list.
+#' @return A list with `clean` (data frame) and `report` (per-test tibble).
+clean_occurrences <- function(x, cfg) {
+
+  before <- nrow(x)
+
+  # Drop records without usable coordinates before testing.
+  x <- x |>
+    dplyr::filter(!is.na(.data$decimalLatitude), !is.na(.data$decimalLongitude))
+
+  say("Records with coordinates: ", fmt_int(nrow(x)),
+      " (", fmt_int(before - nrow(x)), " dropped as missing).")
+
+  # The country test needs a reference polygon that actually knows about
+  # Kosovo — see `kosovo_boundary()` for why the default reference cannot be
+  # used here. The occurrence data is stamped with the matching code.
+  boundary <- kosovo_boundary(iso3 = cfg$iso3, cache_path = cfg$path_boundary)
+  x$.iso3  <- cfg$iso3
+
+  tests <- cfg$cleaning_tests
+  if (isTRUE(cfg$use_capitals_test)) tests <- unique(c(tests, "capitals", "centroids"))
+
+  say("Running CoordinateCleaner tests: ", paste(tests, collapse = ", "))
+
+  flags <- CoordinateCleaner::clean_coordinates(
+    x              = as.data.frame(x),
+    lon            = "decimalLongitude",
+    lat            = "decimalLatitude",
+    species        = "species",
+    countries      = ".iso3",
+    tests          = tests,
+    country_ref    = boundary,
+    country_refcol = "iso_a3",
+    country_buffer = cfg$country_buffer,
+    value          = "spatialvalid",
+    verbose        = FALSE
+  )
+
+  flag_cols <- grep("^\\.", names(flags), value = TRUE)
+  flag_cols <- setdiff(flag_cols, c(".summary", ".iso3"))
+
+  report <- dplyr::tibble(
+    Test    = flag_cols,
+    Flagged = vapply(flag_cols, function(cn) sum(!flags[[cn]]), integer(1))
+  ) |>
+    dplyr::mutate(
+      Test = dplyr::recode(.data$Test,
+        ".val"  = "Invalid coordinates",
+        ".equ"  = "Identical latitude / longitude",
+        ".zer"  = "Zero coordinates / plain zeros",
+        ".cap"  = "Capital city vicinity",
+        ".cen"  = "Country or province centroid",
+        ".con"  = "Country-coordinate mismatch",
+        ".gbf"  = "GBIF headquarters",
+        ".inst" = "Biodiversity institution",
+        .default = .data$Test
+      ),
+      `Per cent` = round(100 * .data$Flagged / nrow(flags), 2)
+    ) |>
+    dplyr::arrange(dplyr::desc(.data$Flagged))
+
+  clean <- flags |>
+    dplyr::filter(.data$.summary) |>
+    dplyr::select(-dplyr::all_of(c(flag_cols, ".summary", ".iso3")))
+
+  say("Retained ", fmt_int(nrow(clean)), " / ", fmt_int(nrow(x)),
+      " records (", round(100 * nrow(clean) / nrow(x), 2), "% passed).")
+
+  list(clean = clean, report = report, boundary = boundary)
+}
+
+cleaning <- clean_occurrences(raw_data, config)
+run_meta$cleaning_report <- cleaning$report
+run_meta$n_raw           <- nrow(raw_data)
+run_meta$n_clean         <- nrow(cleaning$clean)
+
+print(cleaning$report)
+
+
+# ==============================================================================
+# 5. ENRICHMENT — vernacular names
+# ==============================================================================
+
+say("Resolving vernacular names ...")
+vernacular <- fetch_vernacular_names(
+  species_keys = cleaning$clean$speciesKey,
+  cache_path   = config$path_vernacular,
+  max_lookups  = config$vernacular_max_lookups
+)
+
+say("Vernacular names available for ",
+    fmt_int(sum(!is.na(vernacular$vernacularName))), " taxa.")
+
+occurrences <- cleaning$clean |>
+  dplyr::mutate(speciesKey = suppressWarnings(as.integer(.data$speciesKey))) |>
+  dplyr::left_join(vernacular, by = "speciesKey")
+
+
+# ==============================================================================
+# 6. SUBSETTING
+# ==============================================================================
+#
+# Five thematic subsets are produced. Directive membership is attached as
+# `directive` / `annex` columns, collapsed to one row per taxon so that the
+# join can never duplicate occurrence records.
+
+#' Collapse directive listings to one row per GBIF key
+#'
+#' Every key that can identify a listed taxon — the matched `usageKey`, the
+#' accepted species key, and any accepted-usage key — is expanded into its own
+#' row, then collapsed so that each key appears exactly once. This guarantees
+#' the subsequent join cannot duplicate occurrence records.
+#' @return A list with `keys` (one row per GBIF key) and `genera` (one row per
+#'   genus, for "spp." listings).
+directive_lookup <- function(x, ...) {
+
+  sel <- dplyr::filter(x, ...)
+
+  empty_keys <- dplyr::tibble(key = integer(), directive = character(),
+                              annex = character())
+  empty_gen  <- dplyr::tibble(genus = character(), directive = character(),
+                              annex = character())
+
+  if (nrow(sel) == 0) return(list(keys = empty_keys, genera = empty_gen))
+
+  if (!"listing_type" %in% names(sel)) sel$listing_type <- "taxon"
+
+  collapse_by <- function(d, col) {
+    d |>
+      dplyr::filter(!is.na(.data[[col]])) |>
+      dplyr::group_by(.data[[col]]) |>
+      dplyr::summarise(
+        directive = paste(sort(unique(.data$directive)), collapse = "; "),
+        annex     = paste(sort(unique(.data$annex)),     collapse = "; "),
+        .groups   = "drop"
+      )
+  }
+
+  # --- Taxon listings, matched by key ---------------------------------------
+  #
+  # WHICH KEYS ARE SAFE TO MATCH ON DEPENDS ON THE RANK THAT WAS LISTED.
+  #
+  # For a taxon listed at SPECIES rank, both the species key and the taxon key
+  # are used, so that records identified to subspecies are still captured.
+  #
+  # For a taxon listed at SUBSPECIES rank, only the subspecies key is used.
+  # Promoting a subspecies listing to its whole species would be badly wrong
+  # here: the Birds Directive lists island endemics such as *Columba palumbus
+  # azorica*, *Fringilla coelebs ombriosa* and *Parus ater cypriotes*, and
+  # matching those at species level pulls every Wood Pigeon, Chaffinch and Coal
+  # Tit in Kosovo into the Annex I subset — several thousand records for
+  # subspecies that do not occur anywhere near the Balkans.
+  taxa <- sel |> dplyr::filter(.data$listing_type != "genus_or_family")
+
+  if (!"matched_rank" %in% names(taxa)) taxa$matched_rank <- NA_character_
+
+  infraspecific <- !is.na(taxa$matched_rank) &
+    taxa$matched_rank %in% c("SUBSPECIES", "VARIETY", "FORM")
+
+  key_frame <- function(d, cols) {
+    cols <- intersect(cols, names(d))
+    if (nrow(d) == 0 || length(cols) == 0) return(empty_keys)
+    dplyr::bind_rows(lapply(cols, function(cn) {
+      dplyr::tibble(
+        key       = suppressWarnings(as.integer(d[[cn]])),
+        directive = d$directive,
+        annex     = as.character(d$annex)
+      )
+    }))
+  }
+
+  keys <- dplyr::bind_rows(
+    # Listed at species rank (or rank unknown): match the species too.
+    key_frame(taxa[!infraspecific, , drop = FALSE],
+              c("usageKey", "speciesKey", "acceptedUsageKey")),
+    # Listed at subspecies rank: match that subspecies only.
+    key_frame(taxa[infraspecific, , drop = FALSE],
+              c("usageKey", "acceptedUsageKey"))
+  )
+
+  keys <- if (nrow(keys) > 0) collapse_by(keys, "key") else empty_keys
+
+  # --- "spp." listings, matched by genus name -------------------------------
+  #
+  # A handful of annex entries list an entire genus ("Alosa spp.", "Barbus
+  # spp."). Those cannot be matched by species key, so they are matched on the
+  # genus name that GBIF assigns to each occurrence record.
+  spp <- sel |> dplyr::filter(.data$listing_type == "genus_or_family")
+
+  genera <- if (nrow(spp) > 0) {
+    spp |>
+      dplyr::mutate(genus = .data$scientific_name) |>
+      collapse_by("genus")
+  } else {
+    empty_gen
+  }
+
+  list(keys = keys, genera = genera)
+}
+
+#' Select occurrence records belonging to a directive selection
+#'
+#' A record is retained when its `speciesKey` or `taxonKey` appears among the
+#' listed keys, or when its genus is one of the genus-level listings. The
+#' annotation is joined on whichever criterion actually matched, so that records
+#' identified at subspecies level are still labelled with their annex.
+subset_by_directive <- function(occ, lookup) {
+
+  keys   <- lookup$keys
+  genera <- lookup$genera
+
+  if (nrow(keys) == 0 && nrow(genera) == 0) {
+    return(
+      occ[0, , drop = FALSE] |>
+        dplyr::mutate(directive = character(), annex = character())
+    )
+  }
+
+  species_key <- suppressWarnings(as.integer(occ$speciesKey))
+  taxon_key   <- suppressWarnings(as.integer(occ$taxonKey))
+  genus_name  <- if ("genus" %in% names(occ)) as.character(occ$genus)
+                 else rep(NA_character_, nrow(occ))
+
+  hit_species <- !is.na(species_key) & species_key %in% keys$key
+  hit_taxon   <- !is.na(taxon_key)   & taxon_key   %in% keys$key
+  hit_genus   <- !is.na(genus_name)  & genus_name  %in% genera$genus
+
+  keep <- hit_species | hit_taxon | hit_genus
+  out  <- occ[keep, , drop = FALSE]
+
+  if (nrow(out) == 0) {
+    return(dplyr::mutate(out, directive = character(), annex = character()))
+  }
+
+  out$.match_key   <- ifelse(hit_species[keep], species_key[keep],
+                             ifelse(hit_taxon[keep], taxon_key[keep], NA_integer_))
+  out$.match_genus <- ifelse(is.na(out$.match_key) & hit_genus[keep],
+                             genus_name[keep], NA_character_)
+
+  out |>
+    dplyr::left_join(keys, by = c(".match_key" = "key")) |>
+    dplyr::left_join(genera, by = c(".match_genus" = "genus"),
+                     suffix = c("", ".genus")) |>
+    dplyr::mutate(
+      directive = dplyr::coalesce(.data$directive, .data$directive.genus),
+      annex     = dplyr::coalesce(.data$annex,     .data$annex.genus)
+    ) |>
+    dplyr::select(-".match_key", -".match_genus",
+                  -"directive.genus", -"annex.genus")
+}
+
+say("Building thematic subsets ...")
+
+subsets <- list()
+
+# (1) Overall biodiversity — every cleaned record.
+subsets[["kosovo_overall_biodiversity"]] <- occurrences
+
+# (2) Birds — class Aves.
+subsets[["kosovo_birds"]] <- occurrences |>
+  dplyr::filter(.data$class == "Aves")
+
+# (3) Birds Directive, Annex I — species requiring Special Protection Areas.
+#     The species list holds one row per taxon per annex, so an exact match on
+#     the annex label is both simpler and safer than a regular expression.
+subsets[["kosovo_birds_annex_I"]] <- subset_by_directive(
+  occurrences,
+  directive_lookup(directive_matches,
+                   .data$directive == "Birds",
+                   .data$annex == "I")
+)
+
+# (4) Habitats Directive — Annexes II, IV and V combined.
+subsets[["kosovo_habitats_directive"]] <- subset_by_directive(
+  occurrences,
+  directive_lookup(directive_matches, .data$directive == "Habitats")
+)
+
+# (5) Habitats Directive, Annex II — species requiring Special Areas of
+#     Conservation.
+subsets[["kosovo_habitats_annex_II"]] <- subset_by_directive(
+  occurrences,
+  directive_lookup(directive_matches,
+                   .data$directive == "Habitats",
+                   .data$annex == "II")
+)
+
+subset_labels <- c(
+  kosovo_overall_biodiversity = "Overall biodiversity",
+  kosovo_birds                = "Birds (class Aves)",
+  kosovo_birds_annex_I        = "Birds Directive, Annex I",
+  kosovo_habitats_directive   = "Habitats Directive (all annexes)",
+  kosovo_habitats_annex_II    = "Habitats Directive, Annex II"
+)
+
+for (nm in names(subsets)) {
+  say("  ", format(subset_labels[[nm]], width = 34), " ",
+      format(fmt_int(nrow(subsets[[nm]])), width = 8, justify = "right"),
+      " records")
+}
+
+
+# ==============================================================================
+# 7. EXPORT — GeoPackage and CSV
+# ==============================================================================
+
+#' Convert an occurrence table to an sf object and export it
+#'
+#' Writes both a GeoPackage (geometry preserved) and a CSV (flat table, with
+#' coordinate columns retained), restricted to the configured column set.
+#'
+#' @param d Occurrence data frame.
+#' @param name File stem, without extension.
+#' @param cfg The pipeline configuration list.
+#' @return The exported `sf` object, invisibly.
+export_subset <- function(d, name, cfg) {
+
+  keep <- intersect(cfg$export_columns, names(d))
+  d    <- dplyr::select(d, dplyr::all_of(keep))
+
+  gpkg <- file.path(cfg$dir_exports, paste0(name, ".gpkg"))
+  csv  <- file.path(cfg$dir_exports, paste0(name, ".csv"))
+
+  # CSV first: a flat table is what most analysts open, and it keeps the
+  # coordinates as ordinary columns.
+  readr::write_csv(d, csv, na = "")
+
+  if (nrow(d) == 0) {
+    # An empty GeoPackage cannot be written from a zero-row sf object, so
+    # remove any stale file and report the gap rather than failing the run.
+    if (file.exists(gpkg)) unlink(gpkg)
+    warning("Subset '", name, "' contains no records; no GeoPackage written.",
+            call. = FALSE)
+    return(invisible(NULL))
+  }
+
+  spatial <- sf::st_as_sf(
+    d,
+    coords = c("decimalLongitude", "decimalLatitude"),
+    crs    = 4326,
+    remove = FALSE
+  )
+
+  if (file.exists(gpkg)) unlink(gpkg)
+  sf::st_write(spatial, gpkg, layer = name, quiet = TRUE)
+
+  invisible(spatial)
+}
+
+say("Exporting datasets to ", config$dir_exports, "/ ...")
+
+exported <- list()
+for (nm in names(subsets)) {
+  exported[[nm]] <- export_subset(subsets[[nm]], nm, config)
+}
+
+# A machine-readable manifest of what was published, used by the report to
+# build the download table with accurate file sizes.
+manifest <- dplyr::bind_rows(lapply(names(subsets), function(nm) {
+  gpkg <- file.path(config$dir_exports, paste0(nm, ".gpkg"))
+  csv  <- file.path(config$dir_exports, paste0(nm, ".csv"))
+  spp  <- subsets[[nm]]$species
+  dplyr::tibble(
+    name      = nm,
+    label     = unname(subset_labels[[nm]]),
+    records   = nrow(subsets[[nm]]),
+    species   = dplyr::n_distinct(spp[!is.na(spp) & nzchar(spp)]),
+    gpkg      = if (file.exists(gpkg)) basename(gpkg)  else NA_character_,
+    gpkg_size = if (file.exists(gpkg)) file.size(gpkg) else NA_real_,
+    csv       = if (file.exists(csv))  basename(csv)   else NA_character_,
+    csv_size  = if (file.exists(csv))  file.size(csv)  else NA_real_
+  )
+}))
+
+print(manifest |> dplyr::select(label, records, species))
+
+
+# ==============================================================================
+# 8. RUN METADATA
+# ==============================================================================
+#
+# Saved so that the Quarto report can state the DOI, the citation, the record
+# counts and the cleaning outcome without re-running any of the analysis.
+
+run_meta$manifest      <- manifest
+run_meta$subset_labels <- subset_labels
+run_meta$n_species     <- dplyr::n_distinct(
+  occurrences$species[!is.na(occurrences$species)]
+)
+
+saveRDS(run_meta, config$path_metadata)
+
+say("Pipeline complete.")
+say("  DOI:        ", run_meta$download$doi)
+say("  Raw:        ", fmt_int(run_meta$n_raw), " records")
+say("  Cleaned:    ", fmt_int(run_meta$n_clean), " records")
+say("  Species:    ", fmt_int(run_meta$n_species))
+say("  Metadata:   ", config$path_metadata)
+say("Next step: render the website with  quarto render")
