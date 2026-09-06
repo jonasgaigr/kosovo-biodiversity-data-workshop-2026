@@ -5,9 +5,46 @@ publishes Global Biodiversity Information Facility (GBIF) occurrence data for
 the territory of Kosovo, with particular attention to species protected under
 the EU Birds and Habitats Directives.
 
-The output is a Quarto website — summary statistics, interactive Leaflet maps
-and open data downloads — designed for ministry officials and conservation
-practitioners, and hosted on GitHub Pages.
+The output is a Quarto website — summary statistics, interactive Leaflet maps,
+a browser-side record explorer and open data downloads — designed for ministry
+officials and conservation practitioners, and hosted on GitHub Pages.
+
+---
+
+## What the report contains
+
+| Section | What it answers |
+|---|---|
+| Summary statistics | How much data is there, and of what |
+| Data quality control | What was screened out, and how precisely records are placed |
+| Where the records are | Six maps, each with points, a classed density grid, a heat surface and municipal boundaries |
+| Survey coverage by municipality | Which parts of the country are under-recorded |
+| EU Nature Directives | Which species of Community interest have been recorded |
+| Extinction risk | The IUCN Red List profile, and the threatened species in detail |
+| Explore the records | A filterable, linked map and table over the records of conservation interest |
+| Species checklist | Every species, with counts and links to GBIF |
+| Who published these records | Attribution for all contributing datasets and publishers |
+| Download the data | GeoPackage, CSV and Excel for every subset |
+
+### Adopted from the GBIF Viewer
+
+Several features are adapted from the
+[GBIF Viewer](https://github.com/ABiatov/gbif_shiny_onlineviewer) built for
+Ukraine by the Habitat Foundation and the Ukrainian Nature Conservation Group.
+That tool is a Shiny application with a server behind it; this is a static
+site, so each idea is re-implemented to run in the reader's browser:
+
+| GBIF Viewer | Here |
+|---|---|
+| Conservation-status filter panel | `crosstalk` filters driving a linked map and table, no server needed |
+| IUCN Red List as the primary filter | Red List category resolved per species and carried through every export, map, table and filter |
+| Administrative-unit selector | Every municipality summarised in advance — a coverage choropleth and a per-unit table |
+| Draw an area of interest | Leaflet.draw polygon and rectangle tools with live area readout, plus measure, place search and mouse coordinates |
+| Links to the record and dataset on gbif.org | In every pop-up and in the attribution table |
+| Dataset and publisher listing | Resolved from the GBIF registry and published as a credited table |
+| Coordinate-uncertainty threshold | Reported as a precision profile and offered as a filter, rather than silently discarding half the data — see the report for why |
+| CSV / XLSX export | Both, plus GeoPackage, for every subset |
+| Colour by kingdom | Kept, with a validated colour-blind-safe palette and a legend |
 
 ---
 
@@ -34,11 +71,15 @@ kosovo-biodiversity-data-workshop-2026/
 │   ├── eurlex/                     # Cached consolidated legal texts
 │   ├── gbif_download/              # Raw GBIF archives (not tracked)
 │   │   └── download_key.txt        # Tracked, so the DOI is reused
-│   ├── kosovo_boundary.gpkg        # Cached reference polygon
+│   ├── gadm41_XKO.gpkg             # GADM 4.1, all levels (downloaded)
+│   ├── kosovo_boundary.gpkg        # National outline, GADM level 0
+│   ├── kosovo_municipalities.gpkg  # GADM level 2, for coverage reporting
 │   ├── vernacular_cache.csv        # Cached common names
+│   ├── iucn_cache.csv              # Cached IUCN Red List categories
+│   ├── dataset_registry.csv        # Cached dataset and publisher titles
 │   └── run_metadata.rds            # DOI, citation, counts, cleaning report
 │
-├── data_exports/              # Published outputs (.gpkg + .csv), five subsets
+├── data_exports/              # Published outputs (.gpkg, .csv, .xlsx), six subsets
 └── docs/                      # Rendered website — GitHub Pages serves this
 ```
 
@@ -114,8 +155,9 @@ sits in the project root, and that you have restarted R.
 
 ```r
 install.packages(c(
-  "rgbif", "tidyverse", "sf", "leaflet", "leaflet.extras",
-  "CoordinateCleaner", "DT", "htmltools", "rnaturalearth"
+  "rgbif", "tidyverse", "sf", "leaflet", "leaflet.extras", "leafem",
+  "CoordinateCleaner", "DT", "crosstalk", "htmltools", "htmlwidgets",
+  "writexl", "curl", "jsonlite", "rnaturalearth"
 ))
 ```
 
@@ -145,12 +187,17 @@ This will:
 3. Match the EU annex list against the GBIF backbone taxonomy.
 4. Screen coordinates with `CoordinateCleaner`.
 5. Resolve English common names from the GBIF species API (cached).
-6. Write five thematic subsets to `data_exports/` as `.gpkg` and `.csv`.
-7. Save run metadata to `data/run_metadata.rds`.
+6. Resolve IUCN Red List categories from the GBIF species API (cached).
+7. Stamp each record with the municipality it falls in (GADM level 2).
+8. Write six thematic subsets to `data_exports/` as `.gpkg`, `.csv` and —
+   for the smaller ones — `.xlsx`.
+9. Resolve every contributing dataset and publisher from the GBIF registry.
+10. Save run metadata to `data/run_metadata.rds`.
 
 The first run takes roughly 20 minutes, most of it resolving common names for
-several thousand taxa. Subsequent runs are far quicker because both the
-download and the name cache are reused.
+several thousand taxa one at a time. The Red List and registry lookups are
+issued concurrently and take seconds. Subsequent runs are far quicker because
+the download and all three caches are reused.
 
 **The pipeline is idempotent.** The GBIF download key is stored in
 `data/gbif_download/download_key.txt` and re-used, so re-running does not mint
@@ -258,11 +305,27 @@ Natural Earth, its reference dataset, records Kosovo with `iso_a3 == "-99"`,
 meaning no assigned code. Running the `"countries"` test against the default
 reference flags **100 per cent** of Kosovo records as country-coordinate
 mismatches, and with `value = "clean"` returns an empty data frame with no
-warning. `kosovo_boundary()` in `R/functions.R` therefore builds a bespoke
-reference polygon, which is passed via `country_ref`. With the fix in place the
-test flags a plausible 2.7 per cent of records.
+warning. `kosovo_boundary()` in `R/functions.R` therefore supplies a bespoke
+reference polygon, passed via `country_ref`.
 
-**3. Subspecies listings must not be matched at species level.**
+**3. Screen against the same polygon that selected the records.**
+The bespoke reference was at first built from Natural Earth's 1:50m outline —
+72 vertices for the whole country, departing from the true border by as much as
+4.7 km. The GBIF download, however, is selected with `pred("gadm", "XKO")`, so
+every record is inside the *GADM* polygon by construction. Screening those
+records against a different, coarser outline flagged 1,296 of them (2.7 per
+cent, 192 species) as country-coordinate mismatches. Every one was a real
+record near the border, discarded because two datasets drew the same line
+differently.
+
+The reference is now GADM level 0 itself — 1,210 vertices, and the same
+geometry GBIF filtered on — and the test flags nothing, which is the correct
+answer rather than a broken one. The test is kept in the battery because it
+becomes meaningful again the moment the download predicate changes: a
+`country = "XK"` extract, for instance, relies on publisher-supplied country
+codes and genuinely needs checking.
+
+**4. Subspecies listings must not be matched at species level.**
 The Birds Directive lists island endemics such as *Columba palumbus azorica*,
 *Fringilla coelebs ombriosa* and *Parus ater cypriotes*. Matching a subspecies
 listing on its accepted *species* key — which is the right thing to do for
@@ -272,7 +335,49 @@ I subset for subspecies confined to the Azores and the Canaries.
 `directive_lookup()` in `pipeline.R` therefore matches on the species key only
 where the listing itself is at species rank.
 
-**4. GBIF returns no match for cross-kingdom homonyms.**
+**5. CARTO's free basemap tiles now arrive watermarked.**
+`providers$CartoDB.Positron` — the usual light basemap for data cartography —
+still returns HTTP 200 and a valid PNG, but CARTO now stamps
+"API KEY REQUIRED" diagonally across every tile served to an unauthenticated
+client. Nothing in the console reports it; the map simply looks wrong. The
+light basemap is now `Esri.WorldGrayCanvas`, which needs no key. Its tiles stop
+at zoom 16, so `maxNativeZoom` is set and Leaflet upscales beyond that rather
+than showing blanks.
+
+**6. Leaflet's heat layer discards intensity unless it is told the zoom.**
+`L.heatLayer` multiplies every intensity by `1 / 2^(maxZoom − currentZoom)`,
+where `maxZoom` defaults to the *map's* maximum — 19 as soon as a street or
+satellite layer is present. At the country view that divides every value by
+about a thousand, so the entire surface falls onto the minimum-opacity floor
+and renders as one flat wash. `addHeatmap()` does not expose the option, so
+`pin_heatmap_zoom()` sets it on the layer prototype.
+
+Two further defaults compound it. The plugin draws each cell at
+`intensity / max` clamped to 1, so raw record counts — which here run from 1 to
+over 13,000 — all saturate identically; counts are therefore mapped onto 0–1
+with a log transform and a fractional power. And the default gradient is a
+rainbow, which has no inherent order; it is now a single hue running light to
+dark.
+
+**7. `tibble()` evaluates its columns in sequence, with earlier ones in scope.**
+```r
+dplyr::tibble(
+  gpkg      = if (file.exists(gpkg)) basename(gpkg)  else NA_character_,
+  gpkg_size = if (file.exists(gpkg)) file.size(gpkg) else NA_real_   # wrong
+)
+```
+By the second line `gpkg` is no longer the path — it is the bare filename the
+first line just produced. `file.exists()` is then false, `file.size()` returns
+`NA`, and every download button on the site loses its size with no warning
+anywhere. Resolve names and sizes *before* building the tibble.
+
+**8. Quarto's `freeze` does not watch the files your document sources.**
+With `freeze: auto`, editing `R/functions.R` — where every map, pop-up and
+palette in this report actually lives — and re-rendering silently republishes
+the previous output, because Quarto only fingerprints the `.qmd` itself. This
+project therefore sets `freeze: false`.
+
+**9. GBIF returns no match for cross-kingdom homonyms.**
 `name_backbone_checklist("Coronella austriaca")` returns `matchType: "NONE"`
 with the note "Multiple equal matches", because the name exists as both a snake
 and a plant homonym; *Liparis loeselii* fails the same way. Supplying the

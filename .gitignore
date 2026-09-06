@@ -39,7 +39,11 @@ pipeline_run.log
 # data/eu_directives_species.csv  — the annex list is a project input
 # data/vernacular_cache.csv       — cache; avoids thousands of API calls on a
 #                                   fresh clone
-# data/kosovo_boundary.gpkg       — small reference polygon
+# data/iucn_cache.csv             — same, for IUCN Red List categories
+# data/dataset_registry.csv       — same, for dataset and publisher titles
+# data/gadm41_XKO.gpkg            — GADM 4.1 source for both layers below
+# data/kosovo_boundary.gpkg       — national outline, GADM level 0
+# data/kosovo_municipalities.gpkg — GADM level 2, used for coverage reporting
 # data/run_metadata.rds           — required to render the report
 # data_exports/                   — published outputs, served by GitHub Pages
 # docs/                           — the rendered website itself

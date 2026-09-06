@@ -57,8 +57,12 @@ config <- list(
   dir_download   = "data/gbif_download",
   dir_exports    = "data_exports",
   path_directives= "data/eu_directives_species.csv",
+  path_gadm      = "data/gadm41_XKO.gpkg",
   path_boundary  = "data/kosovo_boundary.gpkg",
+  path_municipal = "data/kosovo_municipalities.gpkg",
   path_vernacular= "data/vernacular_cache.csv",
+  path_iucn      = "data/iucn_cache.csv",
+  path_datasets  = "data/dataset_registry.csv",
   path_metadata  = "data/run_metadata.rds",
   path_key       = "data/gbif_download/download_key.txt",
 
@@ -77,11 +81,33 @@ config <- list(
   use_capitals_test = FALSE,
   country_buffer    = NULL,   # metres; NULL = strict boundary test
 
-  # --- Vernacular names -----------------------------------------------------
-  # Common names are not part of the GBIF SIMPLE_CSV download and must be
-  # fetched from the species API (~0.3 s per taxon, cached between runs).
-  # Set to Inf to resolve every taxon in the dataset.
+  # --- Enrichment -----------------------------------------------------------
+  # Neither common names nor IUCN Red List categories are part of the GBIF
+  # SIMPLE_CSV download; both are fetched per taxon from the species API and
+  # cached on disk, so only the first run pays for them. Set either to a finite
+  # number to cap the work done in a single run.
   vernacular_max_lookups = Inf,
+  iucn_max_lookups       = Inf,
+
+  # --- Coordinate precision -------------------------------------------------
+  #
+  # The GBIF Viewer discards records whose stated coordinate uncertainty
+  # exceeds a threshold, on the grounds that a record placed to the nearest
+  # 10 km cannot support a site-level decision. That is the right instinct, but
+  # applied here it would silently remove more than half the dataset: 54 per
+  # cent of Kosovo records carry an uncertainty of exactly 7,071 m, the
+  # half-diagonal of a 10 km atlas square, and those records are perfectly good
+  # evidence of presence at landscape scale.
+  #
+  # The pipeline therefore *reports* the precision profile rather than acting
+  # on it, keeps `coordinateUncertaintyInMeters` in every export, and offers
+  # the threshold as an opt-in. Readers filter interactively instead.
+  coord_uncertainty_max = Inf,   # metres; Inf keeps every record
+
+  # Uncertainty classes used in the precision report and the record explorer.
+  precision_breaks = c(0, 100, 1000, 10000, Inf),
+  precision_labels = c("100 m or better", "100 m &ndash; 1 km",
+                       "1 &ndash; 10 km", "coarser than 10 km"),
 
   # --- Export ---------------------------------------------------------------
   # A lean column set keeps the published files small enough to serve from
@@ -90,14 +116,22 @@ config <- list(
     "gbifID", "scientificName", "species", "vernacularName",
     "kingdom", "phylum", "class", "order", "family", "genus",
     "taxonRank", "taxonKey", "speciesKey",
+    "iucnRedListCategory", "iucnRedListStatus",
     "eventDate", "year", "month", "day",
     "decimalLatitude", "decimalLongitude", "coordinateUncertaintyInMeters",
-    "elevation", "locality", "basisOfRecord", "individualCount",
+    "elevation", "locality", "municipality", "district",
+    "basisOfRecord", "individualCount", "establishmentMeans",
     "recordedBy", "identifiedBy",
     "institutionCode", "collectionCode", "catalogNumber",
     "datasetKey", "license", "issue",
     "directive", "annex"
-  )
+  ),
+
+  # Excel is the format most conservation officers actually open, so the GBIF
+  # Viewer offers it alongside CSV. It is written only for the smaller thematic
+  # extracts: an .xlsx of the full 47,000-record table would be slow to build,
+  # slow to open, and close to Excel's practical limits.
+  xlsx_max_records = 12000
 )
 
 dir.create(config$dir_download, recursive = TRUE, showWarnings = FALSE)
@@ -339,8 +373,10 @@ clean_occurrences <- function(x, cfg) {
 
   # The country test needs a reference polygon that actually knows about
   # Kosovo — see `kosovo_boundary()` for why the default reference cannot be
-  # used here. The occurrence data is stamped with the matching code.
-  boundary <- kosovo_boundary(iso3 = cfg$iso3, cache_path = cfg$path_boundary)
+  # used here, and why the reference is GADM level 0 rather than a coarser
+  # outline. The occurrence data is stamped with the matching code.
+  boundary <- kosovo_boundary(iso3 = cfg$iso3, cache_path = cfg$path_boundary,
+                              gadm_path = cfg$path_gadm)
   x$.iso3  <- cfg$iso3
 
   tests <- cfg$cleaning_tests
@@ -404,7 +440,7 @@ print(cleaning$report)
 
 
 # ==============================================================================
-# 5. ENRICHMENT — vernacular names
+# 5. ENRICHMENT — vernacular names, Red List status, administrative unit
 # ==============================================================================
 
 say("Resolving vernacular names ...")
@@ -417,9 +453,70 @@ vernacular <- fetch_vernacular_names(
 say("Vernacular names available for ",
     fmt_int(sum(!is.na(vernacular$vernacularName))), " taxa.")
 
+# --- IUCN Red List ------------------------------------------------------------
+# The EU annexes and the Red List answer different questions — what is legally
+# protected, and what is at risk — so a screening dataset needs both.
+
+say("Resolving IUCN Red List categories ...")
+iucn <- fetch_iucn_categories(
+  species_keys = cleaning$clean$speciesKey,
+  cache_path   = config$path_iucn,
+  max_lookups  = config$iucn_max_lookups
+)
+
+say("Red List assessments available for ",
+    fmt_int(sum(!is.na(iucn$iucnRedListCategory))), " of ",
+    fmt_int(nrow(iucn)), " taxa.")
+
+# --- Administrative unit ------------------------------------------------------
+# Stamping each record with its municipality is what makes coverage reportable
+# per unit, which is the question the GBIF Viewer's area selector is really
+# asked: not "what is here" so much as "where has nobody looked".
+
+municipalities <- kosovo_municipalities(cache_path = config$path_municipal,
+                                        gadm_path  = config$path_gadm)
+say("Municipal boundaries: ", nrow(municipalities), " units in ",
+    dplyr::n_distinct(municipalities$district), " districts.")
+
 occurrences <- cleaning$clean |>
   dplyr::mutate(speciesKey = suppressWarnings(as.integer(.data$speciesKey))) |>
-  dplyr::left_join(vernacular, by = "speciesKey")
+  dplyr::left_join(vernacular, by = "speciesKey") |>
+  dplyr::left_join(iucn, by = "speciesKey") |>
+  assign_municipality(municipalities)
+
+say("Records located within a municipality: ",
+    fmt_int(sum(!is.na(occurrences$municipality))), " / ",
+    fmt_int(nrow(occurrences)), ".")
+
+if (is.finite(config$coord_uncertainty_max)) {
+  before <- nrow(occurrences)
+  occurrences <- dplyr::filter(
+    occurrences,
+    is.na(.data$coordinateUncertaintyInMeters) |
+      .data$coordinateUncertaintyInMeters <= config$coord_uncertainty_max
+  )
+  say("Coordinate-uncertainty filter removed ",
+      fmt_int(before - nrow(occurrences)), " records.")
+}
+
+# The precision profile is reported rather than acted on — see the note in the
+# configuration block for why.
+precision_report <- occurrences |>
+  dplyr::mutate(
+    .band = cut(suppressWarnings(as.numeric(.data$coordinateUncertaintyInMeters)),
+                breaks = config$precision_breaks, right = TRUE,
+                labels = config$precision_labels)
+  ) |>
+  dplyr::count(`Stated coordinate uncertainty` = .data$.band, name = "Records") |>
+  dplyr::mutate(
+    `Stated coordinate uncertainty` = as.character(
+      dplyr::coalesce(as.character(.data$`Stated coordinate uncertainty`),
+                      "not stated")),
+    `Per cent` = round(100 * .data$Records / nrow(occurrences), 1)
+  )
+
+run_meta$precision_report <- precision_report
+print(precision_report)
 
 
 # ==============================================================================
@@ -611,12 +708,20 @@ subsets[["kosovo_habitats_annex_II"]] <- subset_by_directive(
                    .data$annex == "II")
 )
 
+# (6) IUCN-threatened species — Critically Endangered, Endangered, Vulnerable.
+#     Membership follows the global Red List assessment carried by the GBIF
+#     backbone, so this subset is independent of the EU annexes and picks up
+#     species that are at risk without being legally listed.
+subsets[["kosovo_threatened_iucn"]] <- occurrences |>
+  dplyr::filter(.data$iucnRedListCategory %in% iucn_threatened)
+
 subset_labels <- c(
   kosovo_overall_biodiversity = "Overall biodiversity",
   kosovo_birds                = "Birds (class Aves)",
   kosovo_birds_annex_I        = "Birds Directive, Annex I",
   kosovo_habitats_directive   = "Habitats Directive (all annexes)",
-  kosovo_habitats_annex_II    = "Habitats Directive, Annex II"
+  kosovo_habitats_annex_II    = "Habitats Directive, Annex II",
+  kosovo_threatened_iucn      = "IUCN threatened species (CR, EN, VU)"
 )
 
 for (nm in names(subsets)) {
@@ -627,13 +732,14 @@ for (nm in names(subsets)) {
 
 
 # ==============================================================================
-# 7. EXPORT — GeoPackage and CSV
+# 7. EXPORT — GeoPackage, CSV and Excel
 # ==============================================================================
 
 #' Convert an occurrence table to an sf object and export it
 #'
-#' Writes both a GeoPackage (geometry preserved) and a CSV (flat table, with
-#' coordinate columns retained), restricted to the configured column set.
+#' Writes a GeoPackage (geometry preserved), a CSV (flat table, with coordinate
+#' columns retained) and — for the smaller extracts — an Excel workbook,
+#' restricted to the configured column set.
 #'
 #' @param d Occurrence data frame.
 #' @param name File stem, without extension.
@@ -646,10 +752,17 @@ export_subset <- function(d, name, cfg) {
 
   gpkg <- file.path(cfg$dir_exports, paste0(name, ".gpkg"))
   csv  <- file.path(cfg$dir_exports, paste0(name, ".csv"))
+  xlsx <- file.path(cfg$dir_exports, paste0(name, ".xlsx"))
 
   # CSV first: a flat table is what most analysts open, and it keeps the
   # coordinates as ordinary columns.
   readr::write_csv(d, csv, na = "")
+
+  if (file.exists(xlsx)) unlink(xlsx)
+  if (nrow(d) > 0 && nrow(d) <= cfg$xlsx_max_records &&
+      requireNamespace("writexl", quietly = TRUE)) {
+    writexl::write_xlsx(as.data.frame(d), xlsx)
+  }
 
   if (nrow(d) == 0) {
     # An empty GeoPackage cannot be written from a zero-row sf object, so
@@ -683,18 +796,33 @@ for (nm in names(subsets)) {
 # A machine-readable manifest of what was published, used by the report to
 # build the download table with accurate file sizes.
 manifest <- dplyr::bind_rows(lapply(names(subsets), function(nm) {
-  gpkg <- file.path(config$dir_exports, paste0(nm, ".gpkg"))
-  csv  <- file.path(config$dir_exports, paste0(nm, ".csv"))
-  spp  <- subsets[[nm]]$species
+
+  spp <- subsets[[nm]]$species
+
+  # Names and sizes are resolved BEFORE the tibble is built. `tibble()`
+  # evaluates its arguments in sequence with the earlier columns in scope, so
+  # writing `gpkg = basename(gpkg)` and then `gpkg_size = file.size(gpkg)`
+  # silently measures the bare filename rather than the path — the file is not
+  # found, `file.size()` returns NA, and every download button loses its size.
+  described <- function(ext) {
+    path <- file.path(config$dir_exports, paste0(nm, ".", ext))
+    if (file.exists(path)) {
+      list(name = basename(path), size = as.numeric(file.size(path)))
+    } else {
+      list(name = NA_character_, size = NA_real_)
+    }
+  }
+
+  g <- described("gpkg"); c_ <- described("csv"); x <- described("xlsx")
+
   dplyr::tibble(
     name      = nm,
     label     = unname(subset_labels[[nm]]),
     records   = nrow(subsets[[nm]]),
     species   = dplyr::n_distinct(spp[!is.na(spp) & nzchar(spp)]),
-    gpkg      = if (file.exists(gpkg)) basename(gpkg)  else NA_character_,
-    gpkg_size = if (file.exists(gpkg)) file.size(gpkg) else NA_real_,
-    csv       = if (file.exists(csv))  basename(csv)   else NA_character_,
-    csv_size  = if (file.exists(csv))  file.size(csv)  else NA_real_
+    gpkg      = g$name,  gpkg_size = g$size,
+    csv       = c_$name, csv_size  = c_$size,
+    xlsx      = x$name,  xlsx_size = x$size
   )
 }))
 
@@ -713,6 +841,48 @@ run_meta$subset_labels <- subset_labels
 run_meta$n_species     <- dplyr::n_distinct(
   occurrences$species[!is.na(occurrences$species)]
 )
+
+# --- Attribution --------------------------------------------------------------
+# Every contributing dataset and publishing institution, resolved to a title
+# so the report can credit them by name rather than by UUID.
+
+say("Building the dataset attribution table ...")
+dataset_registry <- fetch_dataset_registry(
+  dataset_keys = occurrences$datasetKey,
+  cache_path   = config$path_datasets
+)
+
+run_meta$datasets <- occurrences |>
+  dplyr::count(datasetKey = .data$datasetKey, name = "records") |>
+  dplyr::left_join(
+    occurrences |>
+      dplyr::group_by(datasetKey = .data$datasetKey) |>
+      dplyr::summarise(
+        species = dplyr::n_distinct(.data$species[!is.na(.data$species) &
+                                                    nzchar(.data$species)]),
+        .groups = "drop"),
+    by = "datasetKey"
+  ) |>
+  dplyr::left_join(dataset_registry, by = "datasetKey") |>
+  dplyr::arrange(dplyr::desc(.data$records))
+
+say("  ", nrow(run_meta$datasets), " datasets from ",
+    dplyr::n_distinct(run_meta$datasets$publisher), " publishers.")
+
+# --- Coverage by municipality -------------------------------------------------
+
+run_meta$municipal_summary <- sf::st_drop_geometry(
+  summarise_by_municipality(occurrences, municipalities)
+)
+
+# --- Red List profile ---------------------------------------------------------
+
+run_meta$iucn_summary <- occurrences |>
+  dplyr::filter(!is.na(.data$species), nzchar(.data$species)) |>
+  dplyr::distinct(.data$species, .keep_all = TRUE) |>
+  dplyr::count(category = iucn_group(.data$iucnRedListCategory),
+               name = "species") |>
+  dplyr::arrange(match(as.character(.data$category), iucn_levels))
 
 saveRDS(run_meta, config$path_metadata)
 

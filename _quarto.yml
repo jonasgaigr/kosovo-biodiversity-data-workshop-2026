@@ -63,6 +63,11 @@ execute:
   echo: false
   warning: false
   message: false
-  freeze: auto
+  # NOT `freeze: auto`. Quarto's freeze only watches the .qmd itself, but most
+  # of what this report does — every map, every popup, every palette — lives in
+  # R/functions.R. With freeze on, editing that file and re-rendering silently
+  # republishes the previous output. `_freeze/` is git-ignored and there is no
+  # CI render, so freezing bought nothing here but that trap.
+  freeze: false
 
 lang: en-GB
