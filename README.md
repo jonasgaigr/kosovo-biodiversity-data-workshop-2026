@@ -44,7 +44,59 @@ site, so each idea is re-implemented to run in the reader's browser:
 | Dataset and publisher listing | Resolved from the GBIF registry and published as a credited table |
 | Coordinate-uncertainty threshold | Reported as a precision profile and offered as a filter, rather than silently discarding half the data — see the report for why |
 | CSV / XLSX export | Both, plus GeoPackage, for every subset |
-| Colour by kingdom | Kept, with a validated colour-blind-safe palette and a legend |
+| Colour by kingdom | Kept, in GBIF's own brand colours, with a legend and a palette measured for colour-blind separation rather than eyeballed |
+
+---
+
+## Following GBIF's cartography
+
+The report is styled to sit inside the GBIF family rather than beside it. Every
+colour is GBIF's own, taken from one of two places — no values were eyeballed:
+
+| Where it is used | Source |
+|---|---|
+| Site theme, kingdom colours, map furniture | GBIF's published brand steps, `gbif/portal16`, `app/views/shared/style/_variables.styl` |
+| Record-density classes and the heat surface | Sampled from the tiles GBIF's own occurrence map serves (`api.gbif.org/v2/map/…&style=classic.poly`) |
+| Basemaps | `tile.gbif.org`, styles `gbif-light`, `gbif-natural`, `gbif-classic` |
+
+The GBIF brand steps are green `#509E2F`, black `#231F20`, azure `#175CA1`,
+aqua `#40BFFF`, purple `#636FB4`, plum `#7E466A`, terracotta `#D66F27`, orange
+peel `#FDB002` and mist `#E8E8E8` — and mist is exactly the land colour of the
+`gbif-light` basemap, which is a good sign the two sources agree.
+
+Three things had to be measured rather than assumed.
+
+**The obvious reading of the brand is unreadable for one reader in twelve.**
+Green for plants and terracotta for fungi is the natural mapping, and it fails:
+GBIF green and GBIF terracotta collapse to a **dE of 4.0** under deuteranopia
+(OKLab ×100, Machado-Oliveira-Fernandes 2009 at severity 1.0), tested over
+*all* pairs rather than adjacent ones, because on a map any two marks can end
+up touching. Orange peel — GBIF's other warm step — clears the same test at
+12.0, and the trio plus the neutral holds 11.5. Fungi are therefore gold, not
+terracotta.
+
+**GBIF's density ramp is built for a dark ground.** The five steps of
+`classic.poly` run `#FFFF00 → #FFCB00 → #FF9800 → #FF6600 → #D50A00`, and their
+lightness falls at every step, which is what makes the ramp read as an ordered
+scale. But the palest class carries **11.8:1** against GBIF's dark basemap and
+**1.1:1** against the pale one. The report keeps a light default, because it is
+a document meant to print, and gives every density cell a dark hairline so the
+sparse classes stay defined; `gbif-classic` is one click away in the layer
+control for anyone who wants the ramp at full strength.
+
+**GBIF green cannot carry small text.** It is 3.35:1 on white — fine for the
+rules, borders and key figures, short of the 4.5:1 that body-sized text needs.
+The theme therefore splits it: `$primary` is the brand green, and
+`$primary-ink` (`#358305`) is the same hue stepped down in OKLCH lightness
+until it clears the threshold at 4.77:1. Links and small headings wear the ink;
+everything else wears the brand.
+
+`run_test.R` covers the parts of this that can regress silently — that the base
+layers are alternatives rather than a stack, that none needs an API key, and
+that the GBIF tiles keep `tileSize = 512` with `zoomOffset = -1`.
+
+IUCN Red List categories keep IUCN's own severity scheme. They are a different
+organisation's standard, and GBIF renders them in IUCN's colours too.
 
 ---
 
@@ -59,6 +111,7 @@ kosovo-biodiversity-data-workshop-2026/
 ├── custom.scss                # Report theme
 ├── index.qmd                  # The report
 ├── pipeline.R                 # Acquisition → cleaning → matching → export
+├── run_test.R                 # Offline smoke test for R/functions.R
 ├── README.md
 ├── LICENSE
 │
@@ -162,6 +215,17 @@ install.packages(c(
 ```
 
 Quarto itself is a separate command-line tool: <https://quarto.org/docs/download/>.
+
+### Check the install
+
+```bash
+Rscript run_test.R
+```
+
+A smoke test over the helpers in `R/functions.R` — the code that turns cleaned
+records into the maps, tables and pop-ups. It needs no GBIF credentials, makes
+no network calls and writes nothing into the project, so it is safe to run on a
+fresh clone before the pipeline has ever been executed.
 
 ---
 
@@ -335,14 +399,25 @@ I subset for subspecies confined to the Azores and the Canaries.
 `directive_lookup()` in `pipeline.R` therefore matches on the species key only
 where the listing itself is at species rank.
 
-**5. CARTO's free basemap tiles now arrive watermarked.**
+**5. Basemap tiles: CARTO watermarks, and GBIF serves 512-pixel tiles.**
 `providers$CartoDB.Positron` — the usual light basemap for data cartography —
 still returns HTTP 200 and a valid PNG, but CARTO now stamps
 "API KEY REQUIRED" diagonally across every tile served to an unauthenticated
-client. Nothing in the console reports it; the map simply looks wrong. The
-light basemap is now `Esri.WorldGrayCanvas`, which needs no key. Its tiles stop
-at zoom 16, so `maxNativeZoom` is set and Leaflet upscales beyond that rather
-than showing blanks.
+client. Nothing in the console reports it; the map simply looks wrong. It was
+replaced by `Esri.WorldGrayCanvas`, and the basemaps are now GBIF's own, from
+`tile.gbif.org` — the same ground the occurrence map on gbif.org draws on, and
+no key required. See [Following GBIF's cartography](#following-gbifs-cartography).
+
+GBIF serves **512-pixel** tiles on the OpenMapTiles scheme (the `omt` in the
+path), so they are added with `tileSize = 512` and `zoomOffset = -1`. The x/y
+indexing is standard, so leaving Leaflet's 256-pixel default still places every
+tile correctly — it just draws each label and road at half its designed size,
+which reads as a rendering fault rather than as a configuration one.
+
+`gbif-light` is deliberately sparse: coastlines, borders and rivers, and no
+roads or labels at *any* zoom. That is what makes it a good ground for data,
+but it means zooming in adds no context, so `gbif-natural` is offered alongside
+it for readers who need to place a record against a road or a town.
 
 **6. Leaflet's heat layer discards intensity unless it is told the zoom.**
 `L.heatLayer` multiplies every intensity by `1 / 2^(maxZoom − currentZoom)`,

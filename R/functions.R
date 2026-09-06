@@ -746,42 +746,60 @@ summarise_subset <- function(x, label) {
 # Cartographic palette
 # ------------------------------------------------------------------------------
 #
-# Colour here does one of three jobs and each job gets one structure:
+# Colour here does one of three jobs and each job gets one structure. Every
+# value is GBIF's own: the brand steps come from GBIF's published style
+# variables (gbif/portal16, app/views/shared/style/_variables.styl) and the
+# density ramp is sampled from the tiles the GBIF occurrence map itself serves
+# (style `classic.poly`), so this report reads as part of the GBIF family
+# rather than as an approximation of it.
 #
-#   * identity  (which kingdom a record belongs to) -> categorical hues,
+#   * identity  (which kingdom a record belongs to) -> GBIF brand hues,
 #     assigned in a fixed order and capped at three, because on a map any two
 #     marks can end up side by side and three is the number that stays
 #     separable under red-green colour blindness at that harder test;
-#   * magnitude (how many records fall in a place) -> ONE hue, light to dark.
-#     The rainbow that heat maps default to is not a magnitude scale: it has no
-#     inherent order, and it spends most of its range on hues the eye reads as
-#     equally "high";
+#   * magnitude (how many records fall in a place) -> GBIF's own density ramp,
+#     light to dark. It runs yellow to red rather than through a single hue,
+#     but its lightness falls at every step, which is the property that makes a
+#     ramp read as an ordered scale. The rainbow that heat maps default to has
+#     no such order, which is why it is not used here;
 #   * conservation state (IUCN Red List) -> a reserved severity scale, never
-#     shown without its label.
+#     shown without its label. Those are IUCN's categories rather than GBIF's,
+#     so they keep their own scheme.
 #
-# Every value below is taken from a validated palette; the categorical trio and
-# the density ramp were checked for colour-blind separation and for contrast
-# against the light grey basemap rather than picked by eye.
+# The kingdom trio was measured, not picked by eye: OKLab dE under
+# Machado-Oliveira-Fernandes protanopia and deuteranopia at severity 1.0, over
+# ALL pairs -- the test a map needs, where any two marks can touch, rather than
+# the adjacent-pair test a bar chart needs. The obvious reading of the brand,
+# green for plants and terracotta for fungi, fails it: GBIF green and GBIF
+# terracotta collapse to dE 4.0 under deuteranopia. Orange peel, GBIF's other
+# warm step, clears it at 12.0, and the trio plus the neutral holds dE 11.5.
+#
+# Orange peel is the one compromise, and it is a deliberate one. It is light
+# (OKLCH L 0.81), so it carries about 1.5:1 against the pale basemap where the
+# other two carry 2.7:1 and 5.6:1. Fungi are much the smallest of the three
+# kingdoms in these data; every map that uses these colours ships a legend, and
+# every record a popup naming its kingdom, so identity never rests on the fill
+# alone. On GBIF's own dark basemap -- one click away in the layer control --
+# it is the strongest of the three at 6.9:1.
 
 map_palette <- list(
 
-  # Categorical -- identity. Fixed order: blue, orange, aqua.
+  # Categorical -- identity. GBIF brand steps, in a fixed order.
   kingdom = c(
-    Animalia = "#2a78d6",
-    Plantae  = "#eb6834",
-    Fungi    = "#1baf7a",
-    Other    = "#898781"
+    Animalia = "#175CA1",  # GBIF azure
+    Plantae  = "#509E2F",  # GBIF green
+    Fungi    = "#FDB002",  # GBIF orange peel
+    Other    = "#767C7A"   # neutral: a residual class, doing no hue work
   ),
 
-  # Sequential -- magnitude. One hue, light to dark, five classes. The light
-  # end still holds 2:1 contrast against the grey basemap, so the sparsest
-  # class is visible rather than lost in the surface.
-  density = c("#6da7ec", "#3987e5", "#256abf", "#184f95", "#0d366b"),
+  # Sequential -- magnitude. The five steps GBIF's `classic.poly` occurrence
+  # map serves, sampled from the tiles themselves, and exactly the five classes
+  # `density_breaks` cuts. Lightness falls monotonically, 0.97 down to 0.55.
+  density = c("#FFFF00", "#FFCB00", "#FF9800", "#FF6600", "#D50A00"),
 
-  # Sequential -- magnitude, continuous. Same hue, extended one step lighter at
-  # the bottom: the heat surface also fades its alpha there, so near-zero is
-  # meant to recede into the map.
-  heat = c("#cde2fb", "#9ec5f4", "#6da7ec", "#3987e5", "#256abf", "#0d366b"),
+  # Sequential -- magnitude, continuous. The same five steps, so that the
+  # classed grid and the heat surface cannot drift apart.
+  heat = c("#FFFF00", "#FFCB00", "#FF9800", "#FF6600", "#D50A00"),
 
   # Status -- reserved severity steps, always paired with the category label.
   # Extinct and Extinct in the Wild sit off the severity scale rather than at
@@ -798,8 +816,8 @@ map_palette <- list(
     NE = "#b9b7b0"   # Not Evaluated
   ),
 
-  boundary     = "#21282d",
-  municipality = "#4d7c8a"
+  boundary     = "#231F20",  # GBIF black
+  municipality = "#6E7B7A"
 )
 
 # Order used wherever IUCN categories are listed, most severe first.
@@ -987,44 +1005,65 @@ occurrence_density_grid <- function(d, cell_km = 2) {
 
 #' Add the standard base layers
 #'
-#' None of these providers requires an API key.
+#' These are GBIF's own basemaps, served from `tile.gbif.org`, so a map in this
+#' report sits on the same ground as the same map on gbif.org. None requires an
+#' API key.
 #'
-#' CARTO's Positron tiles, used here previously, no longer qualify: CARTO now
-#' stamps "API KEY REQUIRED" across every tile served to an unauthenticated
-#' client, so the light basemap arrived watermarked. Esri's World Light Gray
-#' Canvas is the closest key-free equivalent -- a pale, low-chroma ground that
-#' lets data colour carry the meaning. Its tiles stop at zoom 16, so
-#' `maxNativeZoom` is set and Leaflet upscales beyond that rather than showing
-#' blank tiles.
+#' Two earlier choices are recorded here because both failed silently rather
+#' than raising anything. CARTO's Positron tiles now arrive stamped "API KEY
+#' REQUIRED" for an unauthenticated client -- HTTP 200, a valid PNG, a ruined
+#' map. Esri's World Light Gray Canvas replaced them and is key-free, but it is
+#' Esri's cartography, not GBIF's.
+#'
+#' `gbif-light` is the default: GBIF's minimal grey ground, whose land colour is
+#' the brand's own "mist" (#E8E8E8). It is deliberately sparse -- coastlines,
+#' borders and rivers, no roads and no labels at any zoom -- which is what makes
+#' it a good ground for data. `gbif-natural` is the labelled, detailed style for
+#' when a reader needs to place a record against a road or a town, and
+#' `gbif-classic` is GBIF's signature dark ground, on which the yellow-to-red
+#' density ramp is at its strongest (11.8:1 for the palest class against 1.1:1
+#' on the pale ground). Satellite imagery stays with Esri, because GBIF serves
+#' no imagery layer.
+#'
+#' TILE SIZE IS LOAD-BEARING. GBIF serves 512-pixel tiles on the OpenMapTiles
+#' scheme -- the `omt` in the path -- so they are drawn at `tileSize = 512` with
+#' `zoomOffset = -1`. Leaving Leaflet's 256-pixel default would still place the
+#' tiles correctly, because the x/y indexing is standard, but every label and
+#' road width would render at half its designed size.
 #'
 #' @param m A leaflet map.
 #' @return The map, with four base groups added.
 add_basemaps <- function(m) {
+
+  gbif_tiles <- function(m, style, group, max_zoom = 19) {
+    leaflet::addTiles(
+      m,
+      urlTemplate = sprintf(
+        "https://tile.gbif.org/3857/omt/{z}/{x}/{y}@1x.png?style=%s", style),
+      group       = group,
+      attribution = paste(
+        'Basemap <a href="https://www.gbif.org">GBIF</a> |',
+        '&copy; <a href="https://www.openmaptiles.org/">OpenMapTiles</a>',
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        'contributors'),
+      options = leaflet::tileOptions(
+        tileSize = 512, zoomOffset = -1, maxZoom = max_zoom)
+    )
+  }
+
   m |>
-    leaflet::addProviderTiles(
-      leaflet::providers$Esri.WorldGrayCanvas,
-      group   = "Light basemap",
-      options = leaflet::providerTileOptions(maxNativeZoom = 16, maxZoom = 19)
-    ) |>
-    leaflet::addProviderTiles(
-      leaflet::providers$OpenStreetMap.Mapnik,
-      group   = "Street map",
-      options = leaflet::providerTileOptions(maxZoom = 19)
-    ) |>
+    gbif_tiles("gbif-light",   "GBIF light basemap") |>
+    gbif_tiles("gbif-natural", "GBIF detailed basemap") |>
+    gbif_tiles("gbif-classic", "GBIF dark basemap") |>
     leaflet::addProviderTiles(
       leaflet::providers$Esri.WorldImagery,
       group   = "Satellite imagery",
       options = leaflet::providerTileOptions(maxNativeZoom = 18, maxZoom = 19)
-    ) |>
-    leaflet::addProviderTiles(
-      leaflet::providers$OpenTopoMap,
-      group   = "Topographic",
-      options = leaflet::providerTileOptions(maxNativeZoom = 17, maxZoom = 19)
     )
 }
 
-basemap_groups <- c("Light basemap", "Street map", "Satellite imagery",
-                    "Topographic")
+basemap_groups <- c("GBIF light basemap", "GBIF detailed basemap",
+                    "GBIF dark basemap", "Satellite imagery")
 
 #' Draw the national outline, on a pane of its own above the fills
 #'
@@ -1130,8 +1169,8 @@ add_map_tools <- function(m, draw = TRUE) {
       primaryLengthUnit   = "kilometers",
       secondaryLengthUnit = "meters",
       primaryAreaUnit     = "hectares",
-      activeColor         = "#14556b",
-      completedColor      = "#14556b"
+      activeColor         = "#509E2F",
+      completedColor      = "#509E2F"
     ) |>
     leaflet.extras::addFullscreenControl(position = "topleft") |>
     leaflet.extras::addResetMapButton() |>
@@ -1503,7 +1542,7 @@ build_occurrence_map <- function(x,
         data = grid,
         lng1 = ~lng1, lat1 = ~lat1, lng2 = ~lng2, lat2 = ~lat2,
         fillColor = ~grid_pal(class), fillOpacity = 0.78,
-        color = "#ffffff", weight = 0.4, opacity = 0.55,
+        color = "#231F20", weight = 0.4, opacity = 0.35,
         label = ~lapply(sprintf(
           "<strong>%s records</strong><br>%s species<br><em>%s km cell</em>",
           fmt_int(records), fmt_int(species), format(cell_km)),
@@ -1641,14 +1680,14 @@ build_municipal_map <- function(x, value = "records_per_km2",
   if (length(brks) < 3) brks <- unique(raw)
 
   pal <- leaflet::colorBin(map_palette$density, domain = v, bins = brks,
-                           na.color = "#e1e0d9")
+                           na.color = "#E8E8E8")
 
   m <- leaflet::leaflet(options = leaflet::leafletOptions(minZoom = 6)) |>
     add_basemaps() |>
     leaflet::addPolygons(
       data = x,
       fillColor = ~pal(x[[value]]), fillOpacity = 0.8,
-      color = "#ffffff", weight = 1, opacity = 0.9,
+      color = "#231F20", weight = 0.7, opacity = 0.45,
       smoothFactor = 0,
       label = ~lapply(sprintf(
         paste0("<strong>%s</strong><br>%s records &middot; %s species<br>",

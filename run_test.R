@@ -218,12 +218,20 @@ check("the heat-layer zoom shim is attached to every map",
                   fixed = TRUE))
       })
 
+# The base layers are now GBIF's own tiles, added with `addTiles` and a URL
+# template, rather than named providers from leaflet's registry. Asserting on
+# the layers control instead of on the method name keeps the check about what
+# actually matters -- that every base layer is an alternative in one control,
+# not a stack -- and keeps it honest if the transport changes again.
 check("all four base layers are offered as alternatives, not stacked",
       {
         w <- build_occurrence_map(occ)
         calls <- vapply(w$x$calls, function(c) c$method, character(1))
-        sum(calls == "addProviderTiles") == length(basemap_groups) &&
-          sum(calls == "addLayersControl") == 1
+        tiles <- sum(calls %in% c("addTiles", "addProviderTiles"))
+        ctrl  <- w$x$calls[[which(calls == "addLayersControl")[1]]]
+        tiles == length(basemap_groups) &&
+          sum(calls == "addLayersControl") == 1 &&
+          identical(as.character(ctrl$args[[1]]), basemap_groups)
       })
 
 check("no base layer requires an API key",
@@ -232,8 +240,26 @@ check("no base layer requires an API key",
         providers <- unlist(lapply(w$x$calls, function(c) {
           if (identical(c$method, "addProviderTiles")) c$args[[1]] else NULL
         }))
+        urls <- unlist(lapply(w$x$calls, function(c) {
+          if (identical(c$method, "addTiles")) c$args[[1]] else NULL
+        }))
         !any(grepl("^(CartoDB|Stadia|Jawg|Thunderforest|MapBox|HERE|TomTom)",
-                   providers))
+                   providers)) &&
+          !any(grepl("key=|apikey|access_token|api_key", urls,
+                     ignore.case = TRUE))
+      })
+
+check("the GBIF basemaps are drawn at the tile size they are served in",
+      {
+        w <- build_occurrence_map(occ)
+        gbif <- Filter(function(c) identical(c$method, "addTiles") &&
+                         grepl("tile.gbif.org", c$args[[1]], fixed = TRUE),
+                       w$x$calls)
+        length(gbif) == 3 &&
+          all(vapply(gbif, function(c) {
+            o <- c$args[[4]]
+            isTRUE(o$tileSize == 512) && isTRUE(o$zoomOffset == -1)
+          }, logical(1)))
       })
 
 # A minimal municipal layer: two squares with contrasting coverage.

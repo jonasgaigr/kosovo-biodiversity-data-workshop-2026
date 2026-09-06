@@ -19,7 +19,11 @@ website:
   back-to-top-navigation: true
 
   navbar:
-    background: primary
+    # GBIF green (#509E2F) is the brand step, but white on it is 3.35:1 — short
+    # of the 4.5:1 the navbar's own links need. This is `$primary-ink` from
+    # custom.scss: the same hue stepped down in OKLCH lightness until white
+    # clears the threshold at 4.77:1.
+    background: "#358305"
     search: true
     left:
       - href: index.qmd

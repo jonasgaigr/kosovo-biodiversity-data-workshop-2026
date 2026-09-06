@@ -17,6 +17,9 @@
 # ------------------------------------------------------------------------------
 /.quarto/
 /_freeze/
+# `quarto render` also renders README.md, landing an HTML copy in the project
+# root that is no part of the site. The site itself is built into docs/.
+/README.html
 **/*.quarto_ipynb
 pipeline_run.log
 
