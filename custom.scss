@@ -1,13 +1,29 @@
 /*-- scss:defaults --*/
 
-// A restrained, institutional palette. Deep teal reads as authoritative in
-// print and on screen, and keeps sufficient contrast against white for the
-// accessibility standards expected of government publications.
-$primary:   #14556b !default;
-$secondary: #4d7c8a !default;
-$success:   #2e7d54 !default;
-$body-color: #21282d !default;
-$link-color: #14556b !default;
+// GBIF's own palette, so the report reads as part of the GBIF family. The
+// brand steps are taken from GBIF's published style variables
+// (gbif/portal16, app/views/shared/style/_variables.styl):
+//
+//   green #509E2F   black #231F20   azure #175CA1   aqua  #40BFFF
+//   purple #636FB4  plum  #7E466A   terracotta #D66F27  mist #E8E8E8
+//
+// GBIF green carries only 3.35:1 against white. That clears the 3:1 asked of
+// large text and of interface furniture -- rules, borders, the key figures --
+// but not the 4.5:1 that body-sized text needs, so it is never used for small
+// text. `$primary-ink` is the same hue stepped down in OKLCH lightness until
+// it clears 4.5:1 (4.77:1), and that is what links and small headings wear.
+// Splitting the two is what keeps the brand colour on the page without
+// putting unreadable text on it.
+$gbif-green:  #509E2F;
+$gbif-black:  #231F20;
+$gbif-azure:  #175CA1;
+
+$primary:     $gbif-green !default;
+$primary-ink: #358305 !default;   // GBIF green, darkened to 4.77:1 on white
+$secondary:   $gbif-azure !default;
+$success:     $gbif-green !default;
+$body-color:  $gbif-black !default;   // 16.3:1 on white
+$link-color:  $primary-ink !default;
 
 $font-family-sans-serif: "Source Sans Pro", -apple-system, BlinkMacSystemFont,
   "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !default;
@@ -23,7 +39,7 @@ body {
 }
 
 h2 {
-  border-bottom: 2px solid rgba(20, 85, 107, 0.15);
+  border-bottom: 2px solid rgba(80, 158, 47, 0.25);
   padding-bottom: 0.3rem;
   margin-top: 2.4rem;
 }
@@ -38,11 +54,11 @@ h2 {
 }
 
 .keyfigure {
-  border: 1px solid #dde3e7;
+  border: 1px solid #dbe3e7;
   border-left: 4px solid $primary;
   border-radius: 5px;
   padding: 0.85rem 1rem;
-  background: #fbfcfd;
+  background: #fdfdfe;
 }
 
 .keyfigure .value {
@@ -55,7 +71,7 @@ h2 {
 
 .keyfigure .label {
   font-size: 0.82rem;
-  color: #5d6b73;
+  color: #4e565f;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -70,7 +86,7 @@ h2 {
 }
 
 .download-card {
-  border: 1px solid #dde3e7;
+  border: 1px solid #dbe3e7;
   border-radius: 6px;
   padding: 0.9rem 1rem;
   background: #fff;
@@ -79,12 +95,12 @@ h2 {
 .download-card h4 {
   font-size: 0.98rem;
   margin: 0 0 0.15rem;
-  color: $primary;
+  color: $primary-ink;
 }
 
 .download-card .meta {
   font-size: 0.8rem;
-  color: #6b7880;
+  color: #666666;
   margin-bottom: 0.7rem;
 }
 
@@ -98,7 +114,7 @@ h2 {
 /* --- Notes and citation -------------------------------------------------- */
 
 .citation-box {
-  background: #f2f6f8;
+  background: #f7f9fa;
   border-left: 4px solid $secondary;
   padding: 0.9rem 1.1rem;
   border-radius: 4px;
@@ -115,7 +131,7 @@ h2 {
 
 /* Leaflet maps need a little breathing room from the surrounding text. */
 .leaflet-container {
-  border: 1px solid #dde3e7;
+  border: 1px solid #dbe3e7;
   border-radius: 5px;
   margin-bottom: 0.6rem;
 }
@@ -154,12 +170,12 @@ h2 {
   font-style: italic;
   font-weight: 600;
   font-size: 14px;
-  color: $primary;
+  color: $primary-ink;
 }
 
 .occ-popup b {
   font-weight: 400;
-  color: #555;
+  color: #4e565f;
   margin-bottom: 0.35rem;
 }
 
@@ -170,7 +186,7 @@ h2 {
 }
 
 .occ-popup span::before {
-  color: #8a959c;
+  color: #666666;
   font-size: 0.82em;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -187,7 +203,7 @@ h2 {
 .occ-popup em {
   margin-top: 0.45rem;
   padding-top: 0.35rem;
-  border-top: 1px solid #e6ebee;
+  border-top: 1px solid #dbe3e7;
   font-style: normal;
 }
 
@@ -206,13 +222,24 @@ h2 {
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 11px;
-  color: #333;
+  color: #231F20;
   max-width: 320px;
 }
 
-.leaflet-control .info.legend {
+/* Leaflet puts `info legend` and `leaflet-control` on the SAME element, so a
+   descendant selector (`.leaflet-control .info.legend`) never matches and the
+   rule below was silently doing nothing. */
+.info.legend {
   font-size: 11px;
   line-height: 1.35;
+}
+
+/* GBIF's density ramp starts at pure yellow, which on the legend's white
+   ground is about 1.1:1 — a swatch the reader cannot actually see. A hairline
+   ring gives every swatch an edge without changing the box size the way a
+   border would, and it is the same move the density cells make on the map. */
+.info.legend i {
+  box-shadow: 0 0 0 1px rgba(35, 31, 32, 0.35);
 }
 
 /* --- Linked record explorer -----------------------------------------------
@@ -240,10 +267,10 @@ h2 {
 }
 
 .explorer-filters {
-  border: 1px solid #dde3e7;
+  border: 1px solid #dbe3e7;
   border-radius: 6px;
   padding: 0.9rem 1rem 0.4rem;
-  background: #fbfcfd;
+  background: #fdfdfe;
 }
 
 .explorer-filters .form-group {
@@ -256,20 +283,20 @@ h2 {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #5d6b73;
+  color: #4e565f;
   margin-bottom: 0.15rem;
 }
 
 .explorer-note {
   font-size: 0.82rem;
-  color: #6b7880;
+  color: #666666;
   margin: 0.4rem 0 1.2rem;
 }
 
 /* Crosstalk's select widget inherits almost nothing from the site theme. */
 .explorer-filters .selectize-input {
   font-size: 0.85rem;
-  border-color: #cfd8dd;
+  border-color: #dbe3e7;
 }
 
 /* --- Inline status swatches ----------------------------------------------- */

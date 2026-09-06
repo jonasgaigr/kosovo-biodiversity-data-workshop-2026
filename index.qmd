@@ -218,7 +218,7 @@ report_table(
   summary_tbl,
   caption = htmltools::tags$caption(
     style = "caption-side: bottom; text-align: left; padding-top: 8px;
-             font-size: 0.85rem; color: #6b7880;",
+             font-size: 0.85rem; color: #666666;",
     "Table 1. Cleaned GBIF occurrence records for Kosovo, by thematic subset. ",
     "‘Source datasets’ counts the distinct GBIF datasets contributing records."
   ),
@@ -249,7 +249,7 @@ report_table(
   meta$cleaning_report |> rename(`Records flagged` = Flagged),
   caption = htmltools::tags$caption(
     style = "caption-side: bottom; text-align: left; padding-top: 8px;
-             font-size: 0.85rem; color: #6b7880;",
+             font-size: 0.85rem; color: #666666;",
     sprintf(paste0("Table 2. Outcome of the coordinate screening. %s of %s ",
                    "records (%.1f%%) passed every test and form the basis of ",
                    "this report. A record may be flagged by more than one test."),
@@ -311,7 +311,7 @@ report_table(
   meta$precision_report,
   caption = htmltools::tags$caption(
     style = "caption-side: bottom; text-align: left; padding-top: 8px;
-             font-size: 0.85rem; color: #6b7880;",
+             font-size: 0.85rem; color: #666666;",
     "Table 3. Stated coordinate uncertainty of the cleaned records. ",
     "‘Not stated’ means the publisher supplied no uncertainty value; it is ",
     "not a claim of precision either way."
@@ -439,14 +439,16 @@ identically. Two further defaults compounded it: a minimum-opacity floor that
 lifted empty-ish areas up to the same value as real clusters, and an internal
 zoom scaling that divides every intensity by `2^(maxZoom - currentZoom)` —
 about a thousandfold at the country view — pushing the whole surface onto that
-floor. The result was a uniform blue wash.
+floor. The result was a single flat wash.
 
 The layer now: aggregates onto the 110 m grid; maps the counts onto 0–1 with a
 logarithmic transform followed by a power below one, which spreads the crowded
 bottom of the distribution across usable values; pins the zoom reference so the
-surface means the same thing at every scale; and uses a single-hue ramp running
-light to dark, so that "more" reads as "darker" rather than as "a different
-colour".
+surface means the same thing at every scale; and uses GBIF's own density ramp,
+the one the occurrence map on gbif.org draws with. It runs yellow to red rather
+than through a single hue, but it darkens at every step, so "more" still reads
+as "darker" rather than as "a different colour" — which is the property a
+rainbow lacks and the reason one is not used here.
 
 The **Record density** grid is the same information without the smoothing:
 2 km cells, classed on roughly logarithmic breaks, with a legend and the exact
@@ -506,7 +508,7 @@ report_table(
   municipal_tbl,
   caption = htmltools::tags$caption(
     style = "caption-side: bottom; text-align: left; padding-top: 8px;
-             font-size: 0.85rem; color: #6b7880;",
+             font-size: 0.85rem; color: #666666;",
     sprintf(paste0("Table 4. Coverage by municipality, least-recorded first. ",
                    "Boundaries are GADM level 2; names are given in both ",
                    "official languages. Median coverage is %.1f records per ",
@@ -599,7 +601,7 @@ report_table(
   directive_tbl,
   caption = htmltools::tags$caption(
     style = "caption-side: bottom; text-align: left; padding-top: 8px;
-             font-size: 0.85rem; color: #6b7880;",
+             font-size: 0.85rem; color: #666666;",
     sprintf(paste0("Table 5. Species of Community interest recorded in Kosovo: ",
                    "%d taxa across %s quality-checked records. The annex column ",
                    "shows every annex a species was matched against, so a ",
@@ -671,7 +673,7 @@ report_table(
   iucn_tbl,
   caption = htmltools::tags$caption(
     style = "caption-side: bottom; text-align: left; padding-top: 8px;
-             font-size: 0.85rem; color: #6b7880;",
+             font-size: 0.85rem; color: #666666;",
     sprintf(paste0("Table 6. Global Red List assessment of the %s species ",
                    "recorded in Kosovo. Most invertebrates and fungi have ",
                    "never been assessed, which is why ‘not evaluated’ is the ",
@@ -713,7 +715,7 @@ report_table(
   threatened_tbl,
   caption = htmltools::tags$caption(
     style = "caption-side: bottom; text-align: left; padding-top: 8px;
-             font-size: 0.85rem; color: #6b7880;",
+             font-size: 0.85rem; color: #666666;",
     sprintf(paste0("Table 7. The %d species recorded in Kosovo and assessed as ",
                    "Critically Endangered, Endangered or Vulnerable, ordered ",
                    "by severity. Mapped on the ‘IUCN threatened’ tab above."),
@@ -910,7 +912,7 @@ report_table(
   checklist,
   caption = htmltools::tags$caption(
     style = "caption-side: bottom; text-align: left; padding-top: 8px;
-             font-size: 0.85rem; color: #6b7880;",
+             font-size: 0.85rem; color: #666666;",
     sprintf(paste0("Table 8. The %s species recorded in Kosovo, most-recorded ",
                    "first. ‘Municipalities’ counts the administrative units a ",
                    "species has been found in, which is a rough but useful ",
@@ -948,7 +950,7 @@ report_table(
   datasets_tbl,
   caption = htmltools::tags$caption(
     style = "caption-side: bottom; text-align: left; padding-top: 8px;
-             font-size: 0.85rem; color: #6b7880;",
+             font-size: 0.85rem; color: #666666;",
     sprintf(paste0("Table 9. The %d datasets contributing records, from %d ",
                    "publishing institutions, largest contribution first. The ",
                    "licence column gives the terms each publisher chose; the ",
