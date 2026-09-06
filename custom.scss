@@ -1,0 +1,290 @@
+/*-- scss:defaults --*/
+
+// A restrained, institutional palette. Deep teal reads as authoritative in
+// print and on screen, and keeps sufficient contrast against white for the
+// accessibility standards expected of government publications.
+$primary:   #14556b !default;
+$secondary: #4d7c8a !default;
+$success:   #2e7d54 !default;
+$body-color: #21282d !default;
+$link-color: #14556b !default;
+
+$font-family-sans-serif: "Source Sans Pro", -apple-system, BlinkMacSystemFont,
+  "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !default;
+$font-size-root: 16px !default;
+$h1-font-size: 2.1rem !default;
+$h2-font-size: 1.55rem !default;
+$h3-font-size: 1.2rem !default;
+
+/*-- scss:rules --*/
+
+body {
+  line-height: 1.65;
+}
+
+h2 {
+  border-bottom: 2px solid rgba(20, 85, 107, 0.15);
+  padding-bottom: 0.3rem;
+  margin-top: 2.4rem;
+}
+
+/* --- Key-figure cards ---------------------------------------------------- */
+
+.keyfigures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 0.9rem;
+  margin: 1.6rem 0 2rem;
+}
+
+.keyfigure {
+  border: 1px solid #dde3e7;
+  border-left: 4px solid $primary;
+  border-radius: 5px;
+  padding: 0.85rem 1rem;
+  background: #fbfcfd;
+}
+
+.keyfigure .value {
+  font-size: 1.75rem;
+  font-weight: 650;
+  color: $primary;
+  line-height: 1.15;
+  display: block;
+}
+
+.keyfigure .label {
+  font-size: 0.82rem;
+  color: #5d6b73;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* --- Download buttons ---------------------------------------------------- */
+
+.download-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 0.85rem;
+  margin: 1.5rem 0;
+}
+
+.download-card {
+  border: 1px solid #dde3e7;
+  border-radius: 6px;
+  padding: 0.9rem 1rem;
+  background: #fff;
+}
+
+.download-card h4 {
+  font-size: 0.98rem;
+  margin: 0 0 0.15rem;
+  color: $primary;
+}
+
+.download-card .meta {
+  font-size: 0.8rem;
+  color: #6b7880;
+  margin-bottom: 0.7rem;
+}
+
+.download-card a.btn {
+  font-size: 0.82rem;
+  padding: 0.28rem 0.7rem;
+  margin-right: 0.35rem;
+  text-decoration: none;
+}
+
+/* --- Notes and citation -------------------------------------------------- */
+
+.citation-box {
+  background: #f2f6f8;
+  border-left: 4px solid $secondary;
+  padding: 0.9rem 1.1rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  margin: 1.2rem 0;
+}
+
+.citation-box code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  word-break: break-word;
+}
+
+/* Leaflet maps need a little breathing room from the surrounding text. */
+.leaflet-container {
+  border: 1px solid #dde3e7;
+  border-radius: 5px;
+  margin-bottom: 0.6rem;
+}
+
+/* --- Occurrence popups ---------------------------------------------------
+   Styling lives here rather than inline, because the popup markup is repeated
+   once per marker and inline styles would multiply the page size several-fold.
+   The field *labels* live here too, generated from each value's position, so
+   that the HTML carries values only.
+
+   `build_popup()` in R/functions.R emits the matching structure, and the ORDER
+   OF THE SPANS IS LOAD-BEARING — it must stay in step with the rules below:
+   <div class="occ-popup"><i>species</i><b>vernacular</b>
+     <span>date</span><span>basis</span><span>family</span>
+     <span>iucn</span><span>place</span><span>accuracy</span>
+     <em><a>Record</a><a>Dataset</a></em></div>
+   ------------------------------------------------------------------------- */
+
+.occ-popup {
+  font-size: 13px;
+  line-height: 1.45;
+  min-width: 210px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 0.6rem;
+  row-gap: 0.1rem;
+}
+
+.occ-popup i,
+.occ-popup b,
+.occ-popup em {
+  grid-column: 1 / -1;
+}
+
+.occ-popup i {
+  font-style: italic;
+  font-weight: 600;
+  font-size: 14px;
+  color: $primary;
+}
+
+.occ-popup b {
+  font-weight: 400;
+  color: #555;
+  margin-bottom: 0.35rem;
+}
+
+/* `display: contents` lets the generated label and the value sit in adjacent
+   grid cells, so a one-element span still renders as a labelled row. */
+.occ-popup span {
+  display: contents;
+}
+
+.occ-popup span::before {
+  color: #8a959c;
+  font-size: 0.82em;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  align-self: center;
+}
+
+.occ-popup span:nth-of-type(1)::before { content: "Date"; }
+.occ-popup span:nth-of-type(2)::before { content: "Basis"; }
+.occ-popup span:nth-of-type(3)::before { content: "Family"; }
+.occ-popup span:nth-of-type(4)::before { content: "IUCN"; }
+.occ-popup span:nth-of-type(5)::before { content: "Place"; }
+.occ-popup span:nth-of-type(6)::before { content: "Accuracy"; }
+
+.occ-popup em {
+  margin-top: 0.45rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid #e6ebee;
+  font-style: normal;
+}
+
+.occ-popup em a {
+  font-size: 0.82em;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-right: 0.7rem;
+  text-decoration: none;
+}
+
+/* --- Map furniture -------------------------------------------------------- */
+
+.map-caption {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  color: #333;
+  max-width: 320px;
+}
+
+.leaflet-control .info.legend {
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+/* --- Linked record explorer -----------------------------------------------
+   Laid out with CSS grid rather than crosstalk's own `bscols()`, which emits
+   Bootstrap 3 column classes that Bootstrap 5 — the version Quarto ships —
+   does not define.
+   ------------------------------------------------------------------------- */
+
+.explorer-grid {
+  display: grid;
+  grid-template-columns: minmax(210px, 1fr) 3fr;
+  gap: 1rem;
+  align-items: start;
+  margin: 1.4rem 0 1rem;
+}
+
+@media (max-width: 900px) {
+  .explorer-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.explorer-map .leaflet-container {
+  margin-bottom: 0;
+}
+
+.explorer-filters {
+  border: 1px solid #dde3e7;
+  border-radius: 6px;
+  padding: 0.9rem 1rem 0.4rem;
+  background: #fbfcfd;
+}
+
+.explorer-filters .form-group {
+  margin-bottom: 0.9rem;
+}
+
+.explorer-filters label,
+.explorer-filters .control-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #5d6b73;
+  margin-bottom: 0.15rem;
+}
+
+.explorer-note {
+  font-size: 0.82rem;
+  color: #6b7880;
+  margin: 0.4rem 0 1.2rem;
+}
+
+/* Crosstalk's select widget inherits almost nothing from the site theme. */
+.explorer-filters .selectize-input {
+  font-size: 0.85rem;
+  border-color: #cfd8dd;
+}
+
+/* --- Inline status swatches ----------------------------------------------- */
+
+.swatch {
+  display: inline-block;
+  width: 0.62em;
+  height: 0.62em;
+  border-radius: 2px;
+  margin-right: 0.4em;
+  vertical-align: baseline;
+  border: 1px solid rgba(11, 11, 11, 0.18);
+}
+
+/* Keep wide tables scrollable rather than letting the page scroll sideways. */
+.dataTables_wrapper {
+  overflow-x: auto;
+}

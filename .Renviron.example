@@ -1,0 +1,17 @@
+# ------------------------------------------------------------------------------
+# GBIF credentials — TEMPLATE
+#
+# 1. Copy this file to `.Renviron` in the project root.
+# 2. Replace the placeholder values with your own GBIF account details.
+# 3. Restart R so that the variables are loaded.
+#
+# `.Renviron` is listed in .gitignore and must NEVER be committed.
+# Register free of charge at https://www.gbif.org/user/profile
+#
+# Note: `.Renviron` is not an R script. Do not quote values unless the value
+# itself contains spaces, and make sure the file ends with a newline.
+# ------------------------------------------------------------------------------
+
+GBIF_USER=your_gbif_username
+GBIF_PWD=your_gbif_password
+GBIF_EMAIL=your.address@example.org
