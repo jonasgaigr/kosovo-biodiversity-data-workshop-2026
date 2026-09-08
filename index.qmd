@@ -104,6 +104,20 @@ municipalities <- if (file.exists("data/kosovo_municipalities.gpkg")) {
   sf::st_read("data/kosovo_municipalities.gpkg", quiet = TRUE)
 } else NULL
 
+# The protected-area layers carry their record counts from the pipeline rather
+# than recomputing them here, so the map, the tables and the published file
+# cannot drift apart.
+pa_path <- "data_exports/kosovo_protected_areas.gpkg"
+protected_areas <- if (file.exists(pa_path)) {
+  sf::st_read(pa_path, layer = "protected_area_polygons", quiet = TRUE)
+} else NULL
+
+protected_points <- if (file.exists(pa_path)) {
+  sf::st_read(pa_path, layer = "protected_area_points", quiet = TRUE)
+} else NULL
+
+pa <- meta$protected_areas
+
 overall <- subsets[["kosovo_overall_biodiversity"]]
 overall_flat <- sf::st_drop_geometry(overall)
 ```
@@ -180,6 +194,30 @@ cat(
           nrow(meta$datasets), dplyr::n_distinct(meta$datasets$publisher)),
   "<strong>Suggested citation</strong><br>",
   sprintf("<code>%s</code>", meta$download$citation %||% paste0("GBIF Occurrence Download https://doi.org/", doi)),
+  "</div>", sep = "\n"
+)
+```
+
+Two reference layers are used alongside the occurrence records, and both are
+cited here because conclusions drawn from an overlay depend on the layer as
+much as on the points. Administrative boundaries are GADM 4.1. Protected areas
+are the European Environment Agency's inventory of **Nationally designated
+areas**, version `r sub("^v", "", pa$source$version)`.
+
+```{r}
+#| label: citation-protected
+#| output: asis
+
+cat(
+  "<div class='citation-box'>",
+  sprintf("<strong>Protected areas:</strong> EEA Nationally designated areas (NatDA/CDDA), %s<br>",
+          pa$source$version),
+  sprintf("<strong>DOI:</strong> <a href='https://doi.org/%s'>https://doi.org/%s</a><br>",
+          pa$source$doi, pa$source$doi),
+  sprintf("<strong>Licence:</strong> %s, &copy; %s<br>",
+          pa$source$licence, pa$source$copyright),
+  sprintf("<strong>Coverage for Kosovo:</strong> %s designated sites, %s with a mapped boundary<br>",
+          fmt_int(pa$n_sites), fmt_int(pa$n_mapped)),
   "</div>", sep = "\n"
 )
 ```
@@ -354,6 +392,13 @@ in the top-right corner:
   against a legend. This is the layer to read when the question is *how many*.
 - **Heat map** — the same information as a smooth surface, better for seeing
   the shape of the sampled and unsampled areas.
+- **Protected areas** — the nationally designated sites, shown as a green wash
+  under the records so that whether a record falls inside one can be read at a
+  glance. Hovering names the site, its designation, its size and how much has
+  been recorded there. Two further layers sit alongside it in the control: the
+  **strict protection zones** inside the larger sites, and the 189 **natural
+  monuments** — veteran trees, springs and caves — that the register records as
+  a point rather than a boundary.
 - **Municipalities** — administrative boundaries, with each unit's own record
   and species count on hover.
 
@@ -369,6 +414,8 @@ interest can be outlined and sized directly on the map.
 #| label: map-overall
 build_occurrence_map(overall, boundary = boundary,
                      municipalities = municipalities,
+                     protected_areas = protected_areas,
+                     protected_points = protected_points,
                      colour_by = "kingdom", max_points = 2500)
 ```
 
@@ -378,6 +425,8 @@ build_occurrence_map(overall, boundary = boundary,
 #| label: map-birds
 build_occurrence_map(subsets[["kosovo_birds"]], boundary = boundary,
                      municipalities = municipalities,
+                     protected_areas = protected_areas,
+                     protected_points = protected_points,
                      colour_by = "iucn", max_points = 2500)
 ```
 
@@ -387,6 +436,8 @@ build_occurrence_map(subsets[["kosovo_birds"]], boundary = boundary,
 #| label: map-birds-annex-i
 build_occurrence_map(subsets[["kosovo_birds_annex_I"]], boundary = boundary,
                      municipalities = municipalities,
+                     protected_areas = protected_areas,
+                     protected_points = protected_points,
                      colour_by = "iucn", max_points = 2500)
 ```
 
@@ -396,6 +447,8 @@ build_occurrence_map(subsets[["kosovo_birds_annex_I"]], boundary = boundary,
 #| label: map-habitats
 build_occurrence_map(subsets[["kosovo_habitats_directive"]],
                      boundary = boundary, municipalities = municipalities,
+                     protected_areas = protected_areas,
+                     protected_points = protected_points,
                      colour_by = "kingdom")
 ```
 
@@ -405,6 +458,8 @@ build_occurrence_map(subsets[["kosovo_habitats_directive"]],
 #| label: map-habitats-annex-ii
 build_occurrence_map(subsets[["kosovo_habitats_annex_II"]],
                      boundary = boundary, municipalities = municipalities,
+                     protected_areas = protected_areas,
+                     protected_points = protected_points,
                      colour_by = "kingdom")
 ```
 
@@ -414,6 +469,8 @@ build_occurrence_map(subsets[["kosovo_habitats_annex_II"]],
 #| label: map-threatened
 build_occurrence_map(subsets[["kosovo_threatened_iucn"]],
                      boundary = boundary, municipalities = municipalities,
+                     protected_areas = protected_areas,
+                     protected_points = protected_points,
                      colour_by = "iucn")
 ```
 
@@ -537,6 +594,219 @@ This is the characteristic shape of aggregated occurrence data and the reason
 raw record counts should never be read as species richness. The species column
 in the table above is the more honest comparison, and the two rank very
 differently.
+:::
+
+## Protected areas
+
+A record's value to conservation depends partly on where it falls. A population
+inside a national park is already covered by a management regime and a
+competent authority; the same population on undesignated ground is not. This
+section lays the occurrence data over Kosovo's protected-area network and
+reports what each contains.
+
+The network is taken from the European Environment Agency's inventory of
+**Nationally designated areas** (NatDA, long known as the Common Database on
+Designated Areas, CDDA). This is the channel through which 38 Eionet countries
+report their protected areas to the World Database on Protected Areas, so
+Kosovo's entry is its own official register rather than a third-party
+compilation.
+
+```{r}
+#| label: pa-key-figures
+#| output: asis
+
+cat("<div class='keyfigures'>",
+    kf(fmt_int(pa$n_sites), "Designated sites"),
+    kf(sprintf("%s km&sup2;", fmt_int(round(pa$network_km2))),
+       "Protected network"),
+    kf(sprintf("%.1f%%", pa$coverage_pct), "Of the national territory"),
+    kf(fmt_int(pa$records_inside), "Records inside a site"),
+    kf(sprintf("%.0f%%", 100 * pa$records_inside / pa$records_total),
+       "Of all records"),
+    kf(fmt_int(pa$species_inside), "Species inside a site"),
+    "</div>", sep = "\n")
+```
+
+```{r}
+#| label: pa-share
+#| output: asis
+
+sites_by_records <- pa$summary |>
+  dplyr::filter(designated_area_type == "designatedSite") |>
+  dplyr::arrange(dplyr::desc(records))
+
+top      <- sites_by_records[1, ]
+rest_in  <- pa$records_inside - top$records
+rest_all <- pa$records_total  - top$records
+
+cat(sprintf(
+  paste0("%s of the %s quality-checked records — %.0f per cent — fall inside ",
+         "a designated site, and they carry %s species between them. Against ",
+         "a network covering %.1f per cent of the country that looks like a ",
+         "striking concentration, and it is worth taking apart before it is ",
+         "believed.\n\n",
+         "Most of it is one place. **%s**, a wetland of %s km&sup2;, supplies ",
+         "%s of those records on its own — %.0f per cent of everything inside ",
+         "the network, from %.2f per cent of its area. Set that single site ",
+         "aside and %s of the remaining %s records fall in a protected area, ",
+         "%.0f per cent against an %.1f per cent share of the land.\n\n"),
+  fmt_int(pa$records_inside), fmt_int(pa$records_total),
+  100 * pa$records_inside / pa$records_total,
+  fmt_int(pa$species_inside), pa$coverage_pct,
+  top$site_name, formatC(top$area_km2, format = "f", digits = 2),
+  fmt_int(top$records), 100 * top$records / pa$records_inside,
+  100 * top$area_km2 / pa$network_km2,
+  fmt_int(rest_in), fmt_int(rest_all), 100 * rest_in / rest_all,
+  pa$coverage_pct))
+```
+
+Roughly twice the records per unit area, then, rather than five times — a real
+concentration, but a modest one, and it says as much about where people go to
+look as about what lives there. The section on
+[survey coverage](#survey-coverage-by-municipality) makes the same point in
+administrative units.
+
+### What the register contains
+
+```{r}
+#| label: pa-by-designation
+
+pa$by_designation |>
+  dplyr::transmute(
+    Designation   = designation,
+    Role          = role,
+    Sites         = sites,
+    `With a mapped boundary` = mapped,
+    `Reported area (ha)` = round(area_ha),
+    Records       = records
+  ) |>
+  report_table(
+    caption = paste("Kosovo's nationally designated areas by designation type.",
+                    "Source: EEA Nationally designated areas", pa$source$version),
+    page_length = 10, buttons = FALSE
+  ) |>
+  DT::formatCurrency(c("Reported area (ha)", "Records"),
+                     currency = "", digits = 0)
+```
+
+Kosovo's register holds `r fmt_int(pa$n_sites)` designated sites, and it comes
+in two shapes. `r fmt_int(pa$n_mapped)` carry a mapped boundary; the other
+`r fmt_int(pa$n_point_only)` are recorded as a single point. That split is not
+a gap in the data — it is what the sites are. Every national park, strict
+nature reserve, protected landscape, nature park and wetland is a polygon. The
+point-only sites are all **natural monuments**, which in Kosovo means
+individual veteran trees, springs and caves, most of them smaller than a tenth
+of a hectare. A point is an honest way to record a stand of oak; a polygon
+would imply a precision the register does not claim.
+
+A further `r fmt_int(pa$n_strict)` features are **strict-protection zones** —
+the strictly protected cores of sites the table already lists, not separate
+sites. They hold `r fmt_int(pa$records_strict)` records. Their area and their
+records are contained in the rows above rather than additional to them, which
+is why they are labelled as a role rather than counted as sites, and why the
+columns in that table must not be added up.
+
+### Which sites hold the evidence
+
+```{r}
+#| label: pa-sites
+
+pa$summary |>
+  dplyr::filter(designated_area_type == "designatedSite") |>
+  dplyr::transmute(
+    Site            = site_name,
+    Designation     = designation,
+    `IUCN category` = dplyr::coalesce(iucn_management_category, "&mdash;"),
+    Designated      = designation_year,
+    `Area (km²)`    = round(area_km2, 2),
+    Records         = records,
+    Species         = species,
+    `Records / km²` = round(records_per_km2, 1)
+  ) |>
+  report_table(
+    caption = paste("Occurrence records in each designated site with a mapped",
+                    "boundary. Sites with no records are shown, because an",
+                    "empty row is a finding."),
+    page_length = 12,
+    escape = FALSE
+  ) |>
+  DT::formatCurrency(c("Records", "Species"), currency = "", digits = 0)
+```
+
+```{r}
+#| label: pa-gaps
+#| output: asis
+
+mapped <- pa$summary[pa$summary$designated_area_type == "designatedSite", ]
+empty  <- mapped[mapped$records == 0, ]
+zones  <- pa$summary[
+  pa$summary$designated_area_type == "strictProtectionBoundary", ]
+empty_zones <- zones[zones$records == 0, ]
+
+km <- function(x, digits = 1) {
+  formatC(x, format = "f", digits = digits, big.mark = ",")
+}
+
+cat(sprintf(
+  paste0("Counted by site, the coverage looks thin: **%s of the %s sites with ",
+         "a mapped boundary hold no quality-checked GBIF record at all**. ",
+         "Counted by area, it looks the opposite — those %s sites come to ",
+         "%s km&sup2; between them, %.1f per cent of the mapped network, and ",
+         "the remaining %.1f per cent does have records.\n\n",
+         "Both readings are true, and the difference between them is the ",
+         "finding. The gaps are almost entirely in the small sites: %s of the ",
+         "%s are natural monuments, and the median one covers %s km&sup2;. ",
+         "Every national park, the nature park and the wetland are recorded ",
+         "in; it is the municipal-scale sites that are not.\n\n"),
+  fmt_int(nrow(empty)), fmt_int(nrow(mapped)), fmt_int(nrow(empty)),
+  km(sum(empty$area_km2), 2),
+  100 * sum(empty$area_km2) / sum(mapped$area_km2),
+  100 * (1 - sum(empty$area_km2) / sum(mapped$area_km2)),
+  fmt_int(sum(empty$designation == "Natural Monument")), fmt_int(nrow(empty)),
+  km(stats::median(empty$area_km2), 3)))
+
+if (nrow(empty_zones)) {
+  cat(sprintf(
+    paste0("The strict-protection zones are the sharper gap. These are the ",
+           "most tightly protected ground in the country, and **%s of the %s ",
+           "hold no record** — %s km&sup2; of the %s km&sup2; under strict ",
+           "protection, %.0f per cent of it, with no openly published ",
+           "occurrence evidence behind it.\n\n"),
+    fmt_int(nrow(empty_zones)), fmt_int(nrow(zones)),
+    km(sum(empty_zones$area_km2)), km(sum(zones$area_km2)),
+    100 * sum(empty_zones$area_km2) / sum(zones$area_km2)))
+}
+```
+
+A site with no records is not a site with no species; it is a site nobody has
+surveyed, or one whose surveys were never published to GBIF. Which of the two
+it is, is worth knowing before the next field season is planned — and for the
+small municipal sites in particular, a single visit would produce the first
+open record either way.
+
+::: {.callout-warning collapse="true"}
+## Three ways to misread this table
+
+**The IUCN column is not the Red List.** It is the IUCN protected-area
+*management* category — Ia, Ib, II, III, V — which says how a site is run, not
+how likely anything in it is to go extinct. The Red List categories used
+[elsewhere in this report](#extinction-risk-the-iucn-red-list) are CR, EN, VU
+and so on. The two share an acronym and nothing else.
+
+**Records per square kilometre measure effort, not richness.** The wetland at
+the top of that column carries more than twelve thousand records in barely a
+square kilometre, almost all of them bird observations submitted to one
+citizen-science platform from what is in practice one regularly watched spot.
+It is the same concentration described under
+[survey coverage](#one-municipality-dominates-the-totals-read-it-carefully),
+seen through a different boundary. The species column is the more honest
+comparison.
+
+**The point-only sites hold no records here, and cannot.** A point has no
+inside, so the `r fmt_int(pa$n_point_only)` natural monuments recorded that way
+can never match a record by point-in-polygon, however well surveyed they are.
+They appear on the maps above, and in the published register, but they are
+absent from this table by construction rather than for want of evidence.
 :::
 
 ## Species protected under the EU Nature Directives
@@ -996,6 +1266,36 @@ cards <- vapply(seq_len(nrow(mf)), function(i) {
 cat("<div class='download-grid'>", paste(cards, collapse = "\n"), "</div>", sep = "\n")
 ```
 
+The protected-area register is published in the same three formats. The
+GeoPackage holds two layers — the `r fmt_int(pa$n_mapped + pa$n_strict)` mapped
+boundaries and the `r fmt_int(pa$n_point_only)` point-only sites — each carrying
+the record and species counts reported above. The flat table lists all
+`r fmt_int(pa$n_sites)` sites, point-only ones included.
+
+```{r}
+#| label: downloads-protected
+#| output: asis
+
+pa_btn <- function(ext, label, class) {
+  file <- paste0("kosovo_protected_areas.", ext)
+  path <- file.path("data_exports", file)
+  if (!file.exists(path)) return("")
+  sprintf("<a class='btn %s' href='data_exports/%s' download>%s (%s)</a>",
+          class, file, label, fmt_bytes(file.size(path)))
+}
+
+cat("<div class='download-grid'>",
+    sprintf(paste0("<div class='download-card'><h4>Nationally designated ",
+                   "protected areas</h4><div class='meta'>%s sites &middot; ",
+                   "%s km&sup2; &middot; EEA NatDA %s</div>%s%s%s</div>"),
+            fmt_int(pa$n_sites), fmt_int(round(pa$network_km2)),
+            pa$source$version,
+            pa_btn("gpkg", "GeoPackage", "btn-primary"),
+            pa_btn("csv",  "CSV",        "btn-outline-secondary"),
+            pa_btn("xlsx", "Excel",      "btn-outline-secondary")),
+    "</div>", sep = "\n")
+```
+
 ::: {.callout-tip}
 ## Conditions of use
 
@@ -1003,6 +1303,11 @@ GBIF-mediated data are made available under the licences chosen by each
 publishing institution; the `license` column in every export records the terms
 applying to each record. When these data are used in a report or publication,
 please cite the DOI given above, which credits all contributing institutions.
+
+The protected-area boundaries are © `r pa$source$copyright` and are
+redistributed here under **`r pa$source$licence`**, which requires attribution
+and permits reuse for any purpose. Cite them as
+`r sprintf("<https://doi.org/%s>", pa$source$doi)`.
 :::
 
 ## Methods and reproducibility

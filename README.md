@@ -17,8 +17,9 @@ officials and conservation practitioners, and hosted on GitHub Pages.
 |---|---|
 | Summary statistics | How much data is there, and of what |
 | Data quality control | What was screened out, and how precisely records are placed |
-| Where the records are | Six maps, each with points, a classed density grid, a heat surface and municipal boundaries |
+| Where the records are | Six maps, each with points, a classed density grid, a heat surface, protected areas and municipal boundaries |
 | Survey coverage by municipality | Which parts of the country are under-recorded |
+| Protected areas | What the national register holds, how much of the country it covers, and which sites have occurrence evidence behind them |
 | EU Nature Directives | Which species of Community interest have been recorded |
 | Extinction risk | The IUCN Red List profile, and the threatened species in detail |
 | Explore the records | A filterable, linked map and table over the records of conservation interest |
@@ -127,6 +128,7 @@ kosovo-biodiversity-data-workshop-2026/
 │   ├── gadm41_XKO.gpkg             # GADM 4.1, all levels (downloaded)
 │   ├── kosovo_boundary.gpkg        # National outline, GADM level 0
 │   ├── kosovo_municipalities.gpkg  # GADM level 2, for coverage reporting
+│   ├── kosovo_protected_areas.gpkg # EEA designated areas, Kosovo only (cached)
 │   ├── vernacular_cache.csv        # Cached common names
 │   ├── iucn_cache.csv              # Cached IUCN Red List categories
 │   ├── dataset_registry.csv        # Cached dataset and publisher titles
@@ -253,10 +255,13 @@ This will:
 5. Resolve English common names from the GBIF species API (cached).
 6. Resolve IUCN Red List categories from the GBIF species API (cached).
 7. Stamp each record with the municipality it falls in (GADM level 2).
-8. Write six thematic subsets to `data_exports/` as `.gpkg`, `.csv` and —
+8. Stamp each record with the protected area it falls in (EEA NatDA, cached).
+9. Write six thematic subsets to `data_exports/` as `.gpkg`, `.csv` and —
    for the smaller ones — `.xlsx`.
-9. Resolve every contributing dataset and publisher from the GBIF registry.
-10. Save run metadata to `data/run_metadata.rds`.
+10. Write the protected-area register to `data_exports/` in the same three
+    formats.
+11. Resolve every contributing dataset and publisher from the GBIF registry.
+12. Save run metadata to `data/run_metadata.rds`.
 
 The first run takes roughly 20 minutes, most of it resolving common names for
 several thousand taxa one at a time. The Red List and registry lookups are
@@ -463,6 +468,75 @@ with GBIF (lichens, listed under plants but placed in Fungi).
 
 ---
 
+## The protected-area layer
+
+The report overlays the occurrence records on Kosovo's nationally designated
+protected areas, taken from the European Environment Agency's inventory of
+**Nationally designated areas** (NatDA, formerly the Common Database on
+Designated Areas, CDDA), version 24 of July 2026. It is the channel through
+which 38 Eionet countries report their protected areas to the World Database on
+Protected Areas, so Kosovo's entry is its own official register.
+
+```r
+protected_areas  <- kosovo_protected_areas(layer = "polygons")   # 67 features
+protected_points <- kosovo_protected_areas(layer = "points")     # 189 features
+```
+
+| | |
+|---|---|
+| Source | [EEA datahub, dataset `028003e7`](https://www.eea.europa.eu/en/datahub/datahubitem-view/f60cec02-6494-4d08-b12d-17a37012cb28) |
+| DOI | [10.2909/028003e7-7585-4d69-92fc-7f81e0cc2340](https://doi.org/10.2909/028003e7-7585-4d69-92fc-7f81e0cc2340) |
+| Licence | CC-BY 4.0, © European Environment Agency |
+| Kosovo coverage | 237 designated sites and 19 strict-protection zones; 1,261 km², 11.6 % of the country |
+
+### Nothing is downloaded
+
+The EEA publishes the vector data as a 1.7 GB GeoPackage covering 38 countries,
+and a 510 MB File Geodatabase of the same features. The pipeline takes neither.
+A GeoPackage is a SQLite database with an R-tree spatial index, the EEA's server
+honours HTTP range requests, and GDAL's `/vsicurl/` combines the two into a
+query that fetches only the pages covering the bounding box it is given.
+Kosovo's 256 features arrive in about a minute and a few megabytes.
+
+The result is cached in `data/kosovo_protected_areas.gpkg` (700 kB, tracked),
+so a fresh clone reads it from the repository and makes no request at all.
+Delete that file to rebuild.
+
+The File Geodatabase is deliberately not used despite being a third of the
+size: GDAL 3.12's `OpenFileGDB` driver returns empty geometries for its
+multipoint table, which would silently drop the 189 point-only sites — three
+quarters of Kosovo's register.
+
+### Two shapes, and why it matters
+
+Of the 237 designated sites, 48 carry a mapped boundary and 189 are recorded as
+a single point. That is a property of the sites, not a defect: every national
+park, strict nature reserve, protected landscape, nature park and wetland is a
+polygon, while the point-only sites are all natural monuments — individual
+veteran trees, springs and caves, most under a tenth of a hectare.
+
+Only the polygons can carry a point-in-polygon test, so the two are kept as
+separate layers of one GeoPackage rather than one mixed-geometry table. Three
+columns are added to every occurrence export:
+
+| Column | Meaning |
+|---|---|
+| `protectedArea` | Name of the designated site the record falls in, or blank |
+| `protectedAreaDesignation` | That site's designation, in English |
+| `strictlyProtected` | Whether the record also falls inside a strict-protection zone |
+
+Where a record falls inside more than one site — seven of Kosovo's sites
+overlap along their edges — the smallest is taken, being the most specific
+statement anyone has made about that ground. The strict-protection zones are
+excluded from the site test, because each lies inside a site already counted.
+
+> **`iucn_management_category` is not the Red List.** It is the IUCN
+> protected-area *management* category (Ia, Ib, II, III, V), which describes how
+> a site is run. The Red List categories used elsewhere in this project are CR,
+> EN, VU and so on. The two share an acronym and nothing else.
+
+---
+
 ## Citing the data
 
 Every run records a DOI, shown in the published report and stored in
@@ -473,6 +547,10 @@ reader retrieve the identical dataset.
 GBIF-mediated data are released under licences chosen by each publishing
 institution. The `license` column in every export records the terms applying to
 each record.
+
+The protected-area boundaries are © European Environment Agency and are
+redistributed under CC-BY 4.0. Cite them as
+<https://doi.org/10.2909/028003e7-7585-4d69-92fc-7f81e0cc2340>.
 
 ---
 

@@ -290,6 +290,132 @@ check("choropleth classes cover the whole range, extremes included",
         length(fills) > 0 && !any(is.na(fills))
       })
 
+# --- Protected areas ----------------------------------------------------------
+#
+# A fixture standing in for the EEA layer, built here rather than read from
+# disk so that the checks run on a fresh clone and make no network call. Two
+# designated sites, the second overlapping the first, plus a strict-protection
+# zone inside the first — the three arrangements the counting rules exist to
+# handle.
+
+pa <- sf::st_sf(
+  natda_id                 = c("A", "B", "S"),
+  site_name                = c("Big site", "Small site", "Strict core"),
+  designation              = c("National Park", "Natural Monument",
+                               "Strict Nature Reserve"),
+  designation_code         = c("XK01", "XK06", "XK02"),
+  designated_area_type     = c("designatedSite", "designatedSite",
+                               "strictProtectionBoundary"),
+  iucn_management_category = c("II", "III", "Ia"),
+  reported_area_ha         = c(1000, 100, 50),
+  designation_year         = c(2012L, 1985L, 1955L),
+  area_km2                 = c(100, 20, 5),
+  geometry = sf::st_sfc(
+    # Big site: a wide box. Small site: overlaps its right-hand edge.
+    # Strict core: wholly inside the big site, away from the overlap.
+    sf::st_polygon(list(rbind(c(20.0, 42.0), c(21.0, 42.0),
+                              c(21.0, 43.0), c(20.0, 43.0), c(20.0, 42.0)))),
+    sf::st_polygon(list(rbind(c(20.9, 42.0), c(21.5, 42.0),
+                              c(21.5, 43.0), c(20.9, 43.0), c(20.9, 42.0)))),
+    sf::st_polygon(list(rbind(c(20.1, 42.1), c(20.3, 42.1),
+                              c(20.3, 42.3), c(20.1, 42.3), c(20.1, 42.1)))),
+    crs = 4326
+  )
+)
+
+pa_points <- sf::st_sf(
+  natda_id         = c("P1", "P2"),
+  site_name        = c("Veteran oak", "Mineral spring"),
+  designation      = "Natural Monument",
+  reported_area_ha = c(0.05, 0.07),
+  designation_year = c(2007L, 1985L),
+  geometry = sf::st_sfc(sf::st_point(c(20.5, 42.5)),
+                        sf::st_point(c(20.6, 42.6)), crs = 4326)
+)
+
+# Records: one in the big site only, one in the overlap (both sites), one in
+# the strict core (and so also in the big site), and one outside everything.
+pa_occ <- dplyr::tibble(
+  gbifID           = as.character(1:4),
+  species          = c("Aaa aaa", "Bbb bbb", "Ccc ccc", "Ddd ddd"),
+  decimalLongitude = c(20.5, 20.95, 20.2, 19.0),
+  decimalLatitude  = c(42.7, 42.5,  42.2, 41.0)
+)
+
+stamped <- assign_protected_area(pa_occ, pa)
+
+cat("\nProtected areas\n")
+
+check("a record outside every site is left unstamped",
+      is.na(stamped$protectedArea[4]))
+
+check("a record inside one site takes its name",
+      stamped$protectedArea[1] == "Big site")
+
+check("a record inside two sites takes the smaller one",
+      stamped$protectedArea[2] == "Small site")
+
+check("the strict-protection flag is set only inside a strict zone",
+      identical(stamped$strictlyProtected, c(FALSE, FALSE, TRUE, FALSE)))
+
+check("a strict zone does not displace the site the record is in",
+      stamped$protectedArea[3] == "Big site")
+
+check("the designation is carried alongside the site name",
+      stamped$protectedAreaDesignation[2] == "Natural Monument")
+
+pa_summary <- summarise_protected_areas(stamped, pa)
+
+check("every polygon is returned, zones included",
+      nrow(pa_summary) == 3)
+
+check("site counts partition the records rather than double-counting them",
+      sum(pa_summary$records[
+        pa_summary$designated_area_type == "designatedSite"]) ==
+        sum(!is.na(stamped$protectedArea)))
+
+check("a strict zone is counted by its own geometry, not by the site stamp",
+      pa_summary$records[pa_summary$site_name == "Strict core"] == 1)
+
+check("record density per square kilometre is computed from the mapped area",
+      isTRUE(all.equal(
+        pa_summary$records_per_km2[pa_summary$site_name == "Big site"],
+        pa_summary$records[pa_summary$site_name == "Big site"] / 100)))
+
+builds("occurrence map with the protected-area overlay",
+       build_occurrence_map(occ, protected_areas = pa,
+                            protected_points = pa_points))
+
+check("the overlay offers sites, strict zones and points as separate layers",
+      {
+        w <- build_occurrence_map(occ, protected_areas = pa,
+                                  protected_points = pa_points)
+        ctl <- Find(function(c) identical(c$method, "addLayersControl"),
+                    w$x$calls)
+        all(c("Protected areas", "Strict protection zones",
+              "Natural monuments (point only)") %in% unlist(ctl$args[[2]]))
+      })
+
+check("the site layer is shown by default and the detail layers are not",
+      {
+        w <- build_occurrence_map(occ, protected_areas = pa,
+                                  protected_points = pa_points)
+        hidden <- unlist(lapply(w$x$calls, function(c) {
+          if (identical(c$method, "hideGroup")) unlist(c$args) else NULL
+        }))
+        !("Protected areas" %in% hidden) &&
+          all(c("Strict protection zones",
+                "Natural monuments (point only)") %in% hidden)
+      })
+
+check("a map built without a protected-area layer offers no such control",
+      {
+        w <- build_occurrence_map(occ)
+        ctl <- Find(function(c) identical(c$method, "addLayersControl"),
+                    w$x$calls)
+        !("Protected areas" %in% unlist(ctl$args[[2]]))
+      })
+
 # --- Result -------------------------------------------------------------------
 
 cat("\n")

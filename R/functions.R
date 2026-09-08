@@ -169,6 +169,379 @@ kosovo_boundary <- function(iso3 = "XKX",
 }
 
 # ------------------------------------------------------------------------------
+# Nationally designated protected areas
+# ------------------------------------------------------------------------------
+#
+# GBIF says where species have been recorded. The protected-area network says
+# where the state has already accepted an obligation to look after them. Laying
+# one over the other answers the first question a conservation officer asks of
+# an occurrence dataset — is this population inside a designated site, or
+# outside every one of them? — and that is what this section exists to support.
+#
+# The source is the European Environment Agency's inventory of Nationally
+# designated areas (NatDA), long known as the Common Database on Designated
+# Areas (CDDA). It is the channel through which 38 Eionet countries report
+# their protected areas to the World Database on Protected Areas, so a
+# country's entry is its own official list rather than a third-party
+# compilation. Kosovo reports to it under UNSCR 1244/99.
+#
+# Version 24 (July 2026) is used throughout, licensed CC-BY 4.0 to the EEA.
+
+cdda_source <- list(
+  version   = "v24 (July 2026)",
+  licence   = "CC-BY 4.0",
+  copyright = "European Environment Agency",
+  doi       = "10.2909/028003e7-7585-4d69-92fc-7f81e0cc2340",
+  uuid      = "028003e7-7585-4d69-92fc-7f81e0cc2340",
+
+  # The GeoPackage, and not the File Geodatabase the same share also offers,
+  # even though the GDB is 510 MB against the GeoPackage's 1.7 GB. Two reasons,
+  # and the second is decisive:
+  #
+  #   1. Nothing is downloaded. A GeoPackage is a SQLite database with an
+  #      R-tree spatial index, the EEA's server honours HTTP range requests,
+  #      and GDAL's /vsicurl/ turns those three facts into a query that fetches
+  #      only the pages covering the bounding box it is given. Kosovo's 256
+  #      features come back in about a minute and a few megabytes. Pulling the
+  #      GDB would move half a gigabyte to arrive at the same place.
+  #
+  #   2. GDAL cannot read the point geometry out of the GDB at all. Its
+  #      OpenFileGDB driver returns 3,133 empty GEOMETRYCOLLECTIONs for the
+  #      `ProtectedSite_Multipoint` table — verified against GDAL 3.12.1, and
+  #      not fixable from here by promote_to_multi, the SQLite dialect or
+  #      ogr2ogr. Those are the 189 Kosovo sites recorded as a point rather
+  #      than a boundary, three quarters of the national register, and they
+  #      would have gone missing silently. The GeoPackage stores plain WKB and
+  #      reads correctly.
+  file      = "NatDA_2026_v01_public_EPSG4326.gpkg",
+
+  # Fallback only — see `cdda_share_token()`.
+  token     = "8ribwpg4cZNkC3T"
+)
+
+#' Resolve the EEA download token for a dataset
+#'
+#' The EEA serves its spatial data from a Nextcloud share whose token is not
+#' part of the citable identifier and changes whenever a file is republished.
+#' The stable address is the dataset UUID, which redirects to the share, so the
+#' token is read from that page at run time. `fallback` — the token current
+#' when this was written — is used only if the lookup fails, which keeps a
+#' transient network problem from stopping the pipeline dead.
+#'
+#' @param uuid EEA datahub dataset UUID.
+#' @param fallback Token to use if the page cannot be read.
+#' @return A share token.
+cdda_share_token <- function(uuid = cdda_source$uuid,
+                             fallback = cdda_source$token) {
+
+  page <- try(
+    suppressWarnings(
+      readLines(paste0("https://sdi.eea.europa.eu/data/", uuid), warn = FALSE)
+    ),
+    silent = TRUE
+  )
+
+  if (inherits(page, "try-error")) return(fallback)
+
+  hit <- regmatches(page, regexpr('sharingToken"[^>]*value="[^"]+"', page))
+  hit <- hit[nzchar(hit)]
+
+  if (!length(hit)) return(fallback)
+
+  sub('.*value="([^"]+)".*', "\\1", hit[1])
+}
+
+#' GDAL virtual path to the EEA GeoPackage
+#'
+#' @return A `/vsicurl/` path GDAL can open for random access.
+cdda_url <- function() {
+  paste0("/vsicurl/https://sdi.eea.europa.eu/datashare/s/", cdda_share_token(),
+         "/download?files=", cdda_source$file)
+}
+
+#' Build (and cache) the nationally designated protected areas of Kosovo
+#'
+#' Kosovo reports 256 designated areas, and they arrive in two shapes. Sixty-
+#' seven carry a mapped boundary; the remaining 189 are recorded as a single
+#' representative point. That split is not a defect in the data — it is what
+#' the sites are. Every national park, strict nature reserve, protected
+#' landscape, nature park and wetland is a polygon; the 189 points are all
+#' natural monuments (`XK06`), which in Kosovo means individual veteran trees,
+#' springs and caves, most of them under a tenth of a hectare. A point is an
+#' honest representation of a 500 m² stand of oak, and drawing it as a polygon
+#' would imply a precision the register does not claim.
+#'
+#' The two are kept as two layers of one GeoPackage rather than forced into a
+#' single mixed-geometry table: only the polygons can carry a point-in-polygon
+#' test, and a caller that asks for `"polygons"` should not have to remember to
+#' filter out 189 features that would silently never match.
+#'
+#' A second distinction runs through the polygons. Nineteen of the 67 are
+#' `strictProtectionBoundary` features — the strictly protected core of a site
+#' that is already listed in its own right, not a separate site. Summing the
+#' areas of all 67 would therefore count that land twice. `designated_area_type`
+#' keeps the two apart, and `assign_protected_area()` uses only the sites.
+#'
+#' @param cache_path GeoPackage used to cache both layers.
+#' @param layer `"polygons"` for the mapped boundaries, `"points"` for the
+#'   representative points of the sites that have no boundary.
+#' @param verbose Print progress messages.
+#' @return An `sf` layer of Kosovo's nationally designated areas.
+kosovo_protected_areas <- function(
+    cache_path = "data/kosovo_protected_areas.gpkg",
+    layer      = c("polygons", "points"),
+    verbose    = TRUE) {
+
+  layer <- match.arg(layer)
+  gpkg_layer <- paste0("protected_area_", layer)
+
+  if (!is.null(cache_path) && file.exists(cache_path)) {
+    return(sf::st_read(cache_path, layer = gpkg_layer, quiet = TRUE))
+  }
+
+  if (verbose) {
+    say("Reading the Kosovo designated areas from the EEA inventory ",
+        cdda_source$version, " ...")
+  }
+
+  # Tuned for reading a 1.7 GB SQLite file over HTTP: a 1 MB chunk keeps the
+  # number of range requests down, and a cache large enough to hold everything
+  # fetched stops GDAL re-requesting pages it has already seen while it walks
+  # the R-tree.
+  old <- Sys.getenv(c("GDAL_DISABLE_READDIR_ON_OPEN", "CPL_VSIL_CURL_CHUNK_SIZE",
+                      "CPL_VSIL_CURL_CACHE_SIZE", "GDAL_HTTP_MAX_RETRY",
+                      "GDAL_HTTP_RETRY_DELAY"), names = TRUE)
+  Sys.setenv(GDAL_DISABLE_READDIR_ON_OPEN = "EMPTY_DIR",
+             CPL_VSIL_CURL_CHUNK_SIZE     = "1048576",
+             CPL_VSIL_CURL_CACHE_SIZE     = "524288000",
+             GDAL_HTTP_MAX_RETRY          = "3",
+             GDAL_HTTP_RETRY_DELAY        = "2")
+  on.exit(do.call(Sys.setenv, as.list(old)), add = TRUE)
+
+  src <- cdda_url()
+
+  # Geometry comes through the spatial index, not through a WHERE clause on the
+  # country code. `ProtectedSite` holds 142,000 features for the whole of
+  # Europe and carries no index on `natDACountryCode`, so filtering on the
+  # attribute would drag the entire table across the network; a bounding box
+  # touches only the pages that could contain Kosovo. The box is deliberately
+  # generous, and the country code does the exact filtering afterwards.
+  box <- sf::st_as_text(sf::st_as_sfc(sf::st_bbox(
+    c(xmin = 19.9, ymin = 41.75, xmax = 21.7, ymax = 43.25), crs = 4326
+  )))
+
+  sites <- sf::st_read(src, layer = "ProtectedSite", wkt_filter = box,
+                       quiet = TRUE)
+  sites <- sites[!is.na(sites$natDACountryCode) &
+                   sites$natDACountryCode == "XK", ]
+
+  # The two attribute tables are small enough to fetch by attribute:
+  # `DesignatedArea` carries one row per designated area — the designation
+  # type, the IUCN management category, the reported area — and
+  # `DesignationType` is where those type codes acquire names. Kosovo's are
+  # given in Albanian and in English, so both are carried through, for the same
+  # reason the municipal layer is bilingual.
+  areas <- sf::st_read(
+    src, query = "SELECT * FROM DesignatedArea WHERE natDACountryCode = 'XK'",
+    quiet = TRUE)
+
+  types <- sf::st_read(
+    src, query = "SELECT * FROM DesignationType WHERE natDACountryCode = 'XK'",
+    quiet = TRUE) |>
+    dplyr::select(
+      designation_code = "designationTypeCode",
+      designation      = "designationTypeNameEnglish",
+      designation_sq   = "designationTypeName",
+      authority        = "competentAuthorityOrganisationName"
+    ) |>
+    dplyr::distinct(.data$designation_code, .keep_all = TRUE)
+
+  attributes_tbl <- areas |>
+    dplyr::transmute(
+      natda_id             = as.character(.data$natDAId),
+      national_id          = as.character(.data$nationalId),
+      site_name            = .data$siteName,
+      designation_code     = .data$designationTypeCode,
+      designated_area_type = .data$designatedAreaType,
+      # NOT the Red List category. This is the IUCN protected-area MANAGEMENT
+      # category (Ia, Ib, II, III, V) — a statement about how a site is run,
+      # not about how likely a species is to go extinct. The two share an
+      # acronym and nothing else, and this report shows both, so the column is
+      # named at length deliberately.
+      iucn_management_category = .data$iucnCategory,
+      reported_area_ha     = suppressWarnings(as.numeric(.data$siteArea)),
+      designation_year     = suppressWarnings(
+                               as.integer(.data$legalFoundationDate)),
+      ecosystem_type       = .data$majorEcosystemType,
+      management_plan      = .data$managementPlanPA
+    )
+
+  assemble <- function(g) {
+    sf::st_sf(
+      natda_id = as.character(g$natDAId),
+      geometry = sf::st_geometry(g)
+    ) |>
+      dplyr::left_join(attributes_tbl, by = "natda_id") |>
+      dplyr::left_join(types, by = "designation_code") |>
+      sf::st_make_valid() |>
+      sf::st_transform(4326) |>
+      dplyr::relocate("geometry", .after = dplyr::last_col())
+  }
+
+  is_point <- sf::st_geometry_type(sites) %in% c("POINT", "MULTIPOINT")
+
+  polygons <- assemble(sites[!is_point, ])
+  points   <- assemble(sites[is_point, ])
+
+  # Measured area, alongside the area the country reported. They are not the
+  # same number, and the difference is worth being able to see: the reported
+  # figure is the legal extent named in the designation act, the measured one
+  # is what the digitised boundary actually encloses.
+  polygons$area_km2 <- as.numeric(
+    units::set_units(sf::st_area(sf::st_transform(polygons, 32634)), "km^2")
+  )
+
+  polygons <- dplyr::arrange(polygons, dplyr::desc(.data$area_km2))
+  points   <- dplyr::arrange(points, .data$site_name)
+
+  if (!is.null(cache_path)) {
+    dir.create(dirname(cache_path), recursive = TRUE, showWarnings = FALSE)
+    sf::st_write(polygons, cache_path, layer = "protected_area_polygons",
+                 append = FALSE, quiet = TRUE)
+    sf::st_write(points, cache_path, layer = "protected_area_points",
+                 append = FALSE, quiet = TRUE)
+  }
+
+  if (layer == "polygons") polygons else points
+}
+
+#' Attach the protected area each record falls in
+#'
+#' Tested against the designated sites only. The 19 strict-protection
+#' boundaries are nested inside sites that are already in the layer, so
+#' including them would let one record match two features and inflate every
+#' count that follows; they are reported separately, through
+#' `strictlyProtected`.
+#'
+#' Where a record falls inside more than one site — seven of Kosovo's sites
+#' overlap along their edges, though none is wholly inside another — the
+#' smallest is taken. The smallest site is the most specific statement anyone
+#' has made about that ground, and it is the one a reader chasing the record
+#' would want named.
+#'
+#' @param d Occurrence data frame carrying decimal coordinates.
+#' @param protected_areas Polygon layer from `kosovo_protected_areas()`.
+#' @return `d` with `protectedArea`, `protectedAreaDesignation` and
+#'   `strictlyProtected` columns added.
+assign_protected_area <- function(d, protected_areas) {
+
+  pts <- sf::st_as_sf(
+    d[, c("decimalLongitude", "decimalLatitude")],
+    coords = c("decimalLongitude", "decimalLatitude"), crs = 4326
+  )
+
+  sites  <- protected_areas[
+    protected_areas$designated_area_type == "designatedSite", ]
+  strict <- protected_areas[
+    protected_areas$designated_area_type == "strictProtectionBoundary", ]
+
+  hit <- suppressMessages(sf::st_intersects(pts, sites))
+
+  # Smallest containing site, as documented above.
+  idx <- vapply(
+    hit,
+    function(i) if (length(i)) i[which.min(sites$area_km2[i])] else NA_integer_,
+    integer(1)
+  )
+
+  d$protectedArea            <- sites$site_name[idx]
+  d$protectedAreaDesignation <- sites$designation[idx]
+
+  d$strictlyProtected <- lengths(
+    suppressMessages(sf::st_intersects(pts, strict))
+  ) > 0
+
+  d
+}
+
+#' Summarise occurrence records by protected area
+#'
+#' Every polygon in the layer is returned, but the two kinds of polygon are
+#' counted differently, and for a reason worth stating because it decides
+#' whether the column can be added up.
+#'
+#' The designated sites are counted from the `protectedArea` stamp that
+#' `assign_protected_area()` left on each record. That stamp names one site per
+#' record, so the counts partition the records and the column sums to the
+#' number of records inside the network. Counting each site by intersection
+#' instead would give 21,524 where 21,069 records are actually inside: 455 of
+#' them fall in two sites at once, along the edges where seven of Kosovo's
+#' sites overlap, and each would be counted twice.
+#'
+#' The strict-protection boundaries cannot use that stamp — they are not the
+#' record's site, they are a zone inside it — so they are counted by direct
+#' intersection. None of them overlaps another, so those counts are exact too.
+#' What the two must not do is be added together: every record inside a strict
+#' boundary is already counted in the site that contains it.
+#'
+#' @param d Occurrence data with a `protectedArea` column and coordinates.
+#' @param protected_areas Polygon layer from `kosovo_protected_areas()`.
+#' @return A tibble of protected areas with record and species counts.
+summarise_protected_areas <- function(d, protected_areas) {
+
+  flat <- if (inherits(d, "sf")) sf::st_drop_geometry(d) else d
+
+  by_name <- flat |>
+    dplyr::filter(!is.na(.data$protectedArea)) |>
+    dplyr::group_by(site_name = .data$protectedArea) |>
+    dplyr::summarise(
+      records = dplyr::n(),
+      species = dplyr::n_distinct(
+        .data$species[!is.na(.data$species) & nzchar(.data$species)]),
+      .groups = "drop"
+    )
+
+  # The strict boundaries, by intersection.
+  pts <- if (inherits(d, "sf")) {
+    sf::st_geometry(d)
+  } else {
+    sf::st_geometry(sf::st_as_sf(
+      flat[, c("decimalLongitude", "decimalLatitude")],
+      coords = c("decimalLongitude", "decimalLatitude"), crs = 4326))
+  }
+
+  strict <- protected_areas[
+    protected_areas$designated_area_type == "strictProtectionBoundary", ]
+
+  by_strict <- if (nrow(strict)) {
+    inside <- suppressMessages(sf::st_intersects(strict, pts))
+    dplyr::tibble(
+      natda_id = strict$natda_id,
+      records_strict = lengths(inside),
+      species_strict = vapply(inside, function(i) {
+        s <- flat$species[i]
+        dplyr::n_distinct(s[!is.na(s) & nzchar(s)])
+      }, integer(1))
+    )
+  } else {
+    dplyr::tibble(natda_id = character(), records_strict = integer(),
+                  species_strict = integer())
+  }
+
+  protected_areas |>
+    sf::st_drop_geometry() |>
+    dplyr::left_join(by_name, by = "site_name") |>
+    dplyr::left_join(by_strict, by = "natda_id") |>
+    dplyr::mutate(
+      records = dplyr::coalesce(.data$records_strict, .data$records, 0L),
+      species = dplyr::coalesce(.data$species_strict, .data$species, 0L),
+      records_per_km2 = ifelse(.data$area_km2 > 0,
+                               .data$records / .data$area_km2, NA_real_)
+    ) |>
+    dplyr::select(-"records_strict", -"species_strict") |>
+    dplyr::arrange(dplyr::desc(.data$area_km2))
+}
+# ------------------------------------------------------------------------------
 # Vernacular names
 # ------------------------------------------------------------------------------
 
@@ -817,7 +1190,19 @@ map_palette <- list(
   ),
 
   boundary     = "#231F20",  # GBIF black
-  municipality = "#6E7B7A"
+  municipality = "#6E7B7A",
+
+  # Protected areas. Green is the one hue a reader already reads as "protected"
+  # on any conservation map, and it is free to use here: the occurrence marks
+  # carry GBIF green only for Plantae, and the protected-area layer is drawn as
+  # a wash under the marks rather than as marks of its own, so the two never
+  # compete for the same reading. The strict-protection zones take the darker
+  # step, which is also the order of severity.
+  protected = c(
+    site   = "#2E7D32",
+    strict = "#0F4A1E",
+    point  = "#2E7D32"
+  )
 )
 
 # Order used wherever IUCN categories are listed, most severe first.
@@ -1117,6 +1502,115 @@ add_boundary_outline <- function(m, boundary, group = "Kosovo boundary",
                                    lineCap = "butt", interactive = FALSE),
     group = group
   )
+}
+
+#' Add the protected-area overlay
+#'
+#' Drawn beneath the occurrence marks, as a fill rather than an outline: the
+#' question the layer answers is whether a mark sits inside a site, and a
+#' reader answers that far faster from a tinted ground than by tracing an
+#' outline. The fill is kept light for the same reason the municipal overlay is
+#' — it must not compete with the marks it exists to give context to.
+#'
+#' The point-only sites are added as small circle markers rather than left off.
+#' They are three quarters of Kosovo's register, and a map that showed only the
+#' 67 mapped boundaries would imply the other 189 do not exist.
+#'
+#' @param m A leaflet map.
+#' @param protected_areas Polygon layer from `kosovo_protected_areas()`, or
+#'   `NULL` to add nothing.
+#' @param points Point layer from `kosovo_protected_areas(layer = "points")`,
+#'   or `NULL`.
+#' @param group Overlay group name.
+#' @return A list with the map and the overlay group names added.
+add_protected_areas <- function(m, protected_areas, points = NULL,
+                                group = "Protected areas") {
+
+  if (is.null(protected_areas) || !nrow(protected_areas)) {
+    return(list(map = m, groups = character(0)))
+  }
+
+  m <- leaflet::addMapPane(m, "protected", zIndex = 410)
+
+  sites  <- protected_areas[
+    protected_areas$designated_area_type == "designatedSite", ]
+  strict <- protected_areas[
+    protected_areas$designated_area_type == "strictProtectionBoundary", ]
+
+  # A label that names the site, what it is, and how big it is. `records` is
+  # present only when the caller has joined the counts on, so it is added
+  # conditionally rather than assumed.
+  site_label <- function(x) {
+    base <- sprintf(
+      "<strong>%s</strong><br>%s &middot; IUCN %s<br>%s km&sup2;, designated %s",
+      x$site_name, x$designation,
+      ifelse(is.na(x$iucn_management_category), "not assigned",
+             x$iucn_management_category),
+      formatC(x$area_km2, format = "f", digits = 1, big.mark = ","),
+      ifelse(is.na(x$designation_year), "date not given", x$designation_year)
+    )
+    if ("records" %in% names(x)) {
+      base <- paste0(base, sprintf("<br>%s records &middot; %s species",
+                                   fmt_int(dplyr::coalesce(x$records, 0L)),
+                                   fmt_int(dplyr::coalesce(x$species, 0L))))
+    }
+    lapply(base, htmltools::HTML)
+  }
+
+  groups <- character(0)
+
+  if (nrow(sites)) {
+    m <- leaflet::addPolygons(
+      m, data = sites,
+      fill = TRUE, fillColor = map_palette$protected[["site"]],
+      fillOpacity = 0.16,
+      color = map_palette$protected[["site"]], weight = 1.2, opacity = 0.85,
+      smoothFactor = 0,
+      label = site_label(sites),
+      highlightOptions = leaflet::highlightOptions(
+        weight = 2.5, color = map_palette$protected[["site"]],
+        fillOpacity = 0.3, bringToFront = FALSE),
+      options = leaflet::pathOptions(pane = "protected"),
+      group = group
+    )
+    groups <- c(groups, group)
+  }
+
+  if (nrow(strict)) {
+    strict_group <- "Strict protection zones"
+    m <- leaflet::addPolygons(
+      m, data = strict,
+      fill = TRUE, fillColor = map_palette$protected[["strict"]],
+      fillOpacity = 0.3,
+      color = map_palette$protected[["strict"]], weight = 1.2, opacity = 0.9,
+      smoothFactor = 0,
+      label = site_label(strict),
+      options = leaflet::pathOptions(pane = "protected"),
+      group = strict_group
+    )
+    groups <- c(groups, strict_group)
+  }
+
+  if (!is.null(points) && nrow(points)) {
+    point_group <- "Natural monuments (point only)"
+    m <- leaflet::addCircleMarkers(
+      m, data = points,
+      radius = 3, stroke = TRUE, weight = 1,
+      color = map_palette$protected[["point"]],
+      fillColor = map_palette$protected[["point"]], fillOpacity = 0.55,
+      label = ~lapply(sprintf(
+        "<strong>%s</strong><br>%s<br>%s ha, designated %s",
+        site_name, designation,
+        formatC(reported_area_ha, format = "f", digits = 2),
+        ifelse(is.na(designation_year), "date not given", designation_year)),
+        htmltools::HTML),
+      options = leaflet::pathOptions(pane = "protected"),
+      group = point_group
+    )
+    groups <- c(groups, point_group)
+  }
+
+  list(map = m, groups = groups)
 }
 
 #' Add the base-layer switcher
@@ -1433,12 +1927,14 @@ occurrence_colouring <- function(d, colour_by = "kingdom") {
 #' @param seed Random seed, so that any subsample is reproducible.
 #' @return A `leaflet` htmlwidget.
 build_occurrence_map <- function(x,
-                                 boundary       = NULL,
-                                 municipalities = NULL,
-                                 colour_by      = "kingdom",
-                                 max_points     = 6000,
-                                 cell_km        = 2,
-                                 seed           = 42) {
+                                 boundary        = NULL,
+                                 municipalities  = NULL,
+                                 protected_areas = NULL,
+                                 protected_points = NULL,
+                                 colour_by       = "kingdom",
+                                 max_points      = 6000,
+                                 cell_km         = 2,
+                                 seed            = 42) {
 
   stopifnot(requireNamespace("leaflet", quietly = TRUE))
   stopifnot(requireNamespace("leaflet.extras", quietly = TRUE))
@@ -1520,6 +2016,14 @@ build_occurrence_map <- function(x,
       group = "Municipalities"
     )
     overlay_groups <- c(overlay_groups, "Municipalities")
+  }
+
+  # --- Protected areas ------------------------------------------------------
+  # Added before the boundary and the marks so that it sits underneath both.
+  if (!is.null(protected_areas)) {
+    pa <- add_protected_areas(m, protected_areas, protected_points)
+    m  <- pa$map
+    overlay_groups <- c(overlay_groups, pa$groups)
   }
 
   if (!is.null(boundary)) {
@@ -1626,8 +2130,16 @@ build_occurrence_map <- function(x,
 
   m <- m |>
     add_layer_switcher(overlay_groups) |>
+    # "Protected areas" is deliberately NOT hidden. It is the context the marks
+    # are read against, it is drawn as a wash rather than as marks of its own,
+    # and a reader who has to find it in a menu before the map can answer
+    # "is this record inside a site?" will mostly not ask the question. The
+    # strict zones and the 189 point-only monuments are hidden, being detail
+    # rather than context.
     leaflet::hideGroup(intersect(c("Heat map", "Record density",
-                                   "Municipalities"), overlay_groups)) |>
+                                   "Municipalities", "Strict protection zones",
+                                   "Natural monuments (point only)"),
+                                 overlay_groups)) |>
     add_map_tools() |>
     pin_heatmap_zoom() |>
     leaflet::addControl(

@@ -1,0 +1,257 @@
+natda_id,national_id,site_name,designation_code,designated_area_type,iucn_management_category,reported_area_ha,designation_year,ecosystem_type,management_plan,designation,designation_sq,authority,area_km2,records,species,records_per_km2,geometry
+555547192,NP_002,"Parku Kombëtar ""Bjeshkët e Nemuna""",XK01,designatedSite,II,62488,2012,terrestrial,,National Park,Park Kombëtar,Ministry of Environment and Spatial Planning,625.4985150622218,2799,1042,4.4748307671387,boundary
+392171,NP_001,"Parku Kombëtar ""Sharri""",XK01,designatedSite,II,53469,2012,terrestrial,,National Park,Park Kombëtar,Ministry of Environment and Spatial Planning,535.0964485394343,2625,1031,4.905657675667696,boundary
+555588622,PN_003,Mali Pashtrik dhe Liqeni i Vërmices,XK04,designatedSite,V,5934,2015,terrestrial,,Nature Park,Park i Natyrës,Ministry of Environment and Spatial Planning,59.388611104987774,298,141,5.017797090307309,boundary
+555589865,NR_013,Shutmani,XK02,strictProtectionBoundary,Ia,5057,2016,terrestrial,,Strict Nature Reserve,Rezervat Strik i Natyrës,Ministry of Environment and Spatial Planning,50.6106621441363,159,125,3.141630503611611,boundary
+392183,NM_014,Gryka e Rugovës,XK06,designatedSite,III,4301,1985,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,43.05565882717985,399,303,9.2670745464966,boundary
+392256,PL_004,Gërmia,XK05,designatedSite,V,1949,1987,terrestrial,,Protected Landscape,Peizazh i Mbrojtur,Municipal Authorities,19.478458737561425,1186,425,60.88777433467918,boundary
+392163,NR_003,Bjeshka e Kozhnjerit - Maja e Ropsit,XK02,strictProtectionBoundary,Ia,1110.57,1955,terrestrial,,Strict Nature Reserve,Rezervat Strik i Natyrës,Ministry of Environment and Spatial Planning,11.114503420435428,157,99,14.125687316928216,boundary
+555589868,NR_016,Koritniku,XK02,strictProtectionBoundary,Ia,818,2016,terrestrial,,Strict Nature Reserve,Rezervat Strik i Natyrës,Ministry of Environment and Spatial Planning,8.180390162398837,91,35,11.124163786011271,boundary
+555589874,NR_022,Bistra,XK02,strictProtectionBoundary,Ia,642.12,2016,terrestrial,,Strict Nature Reserve,Rezervat Strik i Natyrës,Ministry of Environment and Spatial Planning,6.425744909388617,28,24,4.357471451922931,boundary
+392255,NM_083,Ujëvarat e Mirushës,XK06,designatedSite,III,598.4,2012,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,5.988869554932875,214,151,35.732953946831884,boundary
+392164,NR_007,Oshlaku,XK02,strictProtectionBoundary,Ia,550.47,1960,terrestrial,,Strict Nature Reserve,Rezervat Strik i Natyrës,Ministry of Environment and Spatial Planning,5.504669464857571,8,6,1.4533116022810997,boundary
+555589873,NR_021,Dupnica,XK02,strictProtectionBoundary,Ia,484,2016,terrestrial,,Strict Nature Reserve,Rezervat Strik i Natyrës,Ministry of Environment and Spatial Planning,4.843212657679073,0,0,0,boundary
+555589867,NR_015,Pashallare,XK02,strictProtectionBoundary,Ia,400,2016,terrestrial,,Strict Nature Reserve,Rezervat Strik i Natyrës,Ministry of Environment and Spatial Planning,3.996337396618407,1,1,0.2502291225075673,boundary
+555589870,NR_018,Lumbardhi,XK02,strictProtectionBoundary,Ia,304,2016,terrestrial,,Strict Nature Reserve,Rezervat Strik i Natyrës,Ministry of Environment and Spatial Planning,3.042250826439187,21,18,6.902783891944742,boundary
+555560532,NM_100,Shpella e Ponorcit,XK06,designatedSite,III,279,2014,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,2.7926729997422024,8,5,2.86463900382841,boundary
+392166,NR_004,Rusenica,XK02,strictProtectionBoundary,Ia,270,1955,terrestrial,,Strict Nature Reserve,Rezervat Strik i Natyrës,Ministry of Environment and Spatial Planning,2.7016660289223826,0,0,0,boundary
+392169,NR_011,Kamilja,XK02,strictProtectionBoundary,Ib,228,1988,terrestrial,,Strict Nature Reserve,Rezervat Strik i Natyrës,Ministry of Environment and Spatial Planning,2.2844749736872463,0,0,0,boundary
+392182,NM_013,Gryka e lumit Klina,XK06,designatedSite,III,205,1985,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,2.0522516536361666,0,0,0,boundary
+555589871,NR_019,Luboteni,XK02,strictProtectionBoundary,Ia,202.16,2016,terrestrial,,Strict Nature Reserve,Rezervat Strik i Natyrës,Ministry of Environment and Spatial Planning,2.021626602705932,220,50,108.82326128155003,boundary
+392175,NM_008,Gryka e lumit Bistrica,XK06,designatedSite,III,200,1976,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,2.001758284362166,20,19,9.991216300310073,boundary
+555589872,NR_020,Kobilica,XK02,strictProtectionBoundary,Ia,199,2016,terrestrial,,Strict Nature Reserve,Rezervat Strik i Natyrës,Ministry of Environment and Spatial Planning,1.9950571048444081,1,1,0.5012387853820298,boundary
+392184,NM_017,Kanioni i Drinit të Bardhë te Ura e Fshajtë,XK06,designatedSite,III,198,1986,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,1.9834525807946994,23,17,11.595941452144377,boundary
+392162,NR_006,Maja e Arnenit,XK02,strictProtectionBoundary,Ia,145.48,1960,terrestrial,,Strict Nature Reserve,Rezervat Strik i Natyrës,Ministry of Environment and Spatial Planning,1.4548025598644843,33,26,22.68349046833817,boundary
+555589866,NR_014,Bredhiku,XK02,strictProtectionBoundary,Ia,123.16,2016,terrestrial,,Strict Nature Reserve,Rezervat Strik i Natyrës,Ministry of Environment and Spatial Planning,1.2315648396437884,40,27,32.47900452530733,boundary
+555560533,SAC_001,Ligatina e Hencit/ Radevës,XK07,designatedSite,V,109.5,2014,terrestrial,,Wetlands,Ligatinat,Ministry of Environment and Spatial Planning,1.0955757063929512,13346,207,12181.723200069915,boundary
+392165,NR_009,Malet e Prilepit,XK02,strictProtectionBoundary,Ia,106.04,1963,terrestrial,,Strict Nature Reserve,Rezervat Strik i Natyrës,Ministry of Environment and Spatial Planning,1.0597901213658512,3,3,2.8307491639322113,boundary
+555589869,NR_017,Gryka,XK02,strictProtectionBoundary,Ia,103.98,2016,terrestrial,,Strict Nature Reserve,Rezervat Strik i Natyrës,Ministry of Environment and Spatial Planning,1.0397906205215948,0,0,0,boundary
+555641796,PL_005,"Ahishtat e Llomovës, në Selac",XK05,designatedSite,V,93,2019,terrestrial,,Protected Landscape,Peizazh i Mbrojtur,Municipal Authorities,0.9290640109719205,1,1,1.0763521008136687,boundary
+555742168,PM_007,Ushton lumi” në Popovë,XK05,designatedSite,V,92,2022,terrestrial,,Protected Landscape,Peizazh i Mbrojtur,Municipal Authorities,0.9188473973145913,0,0,0,boundary
+392176,NM_010,Burimi i Drinit të Bardhë me Shpellën dhe Ujëvarën në Radavc,XK06,designatedSite,III,90,1983,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,0.9012806778781665,87,67,96.529307834291,boundary
+392161,NR_005,Gubavci,XK02,strictProtectionBoundary,Ia,76.86,1959,terrestrial,,Strict Nature Reserve,Rezervat Strik i Natyrës,Ministry of Environment and Spatial Planning,0.769382373780299,0,0,0,boundary
+555702653,PL_006,Lugina e Lumit Llapushnik ne Pogragjë,XK05,designatedSite,V,75.8,2021,terrestrial,,Protected Landscape,Peizazh i Mbrojtur,Municipal Authorities,0.7580888016843907,11,11,14.510173446117655,boundary
+555515216,PL_002,Shkugëza,XK05,designatedSite,V,69,2011,terrestrial,,Protected Landscape,Peizazh i Mbrojtur,Municipal Authorities,0.6907062757521009,7,4,10.134553927974366,boundary
+392168,NR_008,Pisha e Madhe,XK02,strictProtectionBoundary,Ia,44,1960,terrestrial,,Strict Nature Reserve,Rezervat Strik i Natyrës,Ministry of Environment and Spatial Planning,0.44880232281927646,0,0,0,boundary
+392172,NM_006,Shpella e Gadimes,XK06,designatedSite,III,39,1969,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,0.3904200903414259,10,10,25.613436007493647,boundary
+555589854,NM_126,Kompleksi i pishave në Shtime,XK06,designatedSite,III,35,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,0.20017309040906325,0,0,0,boundary
+555588620,PL_003,Kompleksi i Pishave në Strazhë,XK05,designatedSite,V,25,2016,terrestrial,,Protected Landscape,Peizazh i Mbrojtur,Municipal Authorities,0.25039619390256235,0,0,0,boundary
+555589864,NR_012,Lëndina e Shenjtë,XK02,strictProtectionBoundary,Ia,17.98,2016,terrestrial,,Strict Nature Reserve,Rezervat Strik i Natyrës,Ministry of Environment and Spatial Planning,0.17976843466788903,0,0,0,boundary
+392179,NM_020,Burimi termomineral në Vuqë,XK06,designatedSite,III,16.6,1988,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,0.16626753195729294,0,0,0,boundary
+392167,NM_108,Bifurkacioni i Lumit Nerodime,XK06,designatedSite,III,15,2015,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,0.15026226038146345,12,12,79.86037192263836,boundary
+392194,PL_001,Pishat e Deçanit,XK05,designatedSite,V,15,1968,terrestrial,,Protected Landscape,Peizazh i Mbrojtur,Municipal Authorities,0.15024766352392452,2,2,13.311355085941369,boundary
+392177,NM_011,Rrjedha e lumit Mirusha,XK06,designatedSite,III,12,1983,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,0.12081130251163896,0,0,0,boundary
+555560531,NM_099,Burimet e ujit në Carravranë,XK06,designatedSite,III,9.76,2014,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,0.0977623504769398,0,0,0,boundary
+555635484,NM_162,Kompleksi i Trungjeve Jabllanicë,XK06,designatedSite,III,7.21,2018,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,0.07188075578352436,0,0,0,boundary
+555635489,NM_167,Shpellat e Kusarit 1 dhe 2,XK06,designatedSite,III,5,2018,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,0.05036440368190966,14,10,277.9741042586521,boundary
+392245,NM_073,Burimi i ujit natyral në Istog,XK06,designatedSite,III,3.88,2008,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,0.038823765633689236,2,2,51.51483807290719,boundary
+555702650,MN_200,Shpella e madhe në Uglar,XK06,designatedSite,III,2.63,2021,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,0.026375186856822108,0,0,0,boundary
+555698371,MN_187,Kompleksi i trungjeve të dushkut (Quercus sp.) në Sllatinë të Poshtme,XK06,designatedSite,III,2,2020,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,0.020843120347885415,0,0,0,boundary
+392202,NM_030,Guri i Gradinës në Llapushnik,XK06,designatedSite,III,2,2006,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,0.02013610402609594,0,0,0,boundary
+555560521,NM_089,Shpella e Bozhurit në Damanek,XK06,designatedSite,III,2,2014,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,0.020053345706010237,0,0,0,boundary
+392200,NM_028,Shpella e Kishnarekës,XK06,designatedSite,III,2,2006,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,0.02003578286988288,0,0,0,boundary
+555560522,NM_090,Shpella e Lladroviqit,XK06,designatedSite,III,2,2014,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,0.020019890160392968,0,0,0,boundary
+392181,NM_022,Burimi i ujit në Shajkovc,XK06,designatedSite,III,1.41,1988,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,0.01411447943520732,0,0,0,boundary
+555702640,MN_190,Lokaliteti i Boshtres (Forsytha europea) Golesh,XK06,designatedSite,III,1.4,2021,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,1.2343256902337427,5,4,4.050794729106834,boundary
+555702666,MN_215,Kompleksi i trungjeve dushkut ne Shaptej,XK06,designatedSite,III,1.4,2021,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,0.014663165244342294,0,0,0,boundary
+555702667,MN_216,Kompleksi i trungjeve-varrezat e Jagozit ne Gramacel,XK06,designatedSite,III,1.4,2021,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,0.014149952355063986,0,0,0,boundary
+555702665,MN_214,Kompleksi i trungjeve të dushkut (Quercus sp.) në Ratish i Eperm,XK06,designatedSite,III,1.3,2021,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,0.013176839932532049,0,0,0,boundary
+555560524,NM_092,Trungu i Qarrit (Quercus cerris L.) ne Drenovc,XK06,designatedSite,III,1.25,2014,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,0.012643990194141865,0,0,0,boundary
+555635487,NM_165,Kompleksi i Trungjeve ne Mulliq,XK06,designatedSite,III,1.12,2018,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,0.011201618167142848,0,0,0,boundary
+555641788,MN_171,"Shpellat e Kaçandollit, në Kacandoll",XK06,designatedSite,III,1,2019,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,0.010632382752129807,0,0,0,boundary
+555589852,NM_124,Shpella e Bali Ages ne Zatriq,XK06,designatedSite,III,1,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,0.010326446252742781,0,0,0,boundary
+555589863,NM_135,Shpella e Devetakut dhe Burimi në Devetak,XK06,designatedSite,III,1,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,0.010072277897519293,0,0,0,boundary
+555588614,NM_142,Shpella e Shullanit në Sllatinë,XK06,designatedSite,III,1,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,0.01003920086336229,0,0,0,boundary
+555589857,NM_129,Shpella e Pjetërshticës në Pjetërshticë,XK06,designatedSite,III,1,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,0.0100208538903594,0,0,0,boundary
+555588617,NM_145,Humnera në shpatin e Qenarës në Glloboqicë,XK06,designatedSite,III,1,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,0.010015620455694384,0,0,0,boundary
+555589855,NM_127,Burimi i ujit “Vrella e zezë” në Petrovë,XK06,designatedSite,III,1,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,0.010013995541112496,0,0,0,boundary
+555589856,NM_128,Shpella e Imer Devetakut në Devetak,XK06,designatedSite,III,1,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,0.010012632809341884,0,0,0,boundary
+555635490,NM_168,Burimi i ujit në Kusar,XK06,designatedSite,III,0.99,2018,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392248,NM_076,Burimi i ujit termal në Banjë - Istog,XK06,designatedSite,III,0.85,2008,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555560527,NM_095,Trungu i Qarrit (Quercus cerris L.) ne Bellanicë,XK06,designatedSite,III,0.8,2014,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555589844,NM_116,Trungu i frasherit (Fraxinus excelsior) në Kaznik,XK06,designatedSite,III,0.8,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555560528,NM_096,Trungu i frasherit gjethengushtë (Fraxinus angustifolia Vahl.) në Javiq,XK06,designatedSite,III,0.8,2014,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555560525,NM_093,Trungu i qarrit (Quercus cerris L.) ne Bubël 1,XK06,designatedSite,III,0.8,2014,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555560526,NM_094,Trungu i qarrit (Quercus cerris L.) ne Bubël 2,XK06,designatedSite,III,0.8,2014,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555702669,MN_218,Trungjet e blirit dhe trungu i pishës ne Drenoc,XK06,designatedSite,III,0.7,2021,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555560529,NM_097,Zabeli i Vakëfit në Vermicë,XK06,designatedSite,III,0.7,2014,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555560517,NM_085,Shpella e Temeqinës,XK06,designatedSite,III,0.69,2014,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555560530,NM_098,Zabeli dhe Vrella ne Javiq,XK06,designatedSite,III,0.51,2014,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392174,NM_019,Shpella e Gllanasellës,XK06,designatedSite,III,0.5,1987,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555635482,NM_160,Trungu i Bungut në Bec,XK06,designatedSite,III,0.5,2018,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555635491,NM_169,Trungu i Qarrit në Vogovë,XK06,designatedSite,III,0.5,2018,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392192,NM_023,Trungu i qarrit (Quercus cerris) në Pollatë,XK06,designatedSite,III,0.44,1988,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392180,NM_021,Burimi i ujit mineral në Sallabajë,XK06,designatedSite,III,0.31,1988,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555589853,NM_125,Shpella e Peshterrit në Zatriq,XK06,designatedSite,III,0.3,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392222,NM_050,Kompleksi i trungjeve të rrënjës (Quercus robur) në Gllarevë,XK06,designatedSite,III,0.28,2007,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392254,NM_082,Burimi i ujit në Vrellë,XK06,designatedSite,III,0.26,2008,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555641790,MN_173,"Ujëvara e Trepçalive, në Milenicë",XK06,designatedSite,III,0.25,2019,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555635488,NM_166,Burimi i ujit në Molliq,XK06,designatedSite,III,0.2,2018,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555698373,MN_189,Guri i blinave në Gjylekar,XK06,designatedSite,III,0.2,2020,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392225,NM_067,Trungu i bungut (Quercus pubescens) në Ujëmir,XK06,designatedSite,III,0.2,2008,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555635485,NM_163,Kompleksi i Trungjeve në Zhabel,XK06,designatedSite,III,0.19,2018,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555755392,MN_231,Trungu i dushkut në Suharekë,XK06,designatedSite,III,0.18,2023,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555702659,MN_208,Burimi i ujit mineral ne Deqan,XK06,designatedSite,III,0.17,2021,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392243,NM_071,Trungjet e bungbutës (Quercus pubescens Willd.) në Sinaj,XK06,designatedSite,III,0.17,2008,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392239,NM_066,Guri i Xhamisë në Luzhnicë,XK06,designatedSite,III,0.15,2007,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392238,NM_065,Kompleksi i trungjeve të bungut (Quercus sp.) në Luzhnicë,XK06,designatedSite,III,0.15,2007,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392227,NM_054,Kompleksi i trungjeve të dushkut (Quercus sp). në Savrovë,XK06,designatedSite,III,0.15,2007,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555589840,NM_112,Kompleksi i trungjeve të dushkut (Quercus sp.) në Galicë,XK06,designatedSite,III,0.15,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392232,NM_059,Kompleksi i trungjeve të dushkut (Quercus sp.) në Muhlan,XK06,designatedSite,III,0.15,2007,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392234,NM_061,Kompleksi i trungjeve të dushkut (Quercus sp.) në Papaz,XK06,designatedSite,III,0.15,2007,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555589858,NM_130,Trungjet e dushkut në Mollopolc,XK06,designatedSite,III,0.15,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555698369,MN_185,Pylli i mllakës (Quercus sp.) në Sllatinë të Epërme,XK06,designatedSite,III,0.14,2020,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555698367,MN_183,Trungjet e Qarrit (Quercus cerris) në Binçë,XK06,designatedSite,III,0.14,2020,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555589846,NM_118,Trungjet e dushkut (Quercus sp.) në Dabidol,XK06,designatedSite,III,0.13,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392223,NM_051,Trungu i qarrit (Quercus cerris) në Nagllavkë,XK06,designatedSite,III,0.12,2007,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392240,NM_068,Dy trungjet e manit të zi (Morus nigra L.) në Cerrcë,XK06,designatedSite,III,0.11,2008,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392173,NM_018,Shpella e Baicës,XK06,designatedSite,III,0.11,1987,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555641797,MN_179,Trungjet e rrënjës (Quercus robur) në Sibovc,XK06,designatedSite,III,0.11,2019,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392250,NM_078,Trungu i rrënjës (Quercus robur L.) në Zallq - Zabllaq,XK06,designatedSite,III,0.11,2008,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392211,NM_039,Burimi i ujit termal në Banjë - Skenderaj,XK06,designatedSite,III,0.1,2007,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555589838,NM_110,Burimi i ujit termomineral në Gjelbishtë,XK06,designatedSite,III,0.1,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392235,NM_062,Dy trungjet e bungut (Quercus sp.) në Bllacë,XK06,designatedSite,III,0.1,2007,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555589862,NM_134,Gështenjat e Shtimes në Shtime,XK06,designatedSite,III,0.1,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392214,NM_042,Kompleksi i trungjeve të bungbutës (Quercus pubescens Willd.) në Klladernicë,XK06,designatedSite,III,0.1,2007,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392237,NM_064,Lokaliteti i bujgerit (Quercus trojana) në Biraqë,XK06,designatedSite,III,0.1,2007,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555589842,NM_114,Trungjet e dushkut (Quercus sp.) në Druarë,XK06,designatedSite,III,0.1,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555588602,NM_102,Trungjet e dushkut (Quercus sp.) në Llapashticë të Epërme,XK06,designatedSite,III,0.1,2015,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555589841,NM_113,Trungjet e shpardhit (Quercus frainetto) në Zhilivodë,XK06,designatedSite,III,0.1,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392241,NM_069,Trungu i blirit të argjendtë (Tilia tomentosa Moench.) në Lubozhdë,XK06,designatedSite,III,0.1,2008,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555641799,MN_181,Trungu i manit (Morus nigra L.) në Mazgit,XK06,designatedSite,III,0.1,2019,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555588604,NM_104,Vrella dhe Trungu i ahut (Fagus sp.) në Dobratin,XK06,designatedSite,III,0.1,2015,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555596232,NM_152,"Trungjet e Qarrit (Quercus cerris), në Jezerc",XK06,designatedSite,III,0.09,2017,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555560519,NM_087,Trungu i bungëbutës (Quercus pubesens Willd.) në Llazicë 1,XK06,designatedSite,III,0.08,2014,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555560516,NM_084,Trungu i qarrit (Quercus ceris L.) në Lladrovc,XK06,designatedSite,III,0.08,2014,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555560518,NM_086,Trungu i qarrit (Quercus cerris L.) ne Carravranë,XK06,designatedSite,III,0.08,2014,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392178,NM_012,Burimi i ujit mineral në Dresnik,XK06,designatedSite,III,0.07,1985,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392224,NM_052,Burimi i ujit mineral në Rudicë,XK06,designatedSite,III,0.07,2007,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392246,NM_074,Trugu i vodhës (Sorbus domestica L.) në Uçë,XK06,designatedSite,III,0.07,2008,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555635483,NM_161,Trungu i Bungbutes ne Hereq,XK06,designatedSite,III,0.07,2018,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392249,NM_077,Trungu i blirit të kuq (Tilia sp.) në Lubovë,XK06,designatedSite,III,0.07,2008,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555560520,NM_088,Trungu i bungëbutës (Quercus pubesens Willd.) në Llazicë 2,XK06,designatedSite,III,0.07,2014,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555589850,NM_122,Trungu i qarrit (Quercus cerris) dhe Trungu i vidhit (Ulmus minor) në Bratotin,XK06,designatedSite,III,0.07,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392193,NM_024,Trungu i qarrit (Quercus cerris) në Dobratin,XK06,designatedSite,III,0.07,1988,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555588621,NM_148,Trungjet e bungut Bob,XK06,designatedSite,III,0.06,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555588618,NM_146,Trungjet e dushkut në Ivajë,XK06,designatedSite,III,0.06,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555742158,MN_221,Burimet e ujit në Baicë,XK06,designatedSite,III,0.05,2022,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555702649,MN_199,Burimi i ujit mineral ne Ponesh,XK06,designatedSite,III,0.05,2021,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392203,NM_031,Burimi i ujit mineral në Poklek,XK06,designatedSite,III,0.05,2006,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555641789,MN_172,"Burimi i ujit mineral, në Mazhiq",XK06,designatedSite,III,0.05,2019,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555702651,MN_201,Burimi i ujit ne Zhegoc,XK06,designatedSite,III,0.05,2021,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392219,NM_047,Burimi i ujit të njelmët në Leqinë,XK06,designatedSite,III,0.05,2007,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555702654,MN_203,Gleni i Llukës ne Llukë te Ulet,XK06,designatedSite,III,0.05,2021,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392207,NM_035,Guri i plakës në Dobroshec,XK06,designatedSite,III,0.05,2006,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555742157,MN_220,Guri te Kroni Krojmir,XK06,designatedSite,III,0.05,2022,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392198,NM_026,Kompleksi i trungjeve të rrënjës (Quercus robur) në Negroc,XK06,designatedSite,III,0.05,2006,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555641792,MN_175,"Kroni i Akullit, në Rahovë",XK06,designatedSite,III,0.05,2019,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555589861,NM_133,Lisat Binjak në Godanc të Epërm,XK06,designatedSite,III,0.05,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555589859,NM_131,Lisi i Alushit në Rashincë,XK06,designatedSite,III,0.05,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555589860,NM_132,Lisi i Sahitit në Godanc të Epërm,XK06,designatedSite,III,0.05,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392196,NM_007,Mineralet - Kristalet,XK06,designatedSite,III,0.05,1970,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392187,NM_003,Plepi (Populus tremula) në Bajçinë,XK06,designatedSite,III,0.05,1959,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392185,NM_002,Rrapi (Platanus orientalis) në Marash,XK06,designatedSite,III,0.05,1959,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555641786,MN_169,Trungjet e Ahut (Fagus  sylvatica) në Bajgorë,XK06,designatedSite,III,0.05,2019,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555641785,MN_168,Trungjet e Ahut (Fagus sylvatica) në Bajgorë,XK06,designatedSite,III,0.05,2019,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555702645,MN_195,Trungjet e Bungut (Quercus petraea) ne Dunav,XK06,designatedSite,III,0.05,2021,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555641793,MN_176,Trungjet e Qarrit (Quercus cerris) në Zabërgjë,XK06,designatedSite,III,0.05,2019,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555742163,MN_226,Trungjet e Shpardhit (Quercus frainetto) Smallushe,XK06,designatedSite,III,0.05,2022,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392189,NM_005,Trungjet e blirit (Tilia argentea) në Isniq,XK06,designatedSite,III,0.05,1968,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392190,NM_015,Trungjet e bungut (Quercus sp.) në Lozice,XK06,designatedSite,III,0.05,1985,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392226,NM_053,Trungjet e dushkut (Quercus sp.) në Breshanc,XK06,designatedSite,III,0.05,2007,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392209,NM_037,Trungjet e dushkut (Quercus sp.) në Polac,XK06,designatedSite,III,0.05,2007,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392205,NM_033,Trungjet e dushkut (Quercus sp.) në Tërstenik,XK06,designatedSite,III,0.05,2006,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392204,NM_032,Trungjet e dushkut - Gjashtë lisat (Quercus sp.) në Likoshan,XK06,designatedSite,III,0.05,2006,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555588610,NM_138,Trungjet e dushkut në Kaçanik të Vjetër,XK06,designatedSite,III,0.05,2015,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392197,NM_025,Trungjet e rrënjës (Quercus robur) në Nekovc,XK06,designatedSite,III,0.05,2006,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392199,NM_027,Trungjet e shpardhit në Negroc,XK06,designatedSite,III,0.05,2006,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555742165,MN_228,Trungu  Bungëbutës (Quercus pubescens) Baicë,XK06,designatedSite,III,0.05,2022,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555742160,MN_223,Trungu  Bungëbutës (Quercus pubescens) Dobraje e Madhe,XK06,designatedSite,III,0.05,2022,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555641787,MN_170,Trungu i  Ahut (Fagus  sylvatica) në Bare,XK06,designatedSite,III,0.05,2019,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555641794,MN_177,Trungu i  Ahut (Fagus moesiaca) në  Zabërgjë,XK06,designatedSite,III,0.05,2019,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555641791,MN_174,"Trungu i Ahut me Burimin e ujit nën   rrënjë, në Ovçar",XK06,designatedSite,III,0.05,2019,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555702662,MN_211,Trungu i Bungbutes ne Dashinoc,XK06,designatedSite,III,0.05,2021,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555702656,MN_205,Trungu i Bungbutes ne Kodrali,XK06,designatedSite,III,0.05,2021,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555702661,MN_210,Trungu i Bungbutes ne Maznik,XK06,designatedSite,III,0.05,2021,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555635486,NM_164,Trungu i Bungbutes ne Rrypaj,XK06,designatedSite,III,0.05,2018,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555596234,NM_154,Trungu i Bungut (Quercus petraea) në Lloshkobarë,XK06,designatedSite,III,0.05,2017,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555596233,NM_153,"Trungu i Bungut (Quercus petraea) në, Komogllavë",XK06,designatedSite,III,0.05,2017,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555596229,NM_149,"Trungu i Bungut (Quercus petraea),  në Cërnillë",XK06,designatedSite,III,0.05,2017,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555596231,NM_151,"Trungu i Bungut (Quercus petraea), në Greme",XK06,designatedSite,III,0.05,2017,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555702664,MN_213,Trungu i Bungut ne Ratish e Eperm,XK06,designatedSite,III,0.05,2021,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555596239,NM_159,"Trungu i Bungëbutës  (Quercus pubescens) , në Zaskok",XK06,designatedSite,III,0.05,2017,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555596230,NM_150,"Trungu i Bungëbutës (Quercus pubescens), në Greme",XK06,designatedSite,III,0.05,2017,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555702642,MN_192,Trungu i Kreka (Acer campestre) ne Burincë,XK06,designatedSite,III,0.05,2021,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555702663,MN_212,Trungu i Mrizit (bungut) ne Ratish e Ulët,XK06,designatedSite,III,0.05,2021,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555742167,MN-230,Trungu i Qarrit (Quercus cerris )” në Lupçë të Poshtëm,XK06,designatedSite,III,0.05,2022,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555742161,MN_224,Trungu i Qarrit (Quercus cerris) Gadime e Eperme,XK06,designatedSite,III,0.05,2022,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555742164,MN_227,Trungu i Qarrit (Quercus cerris) Resinovc,XK06,designatedSite,III,0.05,2021,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555702646,MN_196,Trungu i Qarrit (Quercus cerris) ne Lipovicë,XK06,designatedSite,III,0.05,2021,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555702648,MN_198,Trungu i Qarrit (Quercus cerris) ne Llovcë,XK06,designatedSite,III,0.05,2021,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555596237,NM_157,Trungu i Qarrit (Quercus cerris) në  Rahovicë,XK06,designatedSite,III,0.05,2017,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555698370,MN_186,Trungu i Qarrit (Quercus cerris) në Gërmovë,XK06,designatedSite,III,0.05,2020,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555596235,NM_155,Trungu i Qarrit (Quercus cerris) në Pajat,XK06,designatedSite,III,0.05,2017,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555641795,MN_178,Trungu i Qarrit (Quercus cerris) në Zabërgjë,XK06,designatedSite,III,0.05,2019,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555596236,NM_156,Trungu i Qarrit (Quercus cerris) në. Rahovicë,XK06,designatedSite,III,0.05,2017,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555596238,NM_158,Trungu i Qarrit (Quercus cerris) në. Zaskok,XK06,designatedSite,III,0.05,2017,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555702668,MN_217,Trungu i Qarrit ne Carrabreg i Epërm,XK06,designatedSite,III,0.05,2021,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555742162,MN_225,Trungu i Rrënjës (Quercus robur) Poturoc,XK06,designatedSite,III,0.05,2022,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555742159,MN_222,Trungu i Shpardhit (Quercus frainetto) Bregu i Zi,XK06,designatedSite,III,0.05,2022,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555702641,MN_191,Trungu i Shpardhit (Quercus frainetto) ne Bresallc,XK06,designatedSite,III,0.05,2021,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555702652,MN_202,Trungu i Shpardhit (Quercus frainetto) ne Zhegoc,XK06,designatedSite,III,0.05,2021,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555702660,MN_209,Trungu i blirit Deqan,XK06,designatedSite,III,0.05,2021,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555702655,MN_204,Trungu i blirit ne Kodrali,XK06,designatedSite,III,0.05,2021,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555702658,MN_207,Trungu i blirit ne Strellc i Epërm,XK06,designatedSite,III,0.05,2021,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555702657,MN_206,Trungu i blirit ne Strellc te Ulet,XK06,designatedSite,III,0.05,2021,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392244,NM_072,Trungu i blirit të argjendtë (Tilia tomentosa Moench.) në Shushicë të Epërme,XK06,designatedSite,III,0.05,2008,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555698372,MN_188,"Trungu i bungbutës (Quercus pubescens), në Zhiti",XK06,designatedSite,III,0.05,2020,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555589849,NM_121,Trungu i bungut (Quercus petraea) në Nagavc,XK06,designatedSite,III,0.05,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555589837,NM_109,Trungu i bungut (Quercus petraea) në Shtitaricë,XK06,designatedSite,III,0.05,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392220,NM_048,Trungu i bungut (Quercus sp.) në Lubovec,XK06,designatedSite,III,0.05,2007,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392208,NM_036,Trungu i bungëbutës (Quercus pubescens Willd.) në Aqarevë,XK06,designatedSite,III,0.05,2007,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392217,NM_045,Trungu i bungëbutës (Quercus pubescens Willd.) në Çitak,XK06,designatedSite,III,0.05,2007,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555560523,NM_091,Trungu i bungëbutës (Quercus pubesens Willd.) në Guriq,XK06,designatedSite,III,0.05,2014,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392210,NM_038,Trungu i dushkut (Quercus sp.) në Likoc,XK06,designatedSite,III,0.05,2007,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392206,NM_034,Trungu i dushkut (Quercus sp.) në Likoshan,XK06,designatedSite,III,0.05,2006,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555588603,NM_103,Trungu i dushkut (Quercus sp.) në Llapashticë të Epërme,XK06,designatedSite,III,0.05,2015,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392212,NM_040,Trungu i dushkut (Quercus sp.) në Prellovc,XK06,designatedSite,III,0.05,2007,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555755394,MN_233,Trungu i dushkut në Bllacë (varrezat e fshatit),XK06,designatedSite,III,0.05,2023,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555755393,MN_232,Trungu i dushkut në Krushicë të Poshtme (varrezat e fshatit),XK06,designatedSite,III,0.05,2023,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555702643,MN_193,Trungu i i Qarrit (Quercus cerris) ne Burincë,XK06,designatedSite,III,0.05,2021,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392228,NM_055,Trungu i pishes (Pinus sp.) në Delloc,XK06,designatedSite,III,0.05,2007,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555588606,NM_106,Trungu i plepit (Populus tremula) në Gërdofc,XK06,designatedSite,III,0.05,2015,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555588605,NM_105,Trungu i plepit (Populus tremula) në Murgull,XK06,designatedSite,III,0.05,2015,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555588607,NM_107,Trungu i plepit (Populus tremula) në Orllan,XK06,designatedSite,III,0.05,2015,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392215,NM_043,Trungu i qarrit (Quercus cerris L.) në Kotorr,XK06,designatedSite,III,0.05,2007,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392216,NM_044,Trungu i qarrit (Quercus cerris L.) në Padalishtë,XK06,designatedSite,III,0.05,2007,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392218,NM_046,Trungu i qarrit (Quercus cerris L.) në Runik,XK06,designatedSite,III,0.05,2007,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392201,NM_029,Trungu i qarrit (Quercus cerris) në Krajkovë,XK06,designatedSite,III,0.05,2006,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392191,NM_016,Trungu i qarrit (Quercus cerris) në Zllakuçan,XK06,designatedSite,III,0.05,1985,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555589843,NM_115,Trungu i qarrit (Quercus cerris) në fshatin Ceceli,XK06,designatedSite,III,0.05,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392236,NM_063,Trungu i qarrit (Quercus sp.) në Vraniq,XK06,designatedSite,III,0.05,2007,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392252,NM_080,Trungu i qarrit Gurakoc,XK06,designatedSite,III,0.05,2008,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555742166,MN_229,Trungu i rrënjës (Quercus robur) -Balaj,XK06,designatedSite,III,0.05,2022,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555589839,NM_111,Trungu i rrënjës (Quercus robur) në Dumnicë të Llugës,XK06,designatedSite,III,0.05,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555588601,NM_101,Trungu i shpardhit (Quercus frainetto) në Dyz,XK06,designatedSite,III,0.05,2015,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392233,NM_060,Trungu i vodhes (Sorbus domestica L.) në Budakovë,XK06,designatedSite,III,0.05,2007,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555702647,MN_197,Tugnu i Qarrit (Quercus cerris) ne Llashticë,XK06,designatedSite,III,0.05,2021,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555702644,MN_194,Tungjet e Dardhës së Egër (Pyrus communis) ne Burincë,XK06,designatedSite,III,0.05,2021,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555589851,NM_123,Trungu i shpardhit (Quercus frainetto) në Bratotin,XK06,designatedSite,III,0.04,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555589847,NM_119,Trungu i shpardhit (Quercus frainetto) në Drenoc I,XK06,designatedSite,III,0.04,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555589848,NM_120,Trungu i shpardhit (Quercus frainetto) në Drenoc II,XK06,designatedSite,III,0.04,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555589845,NM_117,Trungu i shpardhit (Quercus frainetto) në Kaznik,XK06,designatedSite,III,0.035,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555641800,MN_182,"Burimi i ujit mineral, në Graboc i Epërm",XK06,designatedSite,III,0.03,2019,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555698368,MN_184,Burimi i ujit termomineral në Ballancë,XK06,designatedSite,III,0.03,2020,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555588615,NM_143,Guri i gjatë në Stagovë,XK06,designatedSite,III,0.03,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392186,NM_001,Mani Sham (Morus sp.),XK06,designatedSite,III,0.03,1957,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555588616,NM_144,Trungjet e dushkut dhe qarrit në Runjevë,XK06,designatedSite,III,0.03,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555588609,NM_137,Trungu i Qarrit në Kaçanik të Vjetër I,XK06,designatedSite,III,0.03,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555641798,MN_180,Trungu i blirit (Tilia argentea) në Sibovc,XK06,designatedSite,III,0.03,2019,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555588612,NM_140,Trungu i dushkut në Kotlinë,XK06,designatedSite,III,0.03,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555588608,NM_136,Trungu i qarrit në Kaçanik të Vjetër  II,XK06,designatedSite,III,0.03,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555588613,NM_141,Trungu i qarrit në Kovaqec,XK06,designatedSite,III,0.03,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392221,NM_049,Trungu i rrënjës (Quercus robur) në Deiq,XK06,designatedSite,III,0.03,2007,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392188,NM_004,Bliri (Tilia argentea) në Isniq,XK06,designatedSite,III,0.02,1968,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555588619,NM_147,Guri i Zi në Llanishtë,XK06,designatedSite,III,0.02,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+392213,NM_041,Kompleksi i trungjeve të dushkut (Quercus sp.) në Rrezallë,XK06,designatedSite,III,0.02,2007,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point
+555588611,NM_139,Trungu i shelgut në Kaçanik,XK06,designatedSite,III,0.02,2016,terrestrial,,Natural Monument,Monument Natyre,Municipal and Govermental Authorities,,,,,point

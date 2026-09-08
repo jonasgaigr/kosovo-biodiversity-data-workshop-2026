@@ -22,6 +22,7 @@
 /README.html
 **/*.quarto_ipynb
 pipeline_run.log
+render.log
 
 # ------------------------------------------------------------------------------
 # Raw GBIF archives
@@ -47,6 +48,12 @@ pipeline_run.log
 # data/gadm41_XKO.gpkg            — GADM 4.1 source for both layers below
 # data/kosovo_boundary.gpkg       — national outline, GADM level 0
 # data/kosovo_municipalities.gpkg — GADM level 2, used for coverage reporting
+# data/kosovo_protected_areas.gpkg— Kosovo's slice of the EEA Nationally
+#                                   designated areas inventory. Cached rather
+#                                   than rebuilt, because building it reads a
+#                                   1.7 GB European file over the network; the
+#                                   cache is 700 kB and takes a minute to
+#                                   regenerate if deleted
 # data/run_metadata.rds           — required to render the report
 # data_exports/                   — published outputs, served by GitHub Pages
 # docs/                           — the rendered website itself

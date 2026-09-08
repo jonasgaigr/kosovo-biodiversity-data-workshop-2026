@@ -60,6 +60,7 @@ config <- list(
   path_gadm      = "data/gadm41_XKO.gpkg",
   path_boundary  = "data/kosovo_boundary.gpkg",
   path_municipal = "data/kosovo_municipalities.gpkg",
+  path_protected = "data/kosovo_protected_areas.gpkg",
   path_vernacular= "data/vernacular_cache.csv",
   path_iucn      = "data/iucn_cache.csv",
   path_datasets  = "data/dataset_registry.csv",
@@ -120,6 +121,7 @@ config <- list(
     "eventDate", "year", "month", "day",
     "decimalLatitude", "decimalLongitude", "coordinateUncertaintyInMeters",
     "elevation", "locality", "municipality", "district",
+    "protectedArea", "protectedAreaDesignation", "strictlyProtected",
     "basisOfRecord", "individualCount", "establishmentMeans",
     "recordedBy", "identifiedBy",
     "institutionCode", "collectionCode", "catalogNumber",
@@ -478,15 +480,40 @@ municipalities <- kosovo_municipalities(cache_path = config$path_municipal,
 say("Municipal boundaries: ", nrow(municipalities), " units in ",
     dplyr::n_distinct(municipalities$district), " districts.")
 
+# --- Protected areas ----------------------------------------------------------
+# The municipality answers "where has anybody looked". The protected area
+# answers the question a conservation officer asks next: of what has been
+# found, how much of it sits on ground the state has already undertaken to
+# look after, and how much does not.
+
+protected_areas <- kosovo_protected_areas(cache_path = config$path_protected,
+                                          layer      = "polygons")
+protected_points <- kosovo_protected_areas(cache_path = config$path_protected,
+                                           layer      = "points")
+
+designated_sites <- protected_areas[
+  protected_areas$designated_area_type == "designatedSite", ]
+
+say("Protected areas: ", nrow(designated_sites), " designated sites with a ",
+    "mapped boundary, ", nrow(protected_points), " recorded as a point, ",
+    nrow(protected_areas) - nrow(designated_sites),
+    " strict-protection boundaries.")
+
 occurrences <- cleaning$clean |>
   dplyr::mutate(speciesKey = suppressWarnings(as.integer(.data$speciesKey))) |>
   dplyr::left_join(vernacular, by = "speciesKey") |>
   dplyr::left_join(iucn, by = "speciesKey") |>
-  assign_municipality(municipalities)
+  assign_municipality(municipalities) |>
+  assign_protected_area(protected_areas)
 
 say("Records located within a municipality: ",
     fmt_int(sum(!is.na(occurrences$municipality))), " / ",
     fmt_int(nrow(occurrences)), ".")
+
+say("Records inside a designated protected area: ",
+    fmt_int(sum(!is.na(occurrences$protectedArea))), " / ",
+    fmt_int(nrow(occurrences)), " (",
+    round(100 * mean(!is.na(occurrences$protectedArea)), 1), "%).")
 
 if (is.finite(config$coord_uncertainty_max)) {
   before <- nrow(occurrences)
@@ -828,6 +855,51 @@ manifest <- dplyr::bind_rows(lapply(names(subsets), function(nm) {
 
 print(manifest |> dplyr::select(label, records, species))
 
+# --- The protected-area register ----------------------------------------------
+# Published alongside the occurrence extracts, because a reader screening a
+# development proposal needs the site boundaries as much as the records, and
+# because the EEA's own distribution is a 1.7 GB file covering 38 countries.
+# Both geometries go into one GeoPackage, as two layers; the flat table carries
+# all 256 sites, point-only ones included, since the attributes are complete
+# even where the boundary is not.
+
+say("Exporting the protected-area register ...")
+
+pa_counts <- summarise_protected_areas(occurrences, protected_areas) |>
+  dplyr::select("natda_id", "records", "species", "records_per_km2")
+
+# The counts are attached to the polygons rather than recomputed, so the map,
+# the table and the published file cannot disagree.
+pa_polygons <- protected_areas |>
+  dplyr::left_join(pa_counts, by = "natda_id")
+
+pa_gpkg <- file.path(config$dir_exports, "kosovo_protected_areas.gpkg")
+if (file.exists(pa_gpkg)) unlink(pa_gpkg)
+
+sf::st_write(pa_polygons, pa_gpkg, layer = "protected_area_polygons",
+             quiet = TRUE)
+sf::st_write(protected_points, pa_gpkg, layer = "protected_area_points",
+             quiet = TRUE)
+
+# `geometry` here records how the site is represented in the register, not the
+# geometry column itself — the sites with no mapped boundary are the point-only
+# natural monuments, and a reader filtering the table needs to see which.
+pa_register <- dplyr::bind_rows(
+  sf::st_drop_geometry(pa_polygons)      |> dplyr::mutate(geometry = "boundary"),
+  sf::st_drop_geometry(protected_points) |> dplyr::mutate(geometry = "point")
+) |>
+  dplyr::arrange(dplyr::desc(.data$reported_area_ha))
+
+readr::write_csv(pa_register,
+                 file.path(config$dir_exports, "kosovo_protected_areas.csv"),
+                 na = "")
+
+if (requireNamespace("writexl", quietly = TRUE)) {
+  writexl::write_xlsx(as.data.frame(pa_register),
+                      file.path(config$dir_exports,
+                                "kosovo_protected_areas.xlsx"))
+}
+
 
 # ==============================================================================
 # 8. RUN METADATA
@@ -874,6 +946,67 @@ say("  ", nrow(run_meta$datasets), " datasets from ",
 run_meta$municipal_summary <- sf::st_drop_geometry(
   summarise_by_municipality(occurrences, municipalities)
 )
+
+# --- Protected-area coverage --------------------------------------------------
+#
+# The denominators matter here and are easy to get wrong, so they are computed
+# once, in one place, and the report reads them rather than deriving its own.
+#
+#   * `network_km2` is the area of the UNION of the designated sites, not the
+#     sum of their areas. Seven of Kosovo's sites overlap along their edges,
+#     and summing would count the shared ground twice — 1,306 km² against the
+#     1,261 km² actually covered.
+#   * The strict-protection boundaries are excluded from that union for the
+#     same reason: every one of them lies inside a site already counted.
+
+network_km2 <- as.numeric(units::set_units(
+  sf::st_area(sf::st_union(sf::st_transform(designated_sites, 32634))), "km^2"))
+
+country_km2 <- as.numeric(units::set_units(
+  sf::st_area(sf::st_transform(cleaning$boundary, 32634)), "km^2"))
+
+run_meta$protected_areas <- list(
+  source        = cdda_source,
+  n_sites       = nrow(designated_sites) + nrow(protected_points),
+  n_mapped      = nrow(designated_sites),
+  n_point_only  = nrow(protected_points),
+  n_strict      = nrow(protected_areas) - nrow(designated_sites),
+  network_km2   = network_km2,
+  country_km2   = country_km2,
+  coverage_pct  = 100 * network_km2 / country_km2,
+  records_inside = sum(!is.na(occurrences$protectedArea)),
+  records_strict = sum(occurrences$strictlyProtected),
+  records_total  = nrow(occurrences),
+  species_inside = dplyr::n_distinct(
+    occurrences$species[!is.na(occurrences$protectedArea) &
+                          !is.na(occurrences$species) &
+                          nzchar(occurrences$species)]),
+  summary       = summarise_protected_areas(occurrences, protected_areas),
+  register      = pa_register,
+  # `role` keeps the two kinds of row apart. Kosovo's 19 strict nature reserves
+  # are zones inside sites that the table already lists, so their area and
+  # their records are contained in the rows above rather than additional to
+  # them, and a reader must not add the column up.
+  by_designation = pa_register |>
+    dplyr::mutate(
+      role = ifelse(.data$designated_area_type == "strictProtectionBoundary",
+                    "zone within a site", "site")
+    ) |>
+    dplyr::group_by(designation = .data$designation, role = .data$role) |>
+    dplyr::summarise(
+      sites      = dplyr::n(),
+      mapped     = sum(.data$geometry == "boundary"),
+      area_ha    = sum(.data$reported_area_ha, na.rm = TRUE),
+      records    = sum(.data$records, na.rm = TRUE),
+      # No species column: species counts cannot be added across sites without
+      # counting a species once for every site it occurs in.
+      .groups    = "drop"
+    ) |>
+    dplyr::arrange(dplyr::desc(.data$area_ha))
+)
+
+say("Protected-area network: ", round(network_km2), " km2, ",
+    round(100 * network_km2 / country_km2, 1), "% of Kosovo.")
 
 # --- Red List profile ---------------------------------------------------------
 
