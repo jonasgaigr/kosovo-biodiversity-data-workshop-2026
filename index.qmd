@@ -200,16 +200,37 @@ cat(
 
 Two reference layers are used alongside the occurrence records, and both are
 cited here because conclusions drawn from an overlay depend on the layer as
-much as on the points. Administrative boundaries are GADM 4.1. Protected areas
-are the European Environment Agency's inventory of **Nationally designated
-areas**, version `r sub("^v", "", pa$source$version)`.
+much as on the points. Administrative boundaries — the national outline and
+the 38 municipalities alike — are OpenStreetMap, for the reasons set out under
+*A note on the spatial filter* below. Protected areas are the European
+Environment Agency's inventory of **Nationally designated areas**, version
+`r sub("^v", "", pa$source$version)`.
 
 ```{r}
 #| label: citation-protected
 #| output: asis
 
+# The boundary layer records which source it was actually built from, and the
+# credit follows it. Hard-coding OpenStreetMap here would attribute the work to
+# the wrong people on any run that fell back to GADM.
+boundary_source <- if (is.null(boundary)) NA_character_ else boundary$source[1]
+
+boundary_credit <- if (identical(boundary_source, "OpenStreetMap")) {
+  paste0(
+    "<strong>Licence:</strong> Open Database License (ODbL) 1.0, ",
+    "&copy; OpenStreetMap contributors<br>",
+    "<strong>Source:</strong> <a href='https://www.openstreetmap.org/copyright'>",
+    "openstreetmap.org/copyright</a><br><br>"
+  )
+} else {
+  "<strong>Licence:</strong> see the source's own terms<br><br>"
+}
+
 cat(
   "<div class='citation-box'>",
+  sprintf("<strong>Administrative boundaries:</strong> %s &mdash; national outline and %s municipalities<br>",
+          boundary_source, fmt_int(nrow(municipalities))),
+  boundary_credit,
   sprintf("<strong>Protected areas:</strong> EEA Nationally designated areas (NatDA/CDDA), %s<br>",
           pa$source$version),
   sprintf("<strong>DOI:</strong> <a href='https://doi.org/%s'>https://doi.org/%s</a><br>",
@@ -237,6 +258,34 @@ Note that the GADM identifier for Kosovo is `XKO`. The similar-looking code
 `XKX` is the World Bank / ISO alpha-3 style code and is **not** recognised by
 GADM — `pred("gadm", "XKX")` returns zero records rather than an error, so a
 pipeline using it would silently produce an empty dataset.
+
+**Selecting the records is not the same as defining the country.** GADM's
+Kosovo polygon is a generalisation: 1,210 vertices for a border that runs
+743 km, roughly one point every 600 m of a line that turns far more often than
+that. Sampling both candidate borders every 200 m and measuring to Eurostat's
+GISCO 1:1M line — an independent official digitisation of the same
+international border — GADM's sits a median 587 m from it, and 2,980 m at the
+ninetieth percentile. OpenStreetMap's sits 60 m and 189 m; the residual there
+is GISCO's own generalisation rather than OSM's. The areas tell the same
+story: published figures for Kosovo cluster between 10,887 km² (World Bank)
+and 10,910 km², and OpenStreetMap's polygon measures 10,898 km², inside that
+range, where GADM's measures 10,828 km², below all of it. The two outlines
+disagree over 755 km², 6.9 per cent of the country, and run up to 4.1 km
+apart.
+
+This report therefore *selects* on GADM, because that is the filter GBIF
+offers, and *screens and draws* on OpenStreetMap, because that is where the
+border actually is. Both errors in GADM's outline matter, and only one of them
+can be repaired here:
+
+- Where GADM bulges outward, it swept in 1,776 records that are not in Kosovo.
+  Their own publishers say as much: 1,030 are stamped `ME`, 320 `MK`, 284 `RS`
+  and 45 `AL`, against 97 stamped `XK`. The country-coordinate test removes
+  them — see below.
+- Where GADM falls short, 412 km² of Kosovo lies outside the polygon GBIF
+  filtered on, and records there were never in the download to begin with.
+  Nothing downstream can recover them. Closing that gap means selecting on a
+  `geometry` predicate instead, which mints a new download and a new DOI.
 :::
 
 ## Summary statistics
@@ -323,15 +372,29 @@ stamped with the code used in the occurrence data.
 
 **That polygon then has to be the right one.** Built from Natural Earth's
 1:50m outline — 72 vertices for the whole country, straying up to 4.7 km from
-the true border — it flagged 1,296 records, 2.7 per cent of the dataset and
-192 species. Every one was a genuine record near the border, discarded only
-because the outline used to *test* them was not the outline used to *select*
-them: this extract is chosen with `gadmGid=XKO`, so every record lies inside
-the GADM polygon by construction. The reference is now GADM level 0 itself, at
-1,210 vertices and exactly the geometry GBIF filtered on, and the test flags
-nothing. It is kept in the battery because it becomes meaningful again the
-moment the extract is defined differently — a `country=XK` download leans on
-publisher-supplied country codes and genuinely needs checking.
+the true border — the test flagged 1,296 records on the strength of the
+outline's own error. Built from GADM level 0, the polygon GBIF filters on, it
+flagged nothing at all, which looks like a clean bill of health and is in fact
+the test grading its own paper: every record lies inside that polygon by
+construction, so asking whether it does can only ever return yes.
+
+The reference is now the OpenStreetMap outline, which is neither the coarse
+polygon nor the selecting one, and the test does what it is for. It flags
+1,776 records, 3.7 per cent of those with coordinates. These are not
+borderline calls made by a wobbly line: 94 per cent of them carry a
+publisher-assigned country code of `ME`, `MK`, `RS` or `AL`, and they sit a
+median 552 m and up to 3.3 km beyond the border. They are the records GADM's
+outward bulges swept into the download, and removing them is the point of the
+exercise.
+
+The correction is not free. 235 species leave the dataset with them, having
+been recorded nowhere else in the extract. Most probably do occur in Kosovo —
+they were found a few hundred metres the wrong side of a line — but this
+extract no longer claims evidence that they do, which is the honest position
+for it to take.
+
+Records within a set distance of the border can be kept instead by setting
+`country_buffer` in `pipeline.R`; it is `NULL` here, meaning a strict test.
 :::
 
 ### How precisely are the records placed?
@@ -567,7 +630,7 @@ report_table(
     style = "caption-side: bottom; text-align: left; padding-top: 8px;
              font-size: 0.85rem; color: #666666;",
     sprintf(paste0("Table 4. Coverage by municipality, least-recorded first. ",
-                   "Boundaries are GADM level 2; names are given in both ",
+                   "Boundaries are OpenStreetMap; names are given in both ",
                    "official languages. Median coverage is %.1f records per ",
                    "km², and the best-covered unit carries %.0f times the ",
                    "records per unit area of the worst."),
@@ -584,7 +647,7 @@ report_table(
 ::: {.callout-warning collapse="true"}
 ## One municipality dominates the totals — read it carefully
 
-Fushë Kosovë / Kosovo Polje holds far more records per square kilometre than
+Graçanicë / Gračanica holds far more records per square kilometre than
 anywhere else in the country. That is not a statement about its biodiversity.
 A single coordinate inside it carries more than thirteen thousand records,
 almost all of them bird observations submitted to one citizen-science platform
@@ -593,7 +656,16 @@ from what is in practice one regularly watched site.
 This is the characteristic shape of aggregated occurrence data and the reason
 raw record counts should never be read as species richness. The species column
 in the table above is the more honest comparison, and the two rank very
-differently.
+differently: Graçanicë leads on records and sits well down the table on
+species.
+
+That coordinate also shows why the municipal layer had to be replaced along
+with the national outline. It sits in the countryside south of Prishtina, on
+ground that belonged to Fushë Kosovë until the 2010 decentralisation moved it
+into the newly created municipality of Graçanicë. GADM 4.1 still draws the
+pre-2010 map, so every one of those thirteen thousand records used to be
+attributed to Fushë Kosovë — the wrong municipality, and the one a reader
+would have gone looking in.
 :::
 
 ## Protected areas

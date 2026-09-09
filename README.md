@@ -125,9 +125,10 @@ kosovo-biodiversity-data-workshop-2026/
 │   ├── eurlex/                     # Cached consolidated legal texts
 │   ├── gbif_download/              # Raw GBIF archives (not tracked)
 │   │   └── download_key.txt        # Tracked, so the DOI is reused
-│   ├── gadm41_XKO.gpkg             # GADM 4.1, all levels (downloaded)
-│   ├── kosovo_boundary.gpkg        # National outline, GADM level 0
-│   ├── kosovo_municipalities.gpkg  # GADM level 2, for coverage reporting
+│   ├── gadm41_XKO.gpkg             # GADM 4.1, all levels (GBIF's selection polygon)
+│   ├── osm_kosovo.gpkg             # OpenStreetMap: country, 7 districts, 38 municipalities
+│   ├── kosovo_boundary.gpkg        # National outline, from osm_kosovo.gpkg
+│   ├── kosovo_municipalities.gpkg  # 38 municipalities, for coverage reporting
 │   ├── kosovo_protected_areas.gpkg # EEA designated areas, Kosovo only (cached)
 │   ├── vernacular_cache.csv        # Cached common names
 │   ├── iucn_cache.csv              # Cached IUCN Red List categories
@@ -254,7 +255,7 @@ This will:
 4. Screen coordinates with `CoordinateCleaner`.
 5. Resolve English common names from the GBIF species API (cached).
 6. Resolve IUCN Red List categories from the GBIF species API (cached).
-7. Stamp each record with the municipality it falls in (GADM level 2).
+7. Stamp each record with the municipality it falls in (OpenStreetMap).
 8. Stamp each record with the protected area it falls in (EEA NatDA, cached).
 9. Write six thematic subsets to `data_exports/` as `.gpkg`, `.csv` and —
    for the smaller ones — `.xlsx`.
@@ -377,24 +378,48 @@ mismatches, and with `value = "clean"` returns an empty data frame with no
 warning. `kosovo_boundary()` in `R/functions.R` therefore supplies a bespoke
 reference polygon, passed via `country_ref`.
 
-**3. Screen against the same polygon that selected the records.**
+**3. Screen against an accurate polygon, not against the selecting one.**
 The bespoke reference was at first built from Natural Earth's 1:50m outline —
 72 vertices for the whole country, departing from the true border by as much as
-4.7 km. The GBIF download, however, is selected with `pred("gadm", "XKO")`, so
-every record is inside the *GADM* polygon by construction. Screening those
-records against a different, coarser outline flagged 1,296 of them (2.7 per
-cent, 192 species) as country-coordinate mismatches. Every one was a real
-record near the border, discarded because two datasets drew the same line
-differently.
+4.7 km — and flagged 1,296 records on the strength of its own error. Replacing
+it with GADM level 0, the polygon `pred("gadm", "XKO")` selects on, made the
+test flag nothing at all. That looked like a clean result and was really the
+test grading its own paper: every record is inside that polygon by
+construction, so asking whether it is can only return yes.
 
-The reference is now GADM level 0 itself — 1,210 vertices, and the same
-geometry GBIF filtered on — and the test flags nothing, which is the correct
-answer rather than a broken one. The test is kept in the battery because it
-becomes meaningful again the moment the download predicate changes: a
-`country = "XK"` extract, for instance, relies on publisher-supplied country
-codes and genuinely needs checking.
+GADM's outline is not accurate enough to be either. At 1,210 vertices it sits
+a median 587 m from Eurostat's independent GISCO digitisation of the same
+international border, and 2,980 m at the ninetieth percentile.
+OpenStreetMap's — 19,268 vertices — sits 60 m and 189 m, and the residual
+there is GISCO's generalisation rather than OSM's. The areas agree: published
+figures for Kosovo cluster between 10,887 km² (World Bank) and 10,910 km²,
+OpenStreetMap measures 10,898 km², and GADM measures 10,828 km².
 
-**4. Subspecies listings must not be matched at species level.**
+The reference is now that OpenStreetMap outline, and the test does what it is
+for: it flags **1,776 records**, 3.7 per cent of those with coordinates. They
+are not borderline calls. Ninety-four per cent carry a publisher-assigned
+country code of `ME`, `MK`, `RS` or `AL`, and they sit a median 552 m and up
+to 3.3 km beyond the border — records that GADM's outward bulges swept into
+the download. `country_buffer` in `pipeline.R` keeps records within a set
+distance of the border if that is wanted; it is `NULL`, meaning a strict test.
+
+The opposite error cannot be repaired downstream. 412 km² of Kosovo falls
+*outside* GADM's outline, so records there were never in the download.
+Selecting on a `geometry` predicate would close the gap, at the cost of a new
+download and a new DOI.
+
+**4. GADM's Kosovo municipalities are the pre-2010 set.**
+Kosovo's decentralisation created new municipalities in 2010 and split
+Mitrovica in two; the country has had 38 ever since. GADM 4.1 still draws 30.
+The units it is missing are not empty ground, and the difference is not
+academic: the single coordinate that carries more records than any other in
+the country — over thirteen thousand of them — sits on ground that moved from
+Fushë Kosovë to the new municipality of Graçanicë in 2010. Reported through
+GADM, all of them landed in Fushë Kosovë, and every coverage figure, map and
+table said so. The municipal layer is now read from the same OpenStreetMap
+source as the national outline, which carries all 38.
+
+**5. Subspecies listings must not be matched at species level.**
 The Birds Directive lists island endemics such as *Columba palumbus azorica*,
 *Fringilla coelebs ombriosa* and *Parus ater cypriotes*. Matching a subspecies
 listing on its accepted *species* key — which is the right thing to do for
@@ -404,7 +429,7 @@ I subset for subspecies confined to the Azores and the Canaries.
 `directive_lookup()` in `pipeline.R` therefore matches on the species key only
 where the listing itself is at species rank.
 
-**5. Basemap tiles: CARTO watermarks, and GBIF serves 512-pixel tiles.**
+**6. Basemap tiles: CARTO watermarks, and GBIF serves 512-pixel tiles.**
 `providers$CartoDB.Positron` — the usual light basemap for data cartography —
 still returns HTTP 200 and a valid PNG, but CARTO now stamps
 "API KEY REQUIRED" diagonally across every tile served to an unauthenticated
@@ -424,7 +449,7 @@ roads or labels at *any* zoom. That is what makes it a good ground for data,
 but it means zooming in adds no context, so `gbif-natural` is offered alongside
 it for readers who need to place a record against a road or a town.
 
-**6. Leaflet's heat layer discards intensity unless it is told the zoom.**
+**7. Leaflet's heat layer discards intensity unless it is told the zoom.**
 `L.heatLayer` multiplies every intensity by `1 / 2^(maxZoom − currentZoom)`,
 where `maxZoom` defaults to the *map's* maximum — 19 as soon as a street or
 satellite layer is present. At the country view that divides every value by
@@ -439,7 +464,7 @@ with a log transform and a fractional power. And the default gradient is a
 rainbow, which has no inherent order; it is now a single hue running light to
 dark.
 
-**7. `tibble()` evaluates its columns in sequence, with earlier ones in scope.**
+**8. `tibble()` evaluates its columns in sequence, with earlier ones in scope.**
 ```r
 dplyr::tibble(
   gpkg      = if (file.exists(gpkg)) basename(gpkg)  else NA_character_,
@@ -451,13 +476,13 @@ first line just produced. `file.exists()` is then false, `file.size()` returns
 `NA`, and every download button on the site loses its size with no warning
 anywhere. Resolve names and sizes *before* building the tibble.
 
-**8. Quarto's `freeze` does not watch the files your document sources.**
+**9. Quarto's `freeze` does not watch the files your document sources.**
 With `freeze: auto`, editing `R/functions.R` — where every map, pop-up and
 palette in this report actually lives — and re-rendering silently republishes
 the previous output, because Quarto only fingerprints the `.qmd` itself. This
 project therefore sets `freeze: false`.
 
-**9. GBIF returns no match for cross-kingdom homonyms.**
+**10. GBIF returns no match for cross-kingdom homonyms.**
 `name_backbone_checklist("Coronella austriaca")` returns `matchType: "NONE"`
 with the note "Multiple equal matches", because the name exists as both a snake
 and a plant homonym; *Liparis loeselii* fails the same way. Supplying the

@@ -47,17 +47,53 @@ fmt_date_en <- function(x, time = FALSE) {
 }
 
 # ------------------------------------------------------------------------------
-# Kosovo reference boundary
+# Kosovo reference geography
 # ------------------------------------------------------------------------------
+#
+# Every map, every area figure and the country-coordinate test all rest on one
+# polygon, so it is worth being explicit about which one and why.
+#
+# The source is OpenStreetMap, not GADM. GADM 4.1 is the obvious choice — it is
+# what GBIF filters on — but its Kosovo geometry is a heavily generalised
+# outline, and the generalisation is large enough to change results rather than
+# only appearance. Sampling each candidate border every 200 m and measuring to
+# Eurostat's GISCO 1:1M line — an independent official digitisation of the same
+# international border, taken from the Serbia polygon, since GISCO does not
+# publish Kosovo separately:
+#
+#                       median deviation   90th percentile
+#     GADM 4.1 level 0        587 m            2,980 m
+#     OpenStreetMap            60 m              189 m
+#
+# Only the stretch that is a true international border is measured — sample
+# points within 6 km of the GISCO line — because GISCO draws no Kosovo–Serbia
+# boundary at all. The ratio holds at 3 km and at 10 km, so it is not an
+# artefact of that threshold. The residual 60 m for OSM is GISCO's own
+# generalisation; GADM's 587 m is GADM's.
+#
+# The areas say the same thing. Published figures for Kosovo cluster between
+# 10,887 km² (World Bank) and 10,910 km²; OSM's polygon measures 10,898 km²,
+# inside that range, and GADM's 10,828 km², below all of it. The two outlines
+# disagree over 755 km² — 6.9 per cent of the country — with the lines up to
+# 4.1 km apart.
+#
+# The practical consequence is not cartographic. GADM's outline bulges across
+# the real border in places, and GBIF's `pred("gadm", "XKO")` filter therefore
+# swept in 1,776 records that lie outside Kosovo. Their own publishers say so:
+# 1,030 are stamped ME, 320 MK, 284 RS and 45 AL, against only 97 stamped XK.
+# Screening against an accurate border removes them, which is what the
+# country-coordinate test is for.
+#
+# The same swap fixes the administrative layer. GADM's 30 municipalities are
+# the pre-2010 set; Kosovo has had 38 since the decentralisation, and OSM
+# carries all of them.
 
 #' Download (and cache) the GADM administrative geography for Kosovo
 #'
-#' One GeoPackage holds all three levels — the country, its 7 districts and its
-#' 30 municipalities — as GADM digitised them, and the levels tile each other
-#' exactly: the union of the municipalities is the national polygon, to the
-#' square metre. Both `kosovo_boundary()` and `kosovo_municipalities()`
-#' therefore read from this single file rather than from separate sources that
-#' would not quite agree along the border.
+#' Retained for two jobs, neither of them the reference boundary. It is the
+#' polygon GBIF selected these records with, so it is the honest description of
+#' the extract's extent; and it is the offline fallback for `kosovo_boundary()`
+#' and `kosovo_municipalities()` when OpenStreetMap cannot be reached.
 #'
 #' @param cache_path Where to keep the downloaded GeoPackage.
 #' @param url Source archive (GADM 4.1).
@@ -83,6 +119,365 @@ gadm_kosovo <- function(cache_path = "data/gadm41_XKO.gpkg",
   cache_path
 }
 
+# Set once `osm_kosovo()` has given up, so that the two layers built from it
+# fall back together rather than one each way. See the note there.
+.osm_kosovo_state <- new.env(parent = emptyenv())
+
+# Kosovo's 7 districts, keyed on the OpenStreetMap relation that carries each
+# one. Districts are named after their principal town, and that town's name in
+# both languages is the label wanted here: OSM's own "Rajoni i Ferizajt /
+# Uroševački okrug" is a pair of adjectival forms, and the Albanian half is in
+# the genitive "Rajoni i ..." governs, so neither half can simply be trimmed.
+.osm_kosovo_districts <- c(
+  "6898087" = "Ferizaj / Uroševac",
+  "6898247" = "Gjakovë / Đakovica",
+  "6898305" = "Gjilan / Gnjilane",
+  "6898597" = "Mitrovicë / Kosovska Mitrovica",
+  "6898457" = "Pejë / Peć",
+  "6900417" = "Prishtinë / Priština",
+  "6898227" = "Prizren"
+)
+
+# Kosovo's 38 municipalities, keyed on the OpenStreetMap relation that carries
+# each one and labelled "Albanian / Serbian" from the official bilingual list.
+#
+# The names are given rather than read from the relations' `name:sq` and
+# `name:sr` tags for the same reason the district labels are: the tags cannot
+# be relied on. Three municipalities carry no `name:sr-Latn` at all, two of the
+# ones that do misspell the Serbian word for municipality ("Opsrina",
+# "Optsina"), and every Albanian name sits in the genitive that "Komuna e ..."
+# governs — "Komuna e Deçanit" yields "Deçanit", not "Deçan". A published
+# report should also not have its municipal labels change under it because
+# someone retagged a relation.
+.osm_kosovo_municipalities <- c(
+  "1332170" = "Deçan / Dečan",
+  "1332198" = "Dragash / Dragaš",
+  "1332192" = "Ferizaj / Uroševac",
+  "1332190" = "Fushë Kosovë / Kosovo Polje",
+  "1332169" = "Gjakovë / Đakovica",
+  "1332172" = "Gjilan / Gnjilane",
+  "1332168" = "Gllogoc / Glogovac",
+  "6901830" = "Graçanicë / Gračanica",
+  "1332197" = "Hani i Elezit / Elez Han",
+  "1332163" = "Istog / Istok",
+  "1332191" = "Junik / Junik",
+  "1332180" = "Kaçanik / Kačanik",
+  "1332162" = "Kamenicë / Kamenica",
+  "1332179" = "Klinë / Klina",
+  "6901841" = "Kllokot / Klokot",
+  "1332176" = "Leposaviq / Leposavić",
+  "1332188" = "Lipjan / Lipljan",
+  "1332165" = "Malishevë / Mališevo",
+  "1332174" = "Mamushë / Mamuša",
+  "1332167" = "Mitrovicë e Jugut / Kosovska Mitrovica",
+  "7426353" = "Mitrovicë e Veriut / Severna Kosovska Mitrovica",
+  "1332177" = "Novobërdë / Novo Brdo",
+  "1332178" = "Obiliq / Obilić",
+  "6901844" = "Partesh / Parteš",
+  "1332187" = "Pejë / Peć",
+  "1332182" = "Podujevë / Podujevo",
+  "1332181" = "Prishtinë / Priština",
+  "1332193" = "Prizren / Prizren",
+  "1332196" = "Rahovec / Orahovac",
+  "6903238" = "Ranillug / Ranilug",
+  "1332171" = "Shtërpcë / Štrpce",
+  "1332175" = "Shtime / Štimlje",
+  "1332183" = "Skenderaj / Srbica",
+  "1332166" = "Suharekë / Suva Reka",
+  "1332194" = "Viti / Vitina",
+  "1332164" = "Vushtrri / Vučitrn",
+  "1332173" = "Zubin Potok / Zubin Potok",
+  "1332195" = "Zveçan / Zvečan"
+)
+
+#' Assemble the polygon of one OpenStreetMap boundary relation
+#'
+#' GDAL's OSM driver is not used for this. It silently drops relations whose
+#' rings it cannot close — for Kosovo it lost Prishtina and Kamenicë, two of
+#' the thirty-eight municipalities and a fifth of the country by area, with no
+#' warning and no error. Assembling the rings here from the member ways is both
+#' complete and checkable: `st_polygonize()` is given the merged linework and
+#' either returns closed rings or returns nothing at all.
+#'
+#' Ring assembly is planar, and that is load-bearing rather than a preference.
+#' `st_polygonize()` and `st_line_merge()` are GEOS operations either way, but
+#' `st_union()` on lon/lat goes through s2 unless told otherwise, and s2 works
+#' on geodesic edges: it splits and re-orders the linework in ways the GEOS
+#' steps downstream cannot then close. Left on, it cost five of the thirty-
+#' eight municipalities — Ferizaj, Hani i Elezit, Mamushë, North Mitrovica and
+#' Podujevë — quietly, on every run. Nothing here measures anything, so plane
+#' geometry is the right tool; areas are computed later, in a projected CRS.
+#'
+#' @param el One `relation` element of an Overpass `out geom` response.
+#' @return An `sfc` polygon in EPSG:4326, or `NULL` if the rings do not close.
+osm_relation_polygon <- function(el) {
+
+  s2 <- suppressMessages(sf::sf_use_s2(FALSE))
+  on.exit(suppressMessages(sf::sf_use_s2(s2)), add = TRUE)
+
+  members <- Filter(
+    function(m) {
+      identical(m$type, "way") &&
+        (is.null(m$role) || m$role %in% c("outer", "inner", ""))
+    },
+    el$members
+  )
+
+  lines <- lapply(members, function(m) {
+    g <- m$geometry
+    if (is.null(g) || length(g) < 2) return(NULL)
+    sf::st_linestring(cbind(vapply(g, function(p) p$lon, numeric(1)),
+                            vapply(g, function(p) p$lat, numeric(1))))
+  })
+  lines <- lines[!vapply(lines, is.null, logical(1))]
+  if (!length(lines)) return(NULL)
+
+  # The member ways arrive in arbitrary order and arbitrary direction, which is
+  # what `st_line_merge()` on the union exists to sort out. Inner rings look
+  # after themselves: polygonising the whole linework yields faces, and
+  # unioning the faces subtracts anything one of them encloses.
+  rings <- try(
+    {
+      merged <- sf::st_line_merge(sf::st_union(sf::st_sfc(lines, crs = 4326)))
+      sf::st_collection_extract(sf::st_polygonize(merged), "POLYGON")
+    },
+    silent = TRUE
+  )
+  if (inherits(rings, "try-error") || !length(rings)) return(NULL)
+
+  sf::st_make_valid(sf::st_union(rings))
+}
+
+#' Fetch (and cache) Kosovo's administrative geography from OpenStreetMap
+#'
+#' One GeoPackage holds the country (relation 2088990), its 7 districts and its
+#' 38 municipalities, so that the levels tile each other exactly and
+#' `kosovo_boundary()` and `kosovo_municipalities()` cannot disagree along the
+#' border. Nothing is written until the three layers have been checked to
+#' actually tile: an incomplete answer from Overpass fails the run rather than
+#' caching a boundary with a hole in it.
+#'
+#' The file is committed to the repository. A fresh clone therefore never
+#' touches Overpass, which matters both because the public instance refuses
+#' roughly one request in three at busy times and because a published report
+#' should not silently re-cut its own boundaries against a moving source.
+#' Delete the cache to rebuild it.
+#'
+#' @param cache_path GeoPackage used to cache the three layers.
+#' @param endpoints Overpass instances, tried in order and each retried.
+#' @param verbose Print progress messages.
+#' @return The local path to the GeoPackage.
+osm_kosovo <- function(cache_path = "data/osm_kosovo.gpkg",
+                       endpoints = c("https://overpass-api.de/api/interpreter",
+                                     "https://overpass.kumi.systems/api/interpreter"),
+                       verbose = TRUE) {
+
+  if (file.exists(cache_path)) return(cache_path)
+
+  # A failure is remembered for the rest of the session. Two callers want this
+  # geography — the national outline and the municipalities — and each falls
+  # back to GADM on its own if it cannot have it. Without this, a build that
+  # failed for one and succeeded for the other would pair a GADM outline with
+  # OSM municipalities, which is the one combination guaranteed not to tile.
+  # It also saves sitting through the retry loop a second time.
+  if (isTRUE(.osm_kosovo_state$failed)) {
+    stop("OpenStreetMap was already unreachable earlier in this session.",
+         call. = FALSE)
+  }
+  on.exit(if (!file.exists(cache_path)) .osm_kosovo_state$failed <- TRUE,
+          add = TRUE)
+
+  # Planar throughout, for the reason given on `osm_relation_polygon()`: the
+  # overlay work here is topological, and the one place an area is wanted
+  # projects to UTM 34N first.
+  s2 <- suppressMessages(sf::sf_use_s2(FALSE))
+  on.exit(suppressMessages(sf::sf_use_s2(s2)), add = TRUE)
+
+  stopifnot(requireNamespace("curl", quietly = TRUE),
+            requireNamespace("jsonlite", quietly = TRUE))
+
+  if (verbose) say("Building Kosovo's administrative geography from OpenStreetMap ...")
+
+  # Every relation is asked for by id, and the answer is checked against the
+  # list. Selecting them by tag instead — `admin_level` inside a bounding box —
+  # reads better and cannot be checked: whatever comes back is by definition
+  # the answer, so a run that quietly assembled 33 of the 38 municipalities
+  # produced a layer that tiled the country apart from a 1,076 km² hole, and
+  # nothing downstream had grounds to complain. (That particular loss was the
+  # s2 problem noted on `osm_relation_polygon()`, but the point stands: it took
+  # a comparison against a known list to notice it at all.) Two of the missing
+  # units were Prishtina and Kamenicë, a fifth of the country between them.
+  #
+  # `out geom` inlines each member way's coordinates, which avoids pulling the
+  # node table and cuts the response from 39 MB to 22 MB.
+  ids <- c("2088990", names(.osm_kosovo_districts),
+           names(.osm_kosovo_municipalities))
+
+  query <- paste0(
+    '[out:json][timeout:300];',
+    'rel(id:', paste(ids, collapse = ","), ');',
+    'out geom;'
+  )
+
+  # Overpass refuses a fair share of requests — 504 when the gateway gives up,
+  # 429 when it is rate-limiting, and, most awkwardly, 200 with an HTML error
+  # page when the dispatcher is busy. All three are transient and all three are
+  # worth waiting out, so the loop is patient and says which one it hit; a
+  # bare "declined" leaves the next person guessing whether the query is wrong.
+  res <- NULL
+  for (endpoint in endpoints) {
+    for (attempt in 1:4) {
+      # The query goes in the POST body, not as a multipart form: Overpass
+      # answers 400 to a `multipart/form-data` request.
+      h <- curl::new_handle(timeout = 600, connecttimeout = 30)
+      curl::handle_setopt(h, post = TRUE, postfields = query)
+      got <- tryCatch(curl::curl_fetch_memory(endpoint, handle = h),
+                      error = function(e) conditionMessage(e))
+
+      why <- if (is.character(got)) {
+        got
+      } else if (got$status_code != 200) {
+        paste("HTTP", got$status_code)
+      } else {
+        txt <- rawToChar(got$content)
+        Encoding(txt) <- "UTF-8"
+        if (!startsWith(trimws(txt), "{")) {
+          "the server answered with an error page"
+        } else {
+          res <- tryCatch(jsonlite::fromJSON(txt, simplifyVector = FALSE),
+                          error = function(e) NULL)
+          if (is.null(res)) "the response was not readable JSON" else NA_character_
+        }
+      }
+
+      if (!is.na(why) && is.null(res)) {
+        if (verbose) {
+          say("  ... ", sub("^https://([^/]+).*", "\\1", endpoint), " declined (",
+              why, "); attempt ", attempt, " of 4")
+        }
+        if (attempt < 4) Sys.sleep(30)
+      } else {
+        break
+      }
+    }
+    if (!is.null(res)) break
+  }
+
+  if (is.null(res)) {
+    stop("Could not get an answer out of any Overpass instance. The service ",
+         "refuses requests when busy; try again in a few minutes.",
+         call. = FALSE)
+  }
+
+  elements <- Filter(function(e) identical(e$type, "relation"), res$elements)
+  geoms    <- lapply(elements, osm_relation_polygon)
+  keep     <- !vapply(geoms, is.null, logical(1))
+  elements <- elements[keep]
+  geoms    <- geoms[keep]
+
+  adm <- if (length(geoms)) {
+    sf::st_sf(
+      osm_id   = vapply(elements, function(e) as.character(e$id), character(1)),
+      geometry = do.call(c, geoms),
+      crs      = 4326
+    )
+  } else {
+    NULL
+  }
+
+  absent <- setdiff(ids, adm$osm_id)
+  if (length(absent)) {
+    labels <- c("2088990" = "Kosovo", .osm_kosovo_districts,
+                .osm_kosovo_municipalities)[absent]
+    stop("OpenStreetMap returned no usable geometry for ", length(absent),
+         " of the ", length(ids), " expected relations: ",
+         paste(sprintf("%s (%s)", absent, labels), collapse = ", "),
+         ". Re-run to try Overpass again.", call. = FALSE)
+  }
+
+  country   <- adm[adm$osm_id == "2088990", ]
+  districts <- adm[adm$osm_id %in% names(.osm_kosovo_districts), ]
+  municipal <- adm[adm$osm_id %in% names(.osm_kosovo_municipalities), ]
+
+  districts$district    <- unname(.osm_kosovo_districts[districts$osm_id])
+  municipal$municipality <- unname(.osm_kosovo_municipalities[municipal$osm_id])
+
+  # Kllokot was carved out of Viti in 2010 and OSM never shrank Viti to match,
+  # so the two relations overlap exactly on Kllokot's 23.4 km². Left alone the
+  # municipalities would not partition the country, and a record in Kllokot
+  # would fall in two of them. Subtracting the child from the parent is the
+  # only repair the layer needs: with it, the 38 units sum to the national
+  # polygon to four decimal places of a square kilometre.
+  viti    <- which(municipal$osm_id == "1332194")
+  kllokot <- which(municipal$osm_id == "6901841")
+  if (length(viti) == 1 && length(kllokot) == 1) {
+    sf::st_geometry(municipal)[viti] <- sf::st_make_valid(sf::st_difference(
+      sf::st_geometry(municipal)[viti], sf::st_geometry(municipal)[kllokot]
+    ))
+  }
+
+  municipal$district <- vapply(
+    suppressMessages(sf::st_intersects(
+      suppressWarnings(sf::st_point_on_surface(sf::st_geometry(municipal))),
+      sf::st_geometry(districts)
+    )),
+    function(i) if (length(i)) districts$district[i[1]] else NA_character_,
+    character(1)
+  )
+  if (anyNA(municipal$district)) {
+    stop("These municipalities fall in no district: ",
+         paste(municipal$municipality[is.na(municipal$district)],
+               collapse = ", "), call. = FALSE)
+  }
+
+  # The levels have to tile each other, because the coverage figures divide
+  # records by municipal area and the maps draw one on top of the other. Three
+  # ways of failing are checked: ground the units miss, ground they add, and
+  # ground two of them claim at once. A tenth of a square kilometre is generous
+  # for a check whose observed failure mode is hundreds.
+  #
+  # Measured in UTM 34N, the projection the rest of the pipeline uses for
+  # Kosovo, rather than on the ellipsoid: the overlay itself is planar, so the
+  # areas being compared should be too.
+  km2 <- function(g) {
+    a <- sf::st_area(sf::st_transform(g, 32634))
+    if (!length(a)) 0 else as.numeric(sum(a)) / 1e6
+  }
+  for (level in list(list("districts", districts),
+                     list("municipalities", municipal))) {
+    parts   <- sf::st_geometry(level[[2]])
+    covered <- sf::st_union(parts)
+    worst <- max(
+      km2(sf::st_difference(sf::st_geometry(country), covered)),
+      km2(sf::st_difference(covered, sf::st_geometry(country))),
+      km2(parts) - km2(covered)
+    )
+    if (worst > 0.1) {
+      stop("The ", level[[1]], " do not tile the national outline: worst ",
+           "discrepancy ", signif(worst, 3), " km².", call. = FALSE)
+    }
+  }
+
+  municipal <- municipal[order(municipal$municipality), ]
+  districts <- districts[order(districts$district), ]
+
+  dir.create(dirname(cache_path), recursive = TRUE, showWarnings = FALSE)
+  sf::st_write(country[, "osm_id"], cache_path, layer = "ADM_0",
+               delete_dsn = TRUE, quiet = TRUE)
+  sf::st_write(districts[, c("osm_id", "district")], cache_path, layer = "ADM_1",
+               append = FALSE, quiet = TRUE)
+  sf::st_write(municipal[, c("osm_id", "municipality", "district")], cache_path,
+               layer = "ADM_2", append = FALSE, quiet = TRUE)
+
+  if (verbose) {
+    say("  ... ", nrow(municipal), " municipalities in ", nrow(districts),
+        " districts, ", fmt_int(nrow(sf::st_coordinates(country))),
+        " vertices on the national outline.")
+  }
+
+  cache_path
+}
+
 #' Build (and cache) a national boundary polygon for Kosovo
 #'
 #' This polygon serves two purposes:
@@ -90,14 +485,11 @@ gadm_kosovo <- function(cache_path = "data/gadm41_XKO.gpkg",
 #'      `CoordinateCleaner::clean_coordinates()`.
 #'   2. It is drawn as a context outline on the Leaflet maps.
 #'
-#' The source is GADM level 0, for two reasons. It is precise — 1,210 vertices
-#' against the 72 of the Natural Earth 1:50m polygon used previously, which
-#' departed from the true border by as much as 4.7 km. And it is the *same*
-#' polygon GBIF used to select these records in the first place: the download
-#' predicate is `pred("gadm", "XKO")`. Screening records against a different
-#' outline than the one that selected them invites a class of country-mismatch
-#' flags that say nothing about the data and everything about two datasets
-#' disagreeing at the border.
+#' The source is OpenStreetMap, for the reasons set out at the head of this
+#' section: 19,268 vertices against GADM's 1,210, an area within 7 km² of the
+#' national statistical office's figure rather than 77 km² short of it, and a
+#' line that follows Eurostat's independent digitisation of the international
+#' border to a median 60 m rather than 587 m.
 #'
 #' IMPORTANT: Natural Earth records Kosovo with `iso_a3 == "-99"` (that is, no
 #' assigned ISO 3166-1 alpha-3 code), and CoordinateCleaner's built-in country
@@ -111,10 +503,12 @@ gadm_kosovo <- function(cache_path = "data/gadm41_XKO.gpkg",
 #' @param iso3 Code attached to the polygon; must match the value placed in the
 #'   occurrence data's country column.
 #' @param cache_path Optional GeoPackage path used to cache the boundary.
-#' @param gadm_path Cache path for the source GADM archive.
+#' @param osm_path Cache path for the OpenStreetMap geography.
+#' @param gadm_path Cache path for the GADM archive used as a fallback.
 #' @return An `sf` polygon with `iso_a3` and `source` columns, in EPSG:4326.
 kosovo_boundary <- function(iso3 = "XKX",
                             cache_path = "data/kosovo_boundary.gpkg",
+                            osm_path   = "data/osm_kosovo.gpkg",
                             gadm_path  = "data/gadm41_XKO.gpkg") {
 
   if (!is.null(cache_path) && file.exists(cache_path)) {
@@ -122,20 +516,36 @@ kosovo_boundary <- function(iso3 = "XKX",
   }
 
   geom <- try(
-    sf::st_geometry(sf::st_read(gadm_kosovo(cache_path = gadm_path),
-                                layer = "ADM_ADM_0", quiet = TRUE)),
+    sf::st_geometry(sf::st_read(osm_kosovo(cache_path = osm_path),
+                                layer = "ADM_0", quiet = TRUE)),
     silent = TRUE
   )
 
-  src <- "GADM 4.1 level 0"
+  src <- "OpenStreetMap"
+
+  # Both fallbacks are materially different references rather than slightly
+  # coarser ones, so each is warned about and recorded in the layer — the
+  # report states which boundary was used rather than leaving the reader to
+  # guess. The underlying message is carried through, because "Overpass was
+  # busy" and "the geometry did not validate" call for different responses and
+  # a bare "could not build" hides which one happened.
+  if (inherits(geom, "try-error")) {
+    warning("Could not build the OpenStreetMap boundary (",
+            conditionMessage(attr(geom, "condition")),
+            "); falling back to the generalised GADM 4.1 outline.",
+            call. = FALSE)
+
+    geom <- try(
+      sf::st_geometry(sf::st_read(gadm_kosovo(cache_path = gadm_path),
+                                  layer = "ADM_ADM_0", quiet = TRUE)),
+      silent = TRUE
+    )
+    src <- "GADM 4.1 level 0"
+  }
 
   if (inherits(geom, "try-error")) {
-    # Falling back keeps the pipeline runnable offline, but the coarser outline
-    # is a materially different reference, so it is both warned about and
-    # recorded in the layer — the report states which boundary was used rather
-    # than leaving the reader to guess.
-    warning("Could not fetch the GADM boundary; falling back to the coarser ",
-            "Natural Earth 1:50m outline.", call. = FALSE)
+    warning("Could not fetch the GADM boundary either; falling back to the ",
+            "coarser Natural Earth 1:50m outline.", call. = FALSE)
 
     if (!requireNamespace("rnaturalearth", quietly = TRUE)) {
       stop("Package 'rnaturalearth' is required for the fallback boundary.",
@@ -910,6 +1320,9 @@ fetch_dataset_registry <- function(dataset_keys,
 #' names; they are given explicitly rather than derived, because the derivation
 #' would be fragile for the sake of seven fixed strings.
 #'
+#' Used only on the GADM fallback path. The OpenStreetMap layer takes its
+#' district labels from `.osm_kosovo_districts`, keyed on relation id.
+#'
 #' @param x Character vector of GADM `NAME_1` values.
 #' @return The matching "Albanian / Serbian" labels, unchanged where no match.
 kosovo_district_label <- function(x) {
@@ -933,19 +1346,30 @@ kosovo_district_label <- function(x) {
 #' records inside it. A static site cannot run that query on demand, but it can
 #' answer the question the query is really asked for -- which parts of the
 #' country are covered and which are not -- by summarising the records in each
-#' unit in advance. This function supplies the units: 30 municipalities (GADM
-#' level 2) grouped into 7 districts (level 1).
+#' unit in advance. This function supplies the units: the 38 municipalities
+#' grouped into 7 districts.
 #'
-#' Names are given in both official languages of Kosovo. GADM stores the
-#' Serbian form in `NAME_2` and Albanian variants in `VARNAME_2`; the label
-#' built here is "Albanian / Serbian" wherever the two differ.
+#' Read from the same OpenStreetMap GeoPackage as `kosovo_boundary()`, so the
+#' municipalities tile the national outline exactly instead of leaving slivers
+#' along the border where two differently generalised versions of the same line
+#' disagree. Names are given in both official languages of Kosovo.
+#'
+#' Thirty-eight, not GADM's thirty. Kosovo's decentralisation created new
+#' municipalities in 2010 and split Mitrovica in two; GADM 4.1 still carries
+#' the pre-2010 set, and the units it lacks are not empty ground. The single
+#' coordinate that holds more records than any other in the country — over
+#' thirteen thousand — sits on ground that moved from Fushë Kosovë to the new
+#' municipality of Graçanicë in 2010. Reported through GADM, every one of them
+#' was credited to Fushë Kosovë.
 #'
 #' @param cache_path GeoPackage used to cache the boundaries.
-#' @param url Source GeoJSON (GADM 4.1, simplified).
+#' @param osm_path Cache path for the OpenStreetMap geography.
+#' @param gadm_path Cache path for the GADM archive used as a fallback.
 #' @param verbose Print progress messages.
 #' @return An `sf` polygon layer with `municipality`, `district` and `gid`.
 kosovo_municipalities <- function(
     cache_path = "data/kosovo_municipalities.gpkg",
+    osm_path   = "data/osm_kosovo.gpkg",
     gadm_path  = "data/gadm41_XKO.gpkg",
     verbose    = TRUE) {
 
@@ -953,54 +1377,86 @@ kosovo_municipalities <- function(
     return(sf::st_read(cache_path, quiet = TRUE))
   }
 
-  # The full GeoPackage rather than GADM's simplified GeoJSON: it is the same
-  # file `kosovo_boundary()` reads, so the municipalities tile the national
-  # outline exactly instead of leaving slivers along the border where two
-  # differently generalised versions of the same line disagree.
-  g <- sf::st_read(gadm_kosovo(cache_path = gadm_path, verbose = verbose),
-                   layer = "ADM_ADM_2", quiet = TRUE)
-
-  # GADM's *simplified GeoJSON* runs multi-word names together
-  # ("KosovskaMitrovica", "FushëKosovë"); the GeoPackage read here spaces them
-  # correctly. The repair is kept as a no-op guard in case the source is
-  # switched back. The Unicode classes matter: a plain `[a-z]` would miss the
-  # "ë" that ends several Albanian names.
-  unrun <- function(x) {
-    gsub("(\\p{Ll})(\\p{Lu})", "\\1 \\2", x, perl = TRUE)
-  }
-
-  # VARNAME_2 holds pipe-separated variants; the first is the Albanian form.
-  albanian <- vapply(strsplit(as.character(g$VARNAME_2), "|", fixed = TRUE),
-                     function(v) if (length(v)) trimws(v[1]) else NA_character_,
-                     character(1))
-  albanian[albanian %in% c("NA", "")] <- NA_character_
-  albanian <- unrun(albanian)
-
-  serbian <- unrun(as.character(g$NAME_2))
-
-  # GADM 4.1 carries no Albanian variant for three municipalities. Both
-  # languages are official in Kosovo, and leaving three units labelled in one
-  # language while the other twenty-seven are bilingual would be an artefact of
-  # the source rather than a fact about the places, so the gaps are filled from
-  # the official municipal names. Matching is on an ASCII substring so that the
-  # lookup cannot be broken by how the leading diacritic is encoded.
-  albanian <- dplyr::case_when(
-    !is.na(albanian)          ~ albanian,
-    grepl("Podujev", serbian) ~ "Podujevë",
-    grepl("timlje",  serbian) ~ "Shtime",
-    grepl("trpce",   serbian) ~ "Shtërpcë",
-    TRUE                      ~ NA_character_
+  osm <- try(
+    sf::st_read(osm_kosovo(cache_path = osm_path, verbose = verbose),
+                layer = "ADM_2", quiet = TRUE),
+    silent = TRUE
   )
 
-  out <- sf::st_sf(
-    gid          = as.character(g$GID_2),
-    municipality = ifelse(is.na(albanian) | albanian == serbian,
-                          serbian, paste0(albanian, " / ", serbian)),
-    name_sq      = ifelse(is.na(albanian), serbian, albanian),
-    name_sr      = serbian,
-    district     = kosovo_district_label(unrun(as.character(g$NAME_1))),
-    geometry     = sf::st_geometry(g)
-  ) |>
+  out <- if (!inherits(osm, "try-error")) {
+
+    # The label is already "Albanian / Serbian"; the two halves are split back
+    # out so that a reader searching in one language finds the unit. Where the
+    # two languages agree — Junik, Prizren, Zubin Potok — the label is shown
+    # once rather than doubled.
+    parts   <- strsplit(osm$municipality, " / ", fixed = TRUE)
+    albanian <- vapply(parts, function(p) p[1], character(1))
+    serbian  <- vapply(parts, function(p) p[length(p)], character(1))
+
+    sf::st_sf(
+      gid          = osm$osm_id,
+      municipality = ifelse(albanian == serbian, serbian,
+                            paste0(albanian, " / ", serbian)),
+      name_sq      = albanian,
+      name_sr      = serbian,
+      district     = osm$district,
+      geometry     = sf::st_geometry(osm)
+    )
+
+  } else {
+
+    warning("Could not build the OpenStreetMap municipalities (",
+            conditionMessage(attr(osm, "condition")),
+            "); falling back to GADM 4.1 level 2, which is both coarser and ",
+            "out of date.", call. = FALSE)
+
+    g <- sf::st_read(gadm_kosovo(cache_path = gadm_path, verbose = verbose),
+                     layer = "ADM_ADM_2", quiet = TRUE)
+
+    # GADM's *simplified GeoJSON* runs multi-word names together
+    # ("KosovskaMitrovica", "FushëKosovë"); the GeoPackage read here spaces
+    # them correctly. The repair is kept as a no-op guard in case the source is
+    # switched back. The Unicode classes matter: a plain `[a-z]` would miss the
+    # "ë" that ends several Albanian names.
+    unrun <- function(x) {
+      gsub("(\\p{Ll})(\\p{Lu})", "\\1 \\2", x, perl = TRUE)
+    }
+
+    # VARNAME_2 holds pipe-separated variants; the first is the Albanian form.
+    albanian <- vapply(strsplit(as.character(g$VARNAME_2), "|", fixed = TRUE),
+                       function(v) if (length(v)) trimws(v[1]) else NA_character_,
+                       character(1))
+    albanian[albanian %in% c("NA", "")] <- NA_character_
+    albanian <- unrun(albanian)
+
+    serbian <- unrun(as.character(g$NAME_2))
+
+    # GADM 4.1 carries no Albanian variant for three municipalities. Both
+    # languages are official in Kosovo, and leaving three units labelled in one
+    # language while the other twenty-seven are bilingual would be an artefact
+    # of the source rather than a fact about the places, so the gaps are filled
+    # from the official municipal names. Matching is on an ASCII substring so
+    # that the lookup cannot be broken by how the leading diacritic is encoded.
+    albanian <- dplyr::case_when(
+      !is.na(albanian)          ~ albanian,
+      grepl("Podujev", serbian) ~ "Podujevë",
+      grepl("timlje",  serbian) ~ "Shtime",
+      grepl("trpce",   serbian) ~ "Shtërpcë",
+      TRUE                      ~ NA_character_
+    )
+
+    sf::st_sf(
+      gid          = as.character(g$GID_2),
+      municipality = ifelse(is.na(albanian) | albanian == serbian,
+                            serbian, paste0(albanian, " / ", serbian)),
+      name_sq      = ifelse(is.na(albanian), serbian, albanian),
+      name_sr      = serbian,
+      district     = kosovo_district_label(unrun(as.character(g$NAME_1))),
+      geometry     = sf::st_geometry(g)
+    )
+  }
+
+  out <- out |>
     sf::st_make_valid() |>
     sf::st_transform(4326)
 
@@ -1465,9 +1921,8 @@ basemap_groups <- c("GBIF light basemap", "GBIF detailed basemap",
 #' below the occurrence markers, which are the subject and should stay on top.
 #'
 #' The geometry is passed through untouched — no simplification, no rounding.
-#' It is GADM 4.1 level 0 at full resolution (1,210 vertices), the same polygon
-#' GBIF used to select these records via `pred("gadm", "XKO")`, and the
-#' municipal layer tiles it exactly.
+#' It is the OpenStreetMap national outline at full resolution (19,268
+#' vertices), and the municipal layer tiles it exactly.
 #'
 #' `smoothFactor = 0` is the load-bearing argument. Exact geometry in the
 #' GeoPackage is only half the job: Leaflet runs its own Douglas–Peucker pass
@@ -1476,7 +1931,7 @@ basemap_groups <- c("GBIF light basemap", "GBIF detailed basemap",
 #' country view that is roughly 400 m on the ground, so the drawn border was a
 #' generalisation of the precise one — and it re-generalised differently at
 #' every zoom level, which is what makes an outline look like it is wobbling as
-#' you zoom. Zero renders all 1,210 vertices at every scale.
+#' you zoom. Zero renders all 19,268 vertices at every scale.
 #'
 #' @param m A leaflet map.
 #' @param boundary An `sf` polygon, or `NULL` to add nothing.
@@ -2027,9 +2482,9 @@ build_occurrence_map <- function(x,
   }
 
   if (!is.null(boundary)) {
-    # Solid, not dashed. A 4/4 dash drops half the vertices of a 1,210-point
-    # outline out of the drawing, which is exactly the detail that makes the
-    # border look approximate at the scale where it matters.
+    # Solid, not dashed. A 4/4 dash drops half the outline out of the drawing,
+    # which is exactly the detail that makes the border look approximate at the
+    # scale where it matters.
     m <- add_boundary_outline(m, boundary)
     overlay_groups <- c(overlay_groups, "Kosovo boundary")
   }
@@ -2173,8 +2628,8 @@ build_municipal_map <- function(x, value = "records_per_km2",
   v <- x[[value]]
 
   # Quantile classes: the distribution is strongly skewed — one municipality
-  # carries thirty times the coverage of the median — and equal intervals would
-  # put twenty-nine of the thirty units in the lowest class. Break values are
+  # carries tens of times the coverage of the median — and equal intervals
+  # would put nearly every unit in the lowest class. Break values are
   # rounded because a quantile boundary carries no meaning of its own and
   # "1.744" only makes the legend harder to read; `unique()` guards the case
   # where two quantiles round together.

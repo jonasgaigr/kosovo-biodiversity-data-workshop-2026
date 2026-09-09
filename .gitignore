@@ -45,9 +45,19 @@ render.log
 #                                   fresh clone
 # data/iucn_cache.csv             — same, for IUCN Red List categories
 # data/dataset_registry.csv       — same, for dataset and publisher titles
-# data/gadm41_XKO.gpkg            — GADM 4.1 source for both layers below
-# data/kosovo_boundary.gpkg       — national outline, GADM level 0
-# data/kosovo_municipalities.gpkg — GADM level 2, used for coverage reporting
+# data/gadm41_XKO.gpkg            — the polygon GBIF selected the records with,
+#                                   and the offline fallback for both layers
+#                                   below. Not the reference boundary; see
+#                                   `kosovo_boundary()` for why not
+# data/osm_kosovo.gpkg            — OpenStreetMap source for both layers below:
+#                                   the country, its 7 districts and its 38
+#                                   municipalities. Cached rather than rebuilt,
+#                                   because the public Overpass instance
+#                                   refuses roughly one request in three and a
+#                                   published report should not re-cut its own
+#                                   borders against a moving source
+# data/kosovo_boundary.gpkg       — national outline, from osm_kosovo.gpkg
+# data/kosovo_municipalities.gpkg — 38 municipalities, for coverage reporting
 # data/kosovo_protected_areas.gpkg— Kosovo's slice of the EEA Nationally
 #                                   designated areas inventory. Cached rather
 #                                   than rebuilt, because building it reads a

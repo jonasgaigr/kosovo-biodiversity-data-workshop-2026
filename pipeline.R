@@ -40,6 +40,16 @@ config <- list(
   # code, because GADM's boundary also captures records whose publisher left
   # `countryCode` blank or misassigned.
   #
+  # This selects the records; it does not define the country. GADM's Kosovo
+  # outline is generalised enough to bulge several kilometres across the real
+  # border in places, so the extract arrives with 1,776 records that are not in
+  # Kosovo at all. They are removed downstream by the country-coordinate test,
+  # which screens against the accurate OpenStreetMap boundary — see
+  # `kosovo_boundary()`. The reverse error cannot be repaired here: 412 km² of
+  # Kosovo falls outside GADM's outline, and records there were never in the
+  # download to begin with. Selecting on a `geometry` predicate instead would
+  # close that gap, at the cost of a new download and a new DOI.
+  #
   # NOTE ON THE CODE: GADM's GID for Kosovo is "XKO". The code "XKX" is the
   # World Bank / ISO-3166 alpha-3 style code for Kosovo and is NOT recognised
   # by GADM — `pred("gadm", "XKX")` returns zero records. Verified against the
@@ -58,6 +68,7 @@ config <- list(
   dir_exports    = "data_exports",
   path_directives= "data/eu_directives_species.csv",
   path_gadm      = "data/gadm41_XKO.gpkg",
+  path_osm       = "data/osm_kosovo.gpkg",
   path_boundary  = "data/kosovo_boundary.gpkg",
   path_municipal = "data/kosovo_municipalities.gpkg",
   path_protected = "data/kosovo_protected_areas.gpkg",
@@ -375,10 +386,11 @@ clean_occurrences <- function(x, cfg) {
 
   # The country test needs a reference polygon that actually knows about
   # Kosovo — see `kosovo_boundary()` for why the default reference cannot be
-  # used here, and why the reference is GADM level 0 rather than a coarser
-  # outline. The occurrence data is stamped with the matching code.
+  # used here, and why the reference is the OpenStreetMap outline rather than
+  # the generalised GADM one that GBIF selected on. The occurrence data is
+  # stamped with the matching code.
   boundary <- kosovo_boundary(iso3 = cfg$iso3, cache_path = cfg$path_boundary,
-                              gadm_path = cfg$path_gadm)
+                              osm_path = cfg$path_osm, gadm_path = cfg$path_gadm)
   x$.iso3  <- cfg$iso3
 
   tests <- cfg$cleaning_tests
@@ -476,6 +488,7 @@ say("Red List assessments available for ",
 # asked: not "what is here" so much as "where has nobody looked".
 
 municipalities <- kosovo_municipalities(cache_path = config$path_municipal,
+                                        osm_path   = config$path_osm,
                                         gadm_path  = config$path_gadm)
 say("Municipal boundaries: ", nrow(municipalities), " units in ",
     dplyr::n_distinct(municipalities$district), " districts.")
