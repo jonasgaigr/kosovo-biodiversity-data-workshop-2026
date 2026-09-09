@@ -2366,10 +2366,15 @@ occurrence_colouring <- function(d, colour_by = "kingdom") {
 #' national outline. Base maps, drawing, measuring and search tools are shared
 #' with every other map in the report.
 #'
-#' For performance the clustered point layer is capped at `max_points` records.
-#' Both density layers always use every record, because neither carries a popup
-#' payload. Where sampling occurs the map caption says so, so the reader is
-#' never misled about what is displayed.
+#' The point layer is all of the records or none of them. Subsampling was tried
+#' and dropped: a thinned layer is indistinguishable from a thin one, so a
+#' sample drawn on top of a density grid built from every record quietly
+#' contradicts the layer beside it, and no caption reliably undoes that. Above
+#' `max_points` records the markers are therefore withheld rather than
+#' sampled — the payload is roughly 390 bytes a record, which is what makes the
+#' cap necessary at all — and the caption says so. The density grid, the heat
+#' surface and the downloadable files always use every record, because none of
+#' them carries a popup.
 #'
 #' @param x An `sf` occurrence data frame (or a plain data frame carrying
 #'   `decimalLongitude` / `decimalLatitude`).
@@ -2377,9 +2382,9 @@ occurrence_colouring <- function(d, colour_by = "kingdom") {
 #' @param municipalities Optional `sf` polygons drawn as an administrative
 #'   overlay, labelled with this subset's record counts.
 #' @param colour_by "kingdom", "iucn", or a single colour for a flat layer.
-#' @param max_points Maximum number of individual markers to render.
+#' @param max_points Record count above which the point layer is omitted
+#'   entirely. At or below it every record is drawn.
 #' @param cell_km Cell size, in kilometres, for the density grid.
-#' @param seed Random seed, so that any subsample is reproducible.
 #' @return A `leaflet` htmlwidget.
 build_occurrence_map <- function(x,
                                  boundary        = NULL,
@@ -2387,9 +2392,8 @@ build_occurrence_map <- function(x,
                                  protected_areas = NULL,
                                  protected_points = NULL,
                                  colour_by       = "kingdom",
-                                 max_points      = 6000,
-                                 cell_km         = 2,
-                                 seed            = 42) {
+                                 max_points      = 10000,
+                                 cell_km         = 2) {
 
   stopifnot(requireNamespace("leaflet", quietly = TRUE))
   stopifnot(requireNamespace("leaflet.extras", quietly = TRUE))
@@ -2531,57 +2535,85 @@ build_occurrence_map <- function(x,
   overlay_groups <- c(overlay_groups, "Heat map")
 
   # --- Point layer ----------------------------------------------------------
-  sampled <- nrow(d) > max_points
-  pts <- if (sampled) {
-    set.seed(seed)
-    d[sample.int(nrow(d), max_points), , drop = FALSE]
-  } else {
-    d
-  }
+  # Every record, or none of them: see the note above the function for why the
+  # subsample went. Where the layer is withheld the reader still has the two
+  # density layers, which are built from the same records this layer would
+  # have drawn.
+  show_points <- nrow(d) <= max_points
 
-  colouring <- occurrence_colouring(pts, colour_by)
+  if (show_points) {
 
-  if (is.null(colouring)) {
-    fill <- if (is.character(colour_by)) colour_by else map_palette$kingdom[["Animalia"]]
-    pts$.fill <- fill
-  } else {
-    pal <- stats::setNames(colouring$colours, colouring$levels)
-    pts$.fill <- unname(pal[as.character(colouring$values)])
-  }
+    pts       <- d
+    colouring <- occurrence_colouring(pts, colour_by)
 
-  m <- leaflet::addCircleMarkers(
-    m, data = pts,
-    lng = ~decimalLongitude, lat = ~decimalLatitude,
-    radius = 5, weight = 1.2, color = "#ffffff", opacity = 0.9,
-    fillColor = ~.fill, fillOpacity = 0.85,
-    popup = build_popup(pts),
-    clusterOptions = leaflet::markerClusterOptions(
-      showCoverageOnHover     = FALSE,
-      spiderfyOnMaxZoom       = TRUE,
-      disableClusteringAtZoom = 13
-    ),
-    group = "Occurrence records"
-  )
-  overlay_groups <- c("Occurrence records", overlay_groups)
+    if (is.null(colouring)) {
+      fill <- if (is.character(colour_by)) colour_by else map_palette$kingdom[["Animalia"]]
+      pts$.fill <- fill
+    } else {
+      pal <- stats::setNames(colouring$colours, colouring$levels)
+      pts$.fill <- unname(pal[as.character(colouring$values)])
+    }
 
-  if (!is.null(colouring)) {
-    m <- leaflet::addLegend(
-      m, position = "bottomright", colors = colouring$colours,
-      labels = colouring$labels, title = colouring$title,
-      opacity = 0.9, group = "Occurrence records"
+    m <- leaflet::addCircleMarkers(
+      m, data = pts,
+      lng = ~decimalLongitude, lat = ~decimalLatitude,
+      radius = 5, weight = 1.2, color = "#ffffff", opacity = 0.9,
+      fillColor = ~.fill, fillOpacity = 0.85,
+      popup = build_popup(pts),
+      clusterOptions = leaflet::markerClusterOptions(
+        showCoverageOnHover     = FALSE,
+        spiderfyOnMaxZoom       = TRUE,
+        disableClusteringAtZoom = 13,
+        # The layer now carries every record rather than a fixed 2,500, so the
+        # clusterer is told to build in chunks: without this the whole layer is
+        # assembled in one pass and the page locks up while it happens.
+        chunkedLoading          = TRUE
+      ),
+      group = "Occurrence records"
     )
+    overlay_groups <- c("Occurrence records", overlay_groups)
+
+    if (!is.null(colouring)) {
+      m <- leaflet::addLegend(
+        m, position = "bottomright", colors = colouring$colours,
+        labels = colouring$labels, title = colouring$title,
+        opacity = 0.9, group = "Occurrence records"
+      )
+    }
   }
 
-  caption <- if (sampled) {
+  caption <- if (show_points) {
+    sprintf("All %s records mapped.", fmt_int(nrow(d)))
+  } else {
     sprintf(
-      paste0("%s records mapped. The point layer shows a random sample of %s ",
-             "records for browser performance; both density layers and the ",
-             "downloadable files use every record."),
+      paste0("%s records mapped. Individual markers are left off above %s ",
+             "records rather than shown as a sample, so this map is the ",
+             "density layers and the heat surface — both built from every ",
+             "record. The downloads carry every record too, and the record ",
+             "explorer further down maps them one by one."),
       fmt_int(nrow(d)), fmt_int(max_points)
     )
-  } else {
-    sprintf("%s records mapped.", fmt_int(nrow(d)))
   }
+
+  # With the point layer withheld, the density grid is the only layer left
+  # carrying the records themselves, so it starts visible in that case; where
+  # the markers are drawn it stays a second reading behind the switcher.
+  hidden <- c("Heat map", "Municipalities", "Strict protection zones",
+              "Natural monuments (point only)")
+  if (show_points) hidden <- c(hidden, "Record density")
+
+  # The caption is dismissible. It is a note about the layers rather than part
+  # of the map, and once it has been read it is only covering the corner of the
+  # country it sits over. The button removes the whole `.leaflet-control`, so
+  # the control's own padding goes with it instead of leaving an empty white
+  # box in the corner.
+  caption_html <- paste0(
+    "<div class='map-caption'><span>", caption, "</span>",
+    "<button type='button' class='map-caption-close' title='Dismiss' ",
+    "aria-label='Dismiss this note' ",
+    "onclick='this.closest(\".leaflet-control\").remove()'>&times;</button>",
+    "</div>"
+  )
 
   m <- m |>
     add_layer_switcher(overlay_groups) |>
@@ -2591,16 +2623,10 @@ build_occurrence_map <- function(x,
     # "is this record inside a site?" will mostly not ask the question. The
     # strict zones and the 189 point-only monuments are hidden, being detail
     # rather than context.
-    leaflet::hideGroup(intersect(c("Heat map", "Record density",
-                                   "Municipalities", "Strict protection zones",
-                                   "Natural monuments (point only)"),
-                                 overlay_groups)) |>
+    leaflet::hideGroup(intersect(hidden, overlay_groups)) |>
     add_map_tools() |>
     pin_heatmap_zoom() |>
-    leaflet::addControl(
-      html = paste0("<div class='map-caption'>", caption, "</div>"),
-      position = "bottomright"
-    ) |>
+    leaflet::addControl(html = caption_html, position = "bottomright") |>
     leaflet::fitBounds(
       lng1 = min(d$decimalLongitude), lat1 = min(d$decimalLatitude),
       lng2 = max(d$decimalLongitude), lat2 = max(d$decimalLatitude)

@@ -218,12 +218,36 @@ h2 {
 /* --- Map furniture -------------------------------------------------------- */
 
 .map-caption {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
   background: rgba(255, 255, 255, 0.9);
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 11px;
+  line-height: 1.35;
   color: #231F20;
   max-width: 320px;
+}
+
+/* The dismiss button follows the note in the DOM as well as on screen, so the
+   text is what a screen reader reaches first. It is a real button rather than
+   a styled span so that it is focusable and answers the keyboard. */
+.map-caption-close {
+  flex: none;
+  margin: -1px -3px 0 0;
+  padding: 0 2px;
+  border: 0;
+  background: none;
+  color: #6c7a80;
+  font-size: 14px;
+  line-height: 1.1;
+  cursor: pointer;
+}
+
+.map-caption-close:hover,
+.map-caption-close:focus-visible {
+  color: #231F20;
 }
 
 /* Leaflet puts `info legend` and `leaflet-control` on the SAME element, so a

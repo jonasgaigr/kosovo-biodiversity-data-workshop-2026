@@ -450,7 +450,11 @@ in the top-right corner:
 
 - **Occurrence records** — individual records, clustered until you zoom in,
   each with a pop-up carrying the determination, the place, the stated accuracy and a link through to the
-  record on GBIF, where the evidence and any photographs can be checked.
+  record on GBIF, where the evidence and any photographs can be checked. Where
+  a tab holds more than 10,000 records this layer is left off altogether rather
+  than thinned to a sample, because a thinned layer of dots looks exactly like
+  a thin one; the two density layers below then carry the same records, and the
+  explorer further down maps them one at a time.
 - **Record density** — every record aggregated onto a 2 km grid and classed
   against a legend. This is the layer to read when the question is *how many*.
 - **Heat map** — the same information as a smooth surface, better for seeing
@@ -479,7 +483,7 @@ build_occurrence_map(overall, boundary = boundary,
                      municipalities = municipalities,
                      protected_areas = protected_areas,
                      protected_points = protected_points,
-                     colour_by = "kingdom", max_points = 2500)
+                     colour_by = "kingdom")
 ```
 
 ### Birds
@@ -490,7 +494,7 @@ build_occurrence_map(subsets[["kosovo_birds"]], boundary = boundary,
                      municipalities = municipalities,
                      protected_areas = protected_areas,
                      protected_points = protected_points,
-                     colour_by = "iucn", max_points = 2500)
+                     colour_by = "iucn")
 ```
 
 ### Birds Directive, Annex I
@@ -501,7 +505,7 @@ build_occurrence_map(subsets[["kosovo_birds_annex_I"]], boundary = boundary,
                      municipalities = municipalities,
                      protected_areas = protected_areas,
                      protected_points = protected_points,
-                     colour_by = "iucn", max_points = 2500)
+                     colour_by = "iucn")
 ```
 
 ### Habitats Directive

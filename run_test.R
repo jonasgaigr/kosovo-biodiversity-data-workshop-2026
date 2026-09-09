@@ -210,6 +210,68 @@ builds("occurrence map, coloured by Red List category",
 builds("occurrence map survives an empty subset",
        build_occurrence_map(occ[0, ], colour_by = "kingdom"))
 
+# --- The point layer is all of the records, or none of them -------------------
+#
+# The layer used to fall back to a random subsample above the cap, which put a
+# thinned scatter of dots on top of a density grid built from every record. A
+# reader cannot tell that layer from a genuinely sparse one, so the cap now
+# withholds the markers instead. These checks pin both halves of that.
+
+marker_calls <- function(w) {
+  Filter(function(c) identical(c$method, "addCircleMarkers"), w$x$calls)
+}
+
+check("every record is drawn when the subset is within the cap",
+      {
+        w <- build_occurrence_map(occ, max_points = nrow(occ))
+        mk <- marker_calls(w)
+        length(mk) == 1 && length(mk[[1]]$args[[1]]) == nrow(occ)
+      })
+
+check("no subsample is drawn above the cap: the point layer is omitted",
+      {
+        w  <- build_occurrence_map(occ, max_points = nrow(occ) - 1L)
+        mk <- marker_calls(w)
+        groups <- unlist(lapply(w$x$calls, function(c) {
+          if (identical(c$method, "addLayersControl")) c$args[[2]] else NULL
+        }))
+        length(mk) == 0 && !("Occurrence records" %in% groups)
+      })
+
+check("the density grid starts visible when the markers are withheld",
+      {
+        hidden <- function(w) unlist(lapply(w$x$calls, function(c) {
+          if (identical(c$method, "hideGroup")) as.character(c$args[[1]]) else NULL
+        }))
+        with_pts <- build_occurrence_map(occ, max_points = nrow(occ))
+        no_pts   <- build_occurrence_map(occ, max_points = nrow(occ) - 1L)
+        "Record density" %in% hidden(with_pts) &&
+          !("Record density" %in% hidden(no_pts))
+      })
+
+check("the caption says which of the two the reader is looking at",
+      {
+        caption <- function(w) {
+          ctl <- Filter(function(c) identical(c$method, "addControl"), w$x$calls)
+          paste(vapply(ctl, function(c) as.character(c$args[[1]]), character(1)),
+                collapse = " ")
+        }
+        grepl("All 12 records mapped", caption(
+          build_occurrence_map(occ, max_points = nrow(occ))), fixed = TRUE) &&
+          grepl("left off above 11 records", caption(
+            build_occurrence_map(occ, max_points = nrow(occ) - 1L)), fixed = TRUE)
+      })
+
+check("the map caption can be dismissed",
+      {
+        w   <- build_occurrence_map(occ)
+        ctl <- Filter(function(c) identical(c$method, "addControl"), w$x$calls)
+        html <- paste(vapply(ctl, function(c) as.character(c$args[[1]]),
+                             character(1)), collapse = " ")
+        grepl("map-caption-close", html, fixed = TRUE) &&
+          grepl("leaflet-control\").remove()", html, fixed = TRUE)
+      })
+
 check("the heat-layer zoom shim is attached to every map",
       {
         w <- build_occurrence_map(occ)
