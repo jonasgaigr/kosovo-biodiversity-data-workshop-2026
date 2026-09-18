@@ -1,6 +1,13 @@
 project:
   type: website
   output-dir: docs
+  # presentation/ is a separate Quarto project holding the TAIEX deck. Without
+  # this, `quarto render` would sweep its .qmd into the website, apply the
+  # `format: html` block below to a reveal.js document and add it to the
+  # navigation and the search index.
+  render:
+    - "*.qmd"
+    - "!presentation/"
   # The exported data files are copied into the rendered site so that the
   # download buttons resolve on GitHub Pages.
   resources:

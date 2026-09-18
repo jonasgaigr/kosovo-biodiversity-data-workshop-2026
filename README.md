@@ -9,6 +9,11 @@ The output is a Quarto website — summary statistics, interactive Leaflet maps,
 a browser-side record explorer and open data downloads — designed for ministry
 officials and conservation practitioners, and hosted on GitHub Pages.
 
+[`presentation/`](presentation) holds the slides that present it: *Accessing and
+utilising GBIF data for biodiversity conservation*, the Day 2 session of the
+TAIEX Expert Mission on GIS and biodiversity data management, Pristina,
+28–30 September 2026.
+
 ---
 
 ## What the report contains
@@ -136,7 +141,14 @@ kosovo-biodiversity-data-workshop-2026/
 │   └── run_metadata.rds            # DOI, citation, counts, cleaning report
 │
 ├── data_exports/              # Published outputs (.gpkg, .csv, .xlsx), six subsets
-└── docs/                      # Rendered website — GitHub Pages serves this
+├── docs/                      # Rendered website — GitHub Pages serves this
+│
+└── presentation/              # TAIEX workshop deck — its own Quarto project
+    ├── gbif-data-access.qmd   # The slides
+    ├── custom.scss            # Deck-specific adjustments to the AOPK template
+    ├── images/                # Screenshots of the rendered report
+    ├── _extensions/aopk/      # AOPK ČR reveal.js template (vendored)
+    └── README.md              # How to build the HTML and the PDF
 ```
 
 `R/functions.R` is deliberately shared between the pipeline and the report so
