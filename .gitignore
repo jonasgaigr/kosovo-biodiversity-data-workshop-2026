@@ -78,3 +78,12 @@ render.log
 # tracked.
 # ------------------------------------------------------------------------------
 /outputs/
+
+# ------------------------------------------------------------------------------
+# Mission paperwork
+#
+# The TAIEX agenda arrives by email, is revised up to the week of the mission,
+# and belongs to the organisers rather than to this repository. Kept in the
+# working directory because the decks are written against it; not tracked.
+# ------------------------------------------------------------------------------
+/Agenda_*.docx
