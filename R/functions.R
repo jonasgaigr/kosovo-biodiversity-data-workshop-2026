@@ -1648,6 +1648,12 @@ map_palette <- list(
   boundary     = "#231F20",  # GBIF black
   municipality = "#6E7B7A",
 
+  # The ground a static map draws land on. GBIF mist, which is exactly the land
+  # colour of the `gbif-light` basemap the website's maps sit on: the printed
+  # locator map and the interactive one are then the same picture in the same
+  # colours, rather than two drawings of the same country.
+  land         = "#E8E8E8",  # GBIF mist
+
   # Protected areas. Green is the one hue a reader already reads as "protected"
   # on any conservation map, and it is free to use here: the occurrence marks
   # carry GBIF green only for Plantae, and the protected-area layer is drawn as

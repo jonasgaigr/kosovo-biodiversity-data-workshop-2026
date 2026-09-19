@@ -1,0 +1,24 @@
+/*-- scss:rules --*/
+
+// Deck-specific additions, loaded after `custom.scss`, which this deck shares
+// with `gbif-data-access.qmd`. Everything here is about code blocks: that deck
+// has none, so these rules live beside it rather than in it.
+
+// A command line and a configuration block both have to fit the slide width
+// without wrapping — a wrapped shell command is a command nobody can retype.
+.reveal .slides section pre code {
+  font-size: $aopk-size-body * 0.52;
+  line-height: 1.35;
+}
+
+// reveal.js gives a code block `overflow: auto` and a height cap. On screen
+// that is right: a reader can scroll a long block. In print it is not — the
+// cap silently truncates, and the scrollbar is rendered INTO the page as a
+// grey strip with arrow buttons at the foot of every block. Neither can be
+// used on paper, so both go, and the block prints at its full height.
+html.reveal-print .reveal .slides section pre,
+html.reveal-print .reveal .slides section pre code,
+html.reveal-print .reveal .slides section div.sourceCode {
+  overflow: visible !important;
+  max-height: none !important;
+}

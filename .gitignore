@@ -68,3 +68,13 @@ render.log
 # data_exports/                   — published outputs, served by GitHub Pages
 # docs/                           — the rendered website itself
 # ------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
+# Site reports
+#
+# `site_reports.R` writes one directory per protected area, plus the run
+# manifest and the national ranking table it quotes. All of it is generated
+# from tracked inputs and is rebuilt by re-running the tool, so none of it is
+# tracked.
+# ------------------------------------------------------------------------------
+/outputs/

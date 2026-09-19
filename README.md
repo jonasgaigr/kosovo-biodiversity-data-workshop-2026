@@ -9,10 +9,12 @@ The output is a Quarto website — summary statistics, interactive Leaflet maps,
 a browser-side record explorer and open data downloads — designed for ministry
 officials and conservation practitioners, and hosted on GitHub Pages.
 
-[`presentation/`](presentation) holds the slides that present it: *Accessing and
-utilising GBIF data for biodiversity conservation*, the Day 2 session of the
-TAIEX Expert Mission on GIS and biodiversity data management, Pristina,
-28–30 September 2026.
+[`presentation/`](presentation) holds the two decks that present it at the TAIEX
+Expert Mission on GIS and biodiversity data management, Pristina,
+28–30 September 2026: *Accessing and utilising GBIF data for biodiversity
+conservation* (Day 2) and *Replicable and automated map and report production
+for biodiversity conservation* (Day 3), which is about the site-level tool
+below.
 
 ---
 
@@ -104,6 +106,9 @@ that the GBIF tiles keep `tileSize = 512` with `zoomOffset = -1`.
 IUCN Red List categories keep IUCN's own severity scheme. They are a different
 organisation's standard, and GBIF renders them in IUCN's colours too.
 
+The per-site PDFs are dressed from the same palette, down to the swatch beside
+a Red List category — see *The report wears the website's colours*.
+
 ---
 
 ## Repository structure
@@ -117,13 +122,22 @@ kosovo-biodiversity-data-workshop-2026/
 ├── custom.scss                # Report theme
 ├── index.qmd                  # The report
 ├── pipeline.R                 # Acquisition → cleaning → matching → export
+├── site_reports.R             # One GeoPackage and one PDF per protected area
 ├── run_test.R                 # Offline smoke test for R/functions.R
+├── run_test_site_report.R     # Offline smoke test for R/site_report.R
 ├── README.md
 ├── LICENSE
 │
 ├── R/
 │   ├── functions.R            # Shared helpers, sourced by pipeline.R AND index.qmd
+│   ├── site_report.R          # Site-level helpers, sourced by site_reports.R AND
+│   │                          #   reports/site_report.qmd
 │   └── build_directive_list.R # Builds the annex lists from the EUR-Lex texts
+│
+├── reports/
+│   ├── site_report.qmd        # Parameterised Typst report for one site
+│   ├── gbif-report.typ        # The report's colours — the website's, in Typst
+│   └── _quarto.yml            # Keeps it out of the website project
 │
 ├── data/                      # Inputs, caches and run metadata
 │   ├── eu_directives_species.csv   # Annex lists (generated; tracked)
@@ -142,11 +156,17 @@ kosovo-biodiversity-data-workshop-2026/
 │
 ├── data_exports/              # Published outputs (.gpkg, .csv, .xlsx), six subsets
 ├── docs/                      # Rendered website — GitHub Pages serves this
+├── outputs/                   # Site reports (generated; not tracked)
+│   ├── protected_areas/<slug>/<slug>.gpkg  and  <slug>.pdf
+│   ├── run_manifest.csv               # One row per site per run
+│   └── national_site_statistics.csv   # The ranking each report quotes
 │
-└── presentation/              # TAIEX workshop deck — its own Quarto project
-    ├── gbif-data-access.qmd   # The slides
-    ├── custom.scss            # Deck-specific adjustments to the AOPK template
-    ├── images/                # Screenshots of the rendered report
+└── presentation/              # TAIEX workshop decks — their own Quarto project
+    ├── gbif-data-access.qmd      # Day 2: accessing and utilising GBIF data
+    ├── automated-reporting.qmd   # Day 3: automated map and report production
+    ├── automated-reporting.scss  # Code-block styles for that deck alone
+    ├── custom.scss            # Adjustments to the AOPK template, shared
+    ├── images/                # Captures of the website and of a site report
     ├── _extensions/aopk/      # AOPK ČR reveal.js template (vendored)
     └── README.md              # How to build the HTML and the PDF
 ```
@@ -571,6 +591,163 @@ excluded from the site test, because each lies inside a site already counted.
 > protected-area *management* category (Ia, Ib, II, III, V), which describes how
 > a site is run. The Red List categories used elsewhere in this project are CR,
 > EN, VU and so on. The two share an acronym and nothing else.
+
+---
+
+## Site reports for individual protected areas
+
+The website answers national questions. A conservation officer asked about one
+site needs the same evidence for that site alone, in a form they can open in
+QGIS and attach to a case file. `site_reports.R` produces it:
+
+```bash
+Rscript site_reports.R --site NP_001
+```
+
+writes `outputs/protected_areas/parku-kombetar-sharri/` containing
+
+* `parku-kombetar-sharri.gpkg` — every record inside the site and its buffer,
+  the boundary, the strict-protection zones, two 1 km grids, the overlapping
+  municipalities, a species list and the provenance, as nine GeoPackage layers;
+* `parku-kombetar-sharri.pdf` — a four- to six-page report on the same figures.
+
+The PDF reads its numbers **out of the GeoPackage**, so the two cannot state
+different figures. No GBIF credentials and no network access are needed: the
+tool reads what `pipeline.R` has already published, and never triggers a new
+download.
+
+### The command line
+
+| Option | Meaning |
+|---|---|
+| `--site VALUE` | A `natda_id`, a `national_id`, or part of a site name, case- and diacritic-insensitive. Repeatable. An ambiguous name is an error listing the candidates |
+| `--all` | Every designated site in the register |
+| `--designation NAME` | Keep only this designation, e.g. `"National Park"` |
+| `--iucn-category CODE` | Keep only this IUCN management category, e.g. `II` |
+| `--min-area-km2 N` | Keep only sites of at least N km², as reported by the register |
+| `--out DIR` | Output directory (default `outputs/protected_areas`) |
+| `--buffer M` | Comparison buffer in metres (default 1000) |
+| `--gpkg-only` / `--pdf-only` | Write only one of the two outputs |
+| `--force` | Regenerate even when the outputs are newer than every input |
+| `--quiet` | Print nothing but errors and the run summary |
+| `--help` | Usage |
+
+```bash
+Rscript site_reports.R --site "Bjeshket e Nemuna"          # diacritics optional
+Rscript site_reports.R --site 555547192 --site NP_001      # repeatable
+Rscript site_reports.R --all --designation "National Park" --out outputs/np
+Rscript site_reports.R --site NP_002 --gpkg-only --force
+```
+
+Re-running regenerates nothing and says so, unless an input — including the
+code — is newer than the outputs, or `--force` is given. One site failing is
+logged and the run continues; the exit status is non-zero if any site failed.
+Every run appends to `outputs/run_manifest.csv` and rewrites
+`outputs/national_site_statistics.csv`, the table each report quotes its
+national rank from.
+
+### The GeoPackage
+
+All layers are stored in **EPSG:4326**; every area, distance and density is
+computed in **EPSG:3035** (ETRS89-LAEA), the projection the EEA uses for area
+statistics. Both are recorded in `report_metadata`, so neither has to be
+inferred from the numbers.
+
+| Layer | Geometry | Columns beyond the register's own |
+|---|---|---|
+| `site_boundary` | polygon | `boundary_basis`, `computed_area_km2`, `buffer_m`, `records`, `species`, `families`, `datasets`, `records_per_km2`, `first_year`, `last_year`, `records_in_buffer_only`, `strict_zones`, `strict_records`, `grid_cells`, `grid_cells_with_records`, `unrecorded_share` |
+| `site_buffer` | polygon | `natda_id`, `site_name`, `buffer_m`, `buffer_area_km2`, `records`, `records_outside` |
+| `strict_protection` | polygon | register attributes, `computed_area_km2`, `records`, `species` |
+| `occurrences` | point | the full export attribute set, plus `inside_site`, `in_buffer_only`, `strictlyProtected`, `directive`, `annex` |
+| `species_richness_grid` | polygon | `cell_id`, `species`, `records`, `cell_area_km2` |
+| `record_density_grid` | polygon | `cell_id`, `records`, `density_class`, `cell_area_km2` |
+| `municipalities_overlapping` | polygon | `unit_area_km2`, `overlap_km2`, `share_of_unit`, `share_of_site` |
+| `species_summary` | none | `species`, `vernacularName`, `kingdom`, `family`, `records`, `iucnRedListCategory`, `directive`, `annex`, `first_year`, `last_year` |
+| `report_metadata` | none | `natda_id`, `item`, `value` — the GBIF DOI and citation, the register version, every input path and its modification time, the CRSs, the buffer, the tool version and commit, and the command that reproduces the file |
+
+Both grids drop their empty cells, because an empty cell is not a
+record; the count of empty cells survives in `site_boundary` as
+`grid_cells` against `grid_cells_with_records`, which is what the report's
+recording-gap figure is computed from.
+
+Two counting rules are worth knowing before the numbers are compared with the
+national report:
+
+* **Records are counted by intersection with the boundary**, not from the
+  `protectedArea` stamp. The stamp names only the smallest site containing a
+  record, so a record in the overlap of two sites would otherwise vanish from
+  one of the two reports. A site's total here can therefore be slightly higher
+  than its row in the national table.
+* **The register's own `area_km2` is dropped** in favour of
+  `computed_area_km2`, measured in EPSG:3035. Two area columns differing in the
+  third decimal place are worse than one.
+
+### The PDF needs Typst, not LaTeX
+
+The report is rendered through Quarto's `format: typst`. Typst ships **inside
+Quarto** from version 1.4, so there is nothing to install: no TeX distribution,
+no `tinytex`, no LaTeX packages. Check with `quarto typst --version`.
+
+The maps are drawn with `ggplot2` and use no tile service, so a report renders
+with the network unplugged and looks the same in a year's time. Above 20,000
+records the point layer is withheld and the density grid is drawn in its place,
+with the reason printed on the map — records are never silently thinned.
+
+> **One line worth adding to `_quarto.yml`.** The website project's render list
+> is `["*.qmd", "!presentation/"]`, and that glob reaches `reports/` as well, so
+> a plain `quarto render` of the website renders the template too and leaves a
+> stray `docs/reports/site_report.pdf` behind. Rendered without a site the
+> template describes itself and stops rather than failing, so nothing breaks
+> either way — but adding `- "!reports/"` beside `- "!presentation/"` keeps the
+> website out of this directory altogether. `reports/_quarto.yml` makes the
+> directory its own project, which is what keeps a targeted render of the
+> template from inheriting the website's format and output directory; it does
+> not exclude it from the parent's render list.
+
+### The report wears the website's colours
+
+A site report and the national report are one publication, so the PDF is drawn
+in the colours of the page, each doing the job it does there: GBIF black for
+reading text, the brand green for the rule under a section heading, the ink
+step `#358305` for text that has to be green — the key figures, the links, the
+file names — azure down the edge of the citation block, and the Red List's own
+colours in a swatch beside every category, which is the swatch `index.qmd`
+puts in its own species tables. The maps have always shared `map_palette` with
+the website's interactive ones; the printed locator map now draws land in GBIF
+mist as well, the land colour of the `gbif-light` basemap those maps sit on.
+
+Those values live in `reports/gbif-report.typ`, which the template includes as
+its Typst header. They are restated there rather than shared because nothing
+can share them — Typst cannot read SCSS, and Quarto's own answer to this, a
+`_brand.yml`, would restyle the website as well as the report. The duplication
+is guarded instead: `run_test_site_report.R` reads `custom.scss`,
+`R/site_report.R` and the theme together, and fails if a value drifts out of
+step, if a map goes back to a hard-coded colour, or if the report starts using
+a colour the page does not.
+
+### Sites with no records, and sites with no boundary
+
+Both are ordinary, and both produce complete outputs:
+
+* a site with **no records** is not an error. Its layers are written empty, and
+  every section says plainly that it is empty. Most of Kosovo's register is in
+  this state, and the report says in as many words that absence of records is
+  not absence of species;
+* a site recorded as a **point** has no inside, so it is buffered to a circle of
+  the area the register reports for it. The substitution is stated in the PDF
+  and recorded in `report_metadata` as `boundary_basis`.
+
+### Testing it
+
+```bash
+Rscript run_test_site_report.R
+```
+
+covers site resolution by all three keys, ambiguity, slug stability and
+ASCII-safety, the zero-record and point-only sites, the layers and CRS of the
+GeoPackage, the determinism of the summary tables, and that the PDF's colours
+still agree with the website's. Like `run_test.R` it
+needs no credentials and no network, and **writes only into `tempdir()`**.
 
 ---
 

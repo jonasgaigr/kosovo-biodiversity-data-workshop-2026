@@ -1,8 +1,11 @@
-# Accessing and utilising GBIF data — TAIEX deck
+# TAIEX workshop decks
 
-The slides for **Day 2, 15:15–16:00** of the TAIEX Expert Mission on GIS and
-biodiversity data management, Pristina, 28–30 September 2026
-(case ID ETT IND/EXP 82606).
+Two decks for the TAIEX Expert Mission on GIS and biodiversity data management,
+Pristina, 28–30 September 2026 (case ID ETT IND/EXP 82606). Both are built from
+the same vendored AOPK ČR reveal.js template in
+[`_extensions/aopk/`](_extensions/aopk) and share [`custom.scss`](custom.scss).
+
+## Day 2, 15:15–16:00 — Accessing and utilising GBIF data
 
 | | |
 |---|---|
@@ -16,6 +19,30 @@ routes into it, how to read occurrence records honestly, the reproducible site
 built on them, and five failure modes that return a plausible answer and no
 error message.
 
+## Day 3, 15:15–16:00 — Replicable and automated map and report production
+
+| | |
+|---|---|
+| Source | [`automated-reporting.qmd`](automated-reporting.qmd) |
+| Slides | `automated-reporting.html` — reveal.js, 16:9, one self-contained file |
+| Handout | `automated-reporting.pdf` — 22 pages, one slide per page |
+| Extra styles | [`automated-reporting.scss`](automated-reporting.scss), loaded after `custom.scss` |
+
+The deck follows the repository's own automation: the two kinds of input
+(occurrence records and thematic layers), the single step where they are
+joined, and the two outputs `site_reports.R` produces per protected area — a
+nine-layer GeoPackage and a Typst PDF that reads its every figure out of it. It
+then sets out what makes that replicable rather than merely done: configuration
+in one block, provenance as a GeoPackage layer, and the rules that stop a run
+failing quietly.
+
+Its figures are pages of a real report —
+`outputs/protected_areas/parku-kombetar-sharri/parku-kombetar-sharri.pdf`,
+rasterised with `pdftoppm -png -r 150` into
+[`images/site-report-p*.png`](images) — and its timings come from
+`outputs/run_manifest.csv` for a full `--all` pass over the register. Re-cut
+both if the tool's output changes.
+
 ---
 
 ## Building it
@@ -24,8 +51,12 @@ error message.
 
 ```bash
 cd presentation
-quarto render gbif-data-access.qmd --to aopk-revealjs
+quarto render gbif-data-access.qmd  --to aopk-revealjs
+quarto render automated-reporting.qmd --to aopk-revealjs
 ```
+
+Each deck is rendered by name rather than by `quarto render` over the
+directory, so that working on one does not rebuild the other.
 
 `presentation/` carries its own `_quarto.yml`, so it is a **separate Quarto
 project** from the website in the repository root. Rendering it does not touch
@@ -46,6 +77,9 @@ chrome --headless=new --disable-gpu --no-pdf-header-footer \
        --print-to-pdf=gbif-data-access.pdf \
        "file:///ABSOLUTE/PATH/TO/gbif-data-access.html?print-pdf"
 ```
+
+The same command produces `automated-reporting.pdf` from
+`automated-reporting.html`.
 
 Points that are not optional:
 
@@ -103,10 +137,30 @@ specificity.
 
 ---
 
-## Screenshots
+## Figures
 
-`images/` holds six captures of the rendered report in `docs/`, taken with
+`images/` holds two sets, both cut from real output rather than mocked up, and
+both from the same GBIF download,
+[10.15468/dl.wzpexq](https://doi.org/10.15468/dl.wzpexq).
+
+**`site-top`, `site-map`, `site-pa`, `site-coverage`, `site-explore`,
+`site-download`** — six captures of the rendered website in `docs/`, taken with
 headless Chrome against the local build rather than the live site, so they match
-the run the figures in the deck come from (GBIF download
-[10.15468/dl.wzpexq](https://doi.org/10.15468/dl.wzpexq), rendered 9 September
-2026). Re-cut them if the report's figures change.
+the run the figures in the Day 2 deck come from (rendered 9 September 2026).
+
+**`site-report-p1`, `-p2`, `-p4`, `-p5`** — four pages of one site report,
+rasterised from the PDF the tool produced for Sharri National Park:
+
+```bash
+pdftoppm -png -r 150 -f 2 -l 2 \
+  outputs/protected_areas/parku-kombetar-sharri/parku-kombetar-sharri.pdf \
+  presentation/images/site-report-p2
+```
+
+Pages 1 and 5 are cropped to their content with `-W 1240 -H 1315` and
+`-W 1240 -H 1060`, because both end in white space that would otherwise be half
+the picture on the slide.
+
+Re-cut either set if the output it is a picture of changes. The `site-` prefix
+is what `custom.scss` matches to give a capture of a white page its hairline
+border, so a new figure should keep it.
