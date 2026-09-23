@@ -111,6 +111,72 @@ h2 {
   text-decoration: none;
 }
 
+/* --- Workshop landing page -----------------------------------------------
+   The landing page reuses `.download-card`, so the decks and the report's own
+   downloads read as one set. Its grid fills rather than fits: a day with a
+   single session keeps a half-width card instead of one stretched across the
+   page.
+   ------------------------------------------------------------------------- */
+
+.signpost-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.85rem;
+  margin: 1rem 0 1.8rem;
+}
+
+.signpost-grid .download-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.signpost-grid .download-card h4 {
+  font-size: 1.02rem;
+  line-height: 1.35;
+}
+
+.signpost-grid .download-card > p {
+  font-size: 0.9rem;
+  color: #4e565f;
+  margin: 0 0 0.8rem;
+}
+
+/* Buttons sit on the card's bottom edge, so a row of cards lines them up
+   however long each summary runs. */
+.signpost-grid .actions {
+  margin-top: auto;
+}
+
+/* Written in Markdown, the meta line and the button row each arrive wrapped
+   in a paragraph of their own. */
+.signpost-grid .meta p,
+.signpost-grid .actions p {
+  margin: 0;
+}
+
+.signpost-grid .actions a.btn {
+  margin-bottom: 0.35rem;
+}
+
+/* The report is the one destination most readers want, so it spans the row
+   and wears the key-figure rule. */
+.signpost-grid .featured {
+  grid-column: 1 / -1;
+  border-left: 4px solid $primary;
+}
+
+.designation-mark {
+  font-size: 0.8em;
+  vertical-align: super;
+  line-height: 0;
+}
+
+.designation-note {
+  font-size: 0.8rem;
+  color: #666666;
+  margin: 0.4rem 0 1.2rem;
+}
+
 /* --- Notes and citation -------------------------------------------------- */
 
 .citation-box {

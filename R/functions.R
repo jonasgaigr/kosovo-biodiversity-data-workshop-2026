@@ -3,7 +3,7 @@
 #
 # Shared helper functions for the Kosovo GBIF biodiversity analysis.
 #
-# This file is sourced by BOTH `pipeline.R` (data preparation) and `index.qmd`
+# This file is sourced by BOTH `pipeline.R` (data preparation) and `report.qmd`
 # (reporting), so that the mapping and summary logic is defined exactly once.
 # ------------------------------------------------------------------------------
 

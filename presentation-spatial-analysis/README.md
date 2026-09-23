@@ -15,7 +15,7 @@ in this repository.
 | Outline | [`OUTLINE.md`](OUTLINE.md) – **generated**; timings, key messages, visual plan, speaker notes, likely questions, references |
 | Plan data | [`data/slide-plan.csv`](data/slide-plan.csv) – one row per slide: minutes, key message, visual and whether it exists |
 | Questions | [`questions.md`](questions.md) – authored; appended to the outline |
-| Figures | [`make-figures.R`](make-figures.R) builds the one computed figure; [`image-slot.lua`](image-slot.lua) stands in for the rest until they are captured |
+| Figures | [`make-figures.R`](make-figures.R) builds the record-density map; [`make-eo-figures.R`](make-eo-figures.R) the two Sentinel-2 scenes and the fragmentation map; [`image-slot.lua`](image-slot.lua) stands in for any picture that is missing |
 | Sources | [`references.bib`](references.bib) |
 | Extra styles | [`spatial-analysis.scss`](spatial-analysis.scss), loaded after [`custom.scss`](custom.scss) |
 | Audience | MESPI and KEPA officials, national policymakers, university academics |
@@ -136,7 +136,7 @@ explains the difference if someone raises it.
 
 ## Building it
 
-### The computed figure
+### The computed figures
 
 ```bash
 Rscript make-figures.R
@@ -145,6 +145,33 @@ Rscript make-figures.R
 Builds `images/kosovo-record-density.png` from the repository's own pipeline
 outputs one level up. Needs `sf` and `ggplot2`. Re-run it whenever the pipeline
 is re-run, or the map and the numbers beside it drift apart.
+
+```bash
+Rscript make-eo-figures.R
+```
+
+Builds the Earth-observation figures on slides 5 and 6. Needs `sf`, `terra`,
+`jsonlite`, `curl` and `ggplot2`, and – on the first run only – the network: it
+downloads open data (no account needed) into `_cache/`, which is git-ignored,
+and later runs are offline. About four minutes, most of it labelling forest
+patches at 10 m.
+
+- **Change pair** – Sentinel-2 L2A from Microsoft Planetary Computer,
+  15 August 2016 and 10 August 2025. Both scenes come from the same satellite
+  on the same orbit, and they share one fixed stretch. The script corrects the
+  −1000 offset that processing baseline 04.00 added to newer scenes, which
+  would otherwise make 2025 look brighter. The 5 km window is on the park's
+  eastern edge at the mouth of the Rugova gorge. It was **chosen by eye, not
+  by an index**: an NDVI difference there is dominated by the 2025 drought on
+  the farmland outside the park.
+- **Fragmentation** – CLC+ Backbone 2021 forest (classes 2–4) from the EEA
+  image service, with OpenStreetMap motorways and main roads burnt in as
+  barriers. The script prints the patch statistics quoted in the notes:
+  9,370 patches; the two largest are 174 and 156 km² and lie either side of
+  the gorge; the effective mesh size is 97 km². **Do not quote a "with and
+  without roads" difference.** At 10 m, CLC+ already maps the motorway
+  corridor as a gap in the forest, so burning the roads in moves the mesh
+  size by under 1 %.
 
 ### Slides
 
@@ -195,12 +222,18 @@ drawn. Render the slides first: the PDF is printed *from* the HTML.
 
 ### Publishing
 
+Rendering the website at the repository root copies both built files into
+`docs/slides/spatial-analysis/` and lists the deck on the site's landing page,
+from the deck's row in [`../data/workshop_decks.csv`](../data/workshop_decks.csv).
+After rebuilding the deck alone, republish it from the repository root without
+re-rendering the site:
+
 ```bash
-mkdir -p ../docs/slides/spatial-analysis
-cp spatial-analysis.html spatial-analysis.pdf ../docs/slides/spatial-analysis/
+Rscript publish_slides.R
 ```
 
 **Do not publish while any placeholder box remains** (see "Figures").
+`publish_slides.R` enforces this: it stops if the built slides still hold one.
 
 ---
 
@@ -223,13 +256,13 @@ whole of the work** – no slide is edited.
 |---|---|---|---|
 | `kosovo-record-density.png` | 3 | **exists** – `make-figures.R` | Records per km² by municipality, protected sites, Ligatina e Hencit ringed |
 | `ndop-full-precision.png` | 13 | **exists** – cropped from the n2k deck's `ndop-record-list.png` | NDOP logged-in list, *Triturus cristatus*, NEG absences |
-| `eo-change-before.jpg` | 5 | to capture | Sentinel-2 true colour, summer 2016, one extent with visible land-take |
-| `eo-change-after.jpg` | 5 | to capture | The same extent, summer 2025, same bands and stretch |
-| `fragmentation.png` | 6 | to produce | Habitat patches from a Copernicus layer with roads over them |
-| `ndop-public-generalised.png` | 12 | to capture | NDOP public view of a sensitive species, generalised to a square |
-| `uncg-viewer-report.png` | 14 | to capture | The viewer's species/legal-status table for one area |
-| `uncg-viewer-map.png` | 15 | to capture | The viewer with an area selected, filtered records, filter panel |
-| `dll-risk-zones.png` | 17 | to source | A published GCN impact risk zone map; check its reuse licence, or redraw |
+| `eo-change-before.jpg` | 5 | **exists** – `make-eo-figures.R` | Sentinel-2, 15 Aug 2016, 5 km of the Bjeshkët e Nemuna park edge above Pejë |
+| `eo-change-after.jpg` | 5 | **exists** – `make-eo-figures.R` | The same extent, 10 Aug 2025: a new road through the forest inside the park |
+| `fragmentation.png` | 6 | **exists** – `make-eo-figures.R` | CLC+ Backbone 2021 forest patches at the Kaçanik gorge, R6 and main roads |
+| `ndop-public-generalised.png` | 12 | **exists** – captured | NDOP public view of a sensitive species, generalised to a square |
+| `uncg-viewer-report.png` | 14 | **exists** – captured | The viewer's species/legal-status table for one area |
+| `uncg-viewer-map.png` | 15 | **exists** – captured | The viewer with an area selected, filtered records, filter panel |
+| `dll-risk-zones.png` | 17 | **exists** – supplied | A published GCN impact risk zone map; **reuse licence still to be checked** |
 
 Three things are drawn in the slide itself rather than as pictures, so they
 cannot come out too small: the Darwin Core record (slide 9), the raw CSV
@@ -249,7 +282,7 @@ The space each picture actually gets:
 |---|---|---|
 | `.aopk-cols` (54 % column) | 3, 12, 17 | ≈ 610 × 370 px – height binds for anything squarer than 1.6:1 |
 | `.aopk-cols-wide` (64 % column) | 6, 15 | ≈ 720 × 400 px |
-| `.aopk-pair` (half each) | 5, 14 | ≈ 550 × 340 px |
+| `.aopk-pair` (half each) | 5, 14 | ≈ 550 × 340 px – but a 16:10 picture is height-capped at ≈ 430 × 270 (measured on slide 5) |
 | full width | 13 | ≈ 1130 × 400 px – for very wide strips such as a table |
 
 **For screenshots**, that means: set the browser to 100 % zoom, crop to the

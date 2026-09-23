@@ -1,8 +1,9 @@
 # Build check for the Day 3 data-collection deck.
 #
 # This workflow does NOT publish. GitHub Pages serves `docs/` from the branch
-# and `docs/` is built locally, so publishing stays a local `cp` — see
-# "Publishing" in presentation-data-collection/README.md. Moving Pages to an
+# and `docs/` is built locally, so publishing stays a local step (the root
+# render copies the deck into docs/slides/) — see "Publishing" in
+# presentation-data-collection/README.md. Moving Pages to an
 # Actions deployment source would mean CI had to build the GBIF website too,
 # including its data pipeline, which is a far larger change than this deck.
 #

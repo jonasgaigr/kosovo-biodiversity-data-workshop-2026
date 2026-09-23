@@ -233,18 +233,19 @@ So the answer to "we have no baseline" is: you have more of one than you think.
 
 ::: {.aopk-pair}
 ::: {}
-![](images/eo-change-before.jpg){slot="16/10" want="Sentinel-2 true colour, summer 2016, one Kosovo extent with visible land-take (suggested: the lignite fields west of Obiliq, or the Pristina urban fringe). Same extent and scale as the 'after' image."}
+![](images/eo-change-before.jpg){slot="16/10" want="Sentinel-2 true colour, 15 August 2016, the eastern edge of Bjeshkët e Nemuna National Park above Pejë. Built by make-eo-figures.R."}
 
 ::: {.figcaption}
-Sentinel-2, summer 2016. *[Place and date to be set when the scene is chosen.]*
+Sentinel-2, 15 August 2016. Bjeshkët e Nemuna National Park (yellow line) above
+Pejë.
 :::
 :::
 
 ::: {}
-![](images/eo-change-after.jpg){slot="16/10" want="The same extent, summer 2025, same band combination and stretch."}
+![](images/eo-change-after.jpg){slot="16/10" want="The same extent, 10 August 2025, same bands and stretch. Built by make-eo-figures.R."}
 
 ::: {.figcaption}
-The same extent, summer 2025.
+The same 5 km, 10 August 2025: a new road through the forest, inside the park.
 :::
 :::
 :::
@@ -256,13 +257,15 @@ included. Together: *where* land cover changed, *how much*, and *when*.
 :::
 
 ::: notes
-Here is what that archive looks like in practice. The same piece of Kosovo, the
-same season, nine years apart. You do not need to be a remote-sensing
-specialist to read this slide – and that is the point. A minister can read it.
+Here is what that archive looks like in practice. The edge of Bjeshkët e Nemuna
+National Park, directly above Pejë – the yellow line is the park boundary.
+August 2016, and August 2025. In 2016 the slope is forest. By 2025 a new road
+climbs through it in switchbacks, inside the boundary. Whether it was permitted
+is a question for the files; that it happened, and when, is now on record.
 
-Two products carry most of the value. Sentinel-2 gives ten-metre optical imagery
+Two products carry the value. Sentinel-2 gives ten-metre optical imagery
 of the whole country every few days, free and openly licensed, back to 2015.
-It is the raw evidence. CORINE Land Cover is the interpreted layer: a
+CORINE Land Cover is the interpreted layer: a
 harmonised land-cover map, with change layers between reference years, produced
 by the European Environment Agency for thirty-nine countries – and Kosovo is
 inside that extent. That matters: your land-cover classes are the same classes
@@ -276,10 +279,9 @@ against. Today, when an assessment says the site is unchanged, you take the
 assessor's word for it. With this, you can check.
 
 For the academics, a word on rigour. Change detection from satellite imagery
-has error, and it must be validated against ground reference points – a
-classification without an accuracy assessment is a picture, not evidence. But
-that validation is a normal, publishable piece of work, and a good thesis
-topic.
+has error, and must be validated against ground reference points – a
+classification without an accuracy assessment is a picture, not evidence. That
+validation is publishable work, and a good thesis topic.
 
 Land cover tells you how much habitat there is. The next question is whether it
 still functions as habitat – and that is about its shape.
@@ -301,26 +303,26 @@ in a cave. It tells field teams **where** to go – it does not replace them.
 :::
 
 ::: {}
-![](images/fragmentation.png){slot="16/10" want="A fragmentation map for one Kosovo landscape: forest (or grassland) patches from a Copernicus layer, e.g. Tree Cover Density or CLC+ Backbone, with motorways and main roads drawn over them. Suggested: the R7 motorway corridor, or the edge of Sharri National Park."}
+![](images/fragmentation.png){slot="16/10" want="Forest patches from CLC+ Backbone 2021 at the Kaçanik gorge, with the R6 motorway and main roads. Built by make-eo-figures.R."}
 
 ::: {.figcaption}
-Habitat patches and the barriers between them. *[Layer, year and extent to be
-set when the map is made.]*
+Forest, CLC+ Backbone 2021 (10 m), Kaçanik gorge. Each dark tone is one
+connected patch; pale, over 9,000 smaller ones. Black: the old main road.
 :::
 :::
 :::
 
 ::: notes
-Fragmentation is the harder concept and the more important one for species. A
-forest can keep its total area and still fail as habitat, if a motorway cuts it
-into pieces too small or too isolated for the animals that need it. Bears, lynx
-and amphibians care less about hectares than about getting from one piece to the
-next.
+Fragmentation is the harder concept, and matters more for species. This is the Kaçanik gorge, just east of Sharri National Park. The forest here
+is two blocks, of about 175 and 155 square kilometres – and between them runs
+one gorge carrying the R6 motorway, the old road, the river and the railway.
+For a bear or a lynx, whether that is one habitat or two depends on the
+crossings.
 
-Three measures do most of the work. Patch size and isolation: how much habitat,
+Three measures do the work. Patch size and isolation: how much habitat,
 in how many pieces, how far apart. Effective mesh size: one number for how
 connected a landscape still is. The European Environment Agency uses it across
-Europe, so Kosovo's figure can sit in the same table as its neighbours'. And
+Europe, so Kosovo's figure sits in the same table as its neighbours'. And
 barriers: roads, fences, reservoirs.
 
 For policymakers: this is how you see, before a motorway is built, which
@@ -328,9 +330,9 @@ alignment cuts a corridor and which runs along an existing one. That is cheaper
 to learn on a map than in a court.
 
 Now the limit, bluntly: satellites cannot replace the field programme. There is
-no spectral signature for a yellow-bellied toad, and no band combination that
-finds a bat roost. Earth observation answers *where* and *how much*. Field survey
-answers *what* and *in what condition*. The first tells you where to spend the
+no spectral signature for a yellow-bellied toad, or a bat roost. Earth
+observation answers *where* and *how much*. Field survey answers *what* and *in
+what condition*. The first tells you where to spend the
 second – that is what makes a small field budget behave like a larger one.
 
 And when a Natura 2000 boundary comes to be drawn, these are the edges it should

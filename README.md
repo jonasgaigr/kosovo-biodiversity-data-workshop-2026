@@ -9,6 +9,15 @@ The output is a Quarto website — summary statistics, interactive Leaflet maps,
 a browser-side record explorer and open data downloads — designed for ministry
 officials and conservation practitioners, and hosted on GitHub Pages.
 
+The site opens on [`index.qmd`](index.qmd), the landing page for the TAIEX
+Expert Mission on GIS and biodiversity data management, Pristina,
+28–30 September 2026. It says briefly what the mission was for and links every
+deck given there, as slides and as a PDF handout, alongside the report itself,
+which is [`report.qmd`](report.qmd). The decks are listed once, in
+[`data/workshop_decks.csv`](data/workshop_decks.csv): the page is built from
+that file, and [`publish_slides.R`](publish_slides.R) copies the built decks
+into `docs/slides/` from it after every render.
+
 [`presentation/`](presentation) holds the two decks that present it at the TAIEX
 Expert Mission on GIS and biodiversity data management, Pristina,
 28–30 September 2026: *Accessing and utilising GBIF data for biodiversity
@@ -128,7 +137,9 @@ kosovo-biodiversity-data-workshop-2026/
 ├── .gitignore
 ├── _quarto.yml                # Website configuration
 ├── custom.scss                # Report theme
-├── index.qmd                  # The report
+├── index.qmd                  # Landing page: the mission and every deck
+├── report.qmd                 # The report
+├── publish_slides.R           # Copies the built decks into docs/slides/
 ├── pipeline.R                 # Acquisition → cleaning → matching → export
 ├── site_reports.R             # One GeoPackage and one PDF per protected area
 ├── run_test.R                 # Offline smoke test for R/functions.R
@@ -137,7 +148,7 @@ kosovo-biodiversity-data-workshop-2026/
 ├── LICENSE
 │
 ├── R/
-│   ├── functions.R            # Shared helpers, sourced by pipeline.R AND index.qmd
+│   ├── functions.R            # Shared helpers, sourced by pipeline.R AND report.qmd
 │   ├── site_report.R          # Site-level helpers, sourced by site_reports.R AND
 │   │                          #   reports/site_report.qmd
 │   └── build_directive_list.R # Builds the annex lists from the EUR-Lex texts
@@ -148,6 +159,7 @@ kosovo-biodiversity-data-workshop-2026/
 │   └── _quarto.yml            # Keeps it out of the website project
 │
 ├── data/                      # Inputs, caches and run metadata
+│   ├── workshop_decks.csv          # The decks the landing page lists and publishes
 │   ├── eu_directives_species.csv   # Annex lists (generated; tracked)
 │   ├── eurlex/                     # Cached consolidated legal texts
 │   ├── gbif_download/              # Raw GBIF archives (not tracked)
@@ -164,6 +176,7 @@ kosovo-biodiversity-data-workshop-2026/
 │
 ├── data_exports/              # Published outputs (.gpkg, .csv, .xlsx), six subsets
 ├── docs/                      # Rendered website — GitHub Pages serves this
+│   └── slides/<deck>/         # Each deck's slides and handout, copied by publish_slides.R
 ├── outputs/                   # Site reports (generated; not tracked)
 │   ├── protected_areas/<slug>/<slug>.gpkg  and  <slug>.pdf
 │   ├── run_manifest.csv               # One row per site per run
@@ -322,7 +335,13 @@ quarto render
 ```
 
 The site is written to `docs/`, with the exported data files copied alongside
-it so that the download buttons resolve.
+it so that the download buttons resolve. Once the pages are written,
+`publish_slides.R` copies each workshop deck's slides and handout into
+`docs/slides/<deck>/`. The decks are not built here — each is its own Quarto
+project — so render a changed deck in its own folder first. The copy stops the
+render if a listed deck has not been built, or if its slides still show a
+placeholder for a missing figure. After rebuilding a deck alone,
+`Rscript publish_slides.R` republishes it without re-rendering the site.
 
 To preview locally while editing:
 
@@ -719,7 +738,7 @@ in the colours of the page, each doing the job it does there: GBIF black for
 reading text, the brand green for the rule under a section heading, the ink
 step `#358305` for text that has to be green — the key figures, the links, the
 file names — azure down the edge of the citation block, and the Red List's own
-colours in a swatch beside every category, which is the swatch `index.qmd`
+colours in a swatch beside every category, which is the swatch `report.qmd`
 puts in its own species tables. The maps have always shared `map_palette` with
 the website's interactive ones; the printed locator map now draws land in GBIF
 mist as well, the land colour of the `gbif-light` basemap those maps sit on.

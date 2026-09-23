@@ -84,6 +84,20 @@ anything laid out below the safe area prints straight through the footer bar:
 pdftoppm -f 14 -l 14 -r 100 -png n2k-condition-evaluation.pdf page
 ```
 
+### Publishing
+
+Pages serves `docs/` from the branch, and `docs/` is built locally rather than
+in CI. Rendering the website at the repository root copies the slides and the
+handout into `docs/slides/n2k-condition/` and lists the deck on the site's
+landing page, from its row in
+[`../data/workshop_decks.csv`](../data/workshop_decks.csv). After rebuilding the
+deck alone, republish it from the repository root without re-rendering the
+site:
+
+```bash
+Rscript publish_slides.R
+```
+
 ---
 
 ## Notes on the template and the styles

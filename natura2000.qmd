@@ -64,7 +64,7 @@ Ministry's list; question 7 lies outside these sessions.
 
 Each answer gives the recommendation first, then what Kosovo's own data show
 about it. Those figures are computed from the same GBIF extract, protected-area
-register and pipeline as the [main report](index.qmd), so they move with it.
+register and pipeline as the [main report](report.qmd), so they move with it.
 
 | Question | Answered here | Discussed in |
 |---|---|---|
@@ -156,7 +156,7 @@ the effort fields are read from eBird's own dataset
 
 For Natura 2000 purposes GBIF is a screening layer, and a good one: it says
 where the evidence is and where it is missing. The
-[precision profile](index.qmd#data-quality-control) in the main report gives
+[precision profile](report.qmd#data-quality-control) in the main report gives
 the full distribution.
 
 *Discussed in:* GBIF data (Day 2), "How precisely are the records placed?"; Field

@@ -96,6 +96,20 @@ Points that are not optional:
 Render the slides first: the PDF is printed *from* the HTML, so it can never be
 newer than it.
 
+### Publishing
+
+Pages serves `docs/` from the branch, and `docs/` is built locally rather than
+in CI. Rendering the website at the repository root copies each deck's slides
+and handout into `docs/slides/gbif-data-access/` and
+`docs/slides/automated-reporting/`, and lists both on the site's landing page,
+from their rows in [`../data/workshop_decks.csv`](../data/workshop_decks.csv).
+After rebuilding a deck alone, republish from the repository root without
+re-rendering the site:
+
+```bash
+Rscript publish_slides.R
+```
+
 ---
 
 ## Notes on the template

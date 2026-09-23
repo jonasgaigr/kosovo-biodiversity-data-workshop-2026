@@ -175,7 +175,7 @@ report_table <- function(x, caption = NULL, widths = NULL) {
 # --- Colour carried into the tables -------------------------------------------
 #
 # The print counterparts of two pieces the website builds in HTML: the category
-# swatch `swatch()` puts in every species table in `index.qmd`, and the brand
+# swatch `swatch()` puts in every species table in `report.qmd`, and the brand
 # green `.keyfigure .value` wears in `custom.scss`. Both emit raw Typst, which
 # the cell carries through `kable()` untouched, and both defer to
 # `reports/gbif-report.typ` for the colour itself — nothing here chooses one.

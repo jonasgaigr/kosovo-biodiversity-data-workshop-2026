@@ -23,19 +23,19 @@ Kosovo\* - this designation is without prejudice to positions on status, and is 
 | 2 | No baseline is not a reason to wait | 0.5 min | n/a |
 | 3 | Kosovo's published record: thin, and concentrated | 2.5 min | exists |
 | 4 | A missing baseline is not a reason for inaction | 2 min | n/a |
-| 5 | Land-cover change from Copernicus | 2 min | to produce |
-| 6 | Fragmentation: connection, not just cover | 2 min | to produce |
+| 5 | Land-cover change from Copernicus | 2 min | exists |
+| 6 | Fragmentation: connection, not just cover | 2 min | exists |
 | 7 | Why project data dies on hard drives | 2 min | n/a |
 | 8 | One central Biodiversity Information System | 2 min | exists |
 | 9 | Interoperability: one record, across borders | 2.5 min | exists |
 | 10 | Three systems that work | 0.5 min | n/a |
 | 11 | The open-data dilemma | 1.5 min | n/a |
-| 12 | NDOP: open by default, precise by permission | 2 min | to produce |
+| 12 | NDOP: open by default, precise by permission | 2 min | exists |
 | 13 | What the planner sees: the full-precision record | 1.5 min | exists |
-| 14 | Raw data is not an answer | 2 min | partly exists |
-| 15 | The UNCG Biodiversity Viewer: GBIF, filtered by law | 2.5 min | to produce |
+| 14 | Raw data is not an answer | 2 min | exists |
+| 15 | The UNCG Biodiversity Viewer: GBIF, filtered by law | 2.5 min | exists |
 | 16 | Newt surveys on the critical path | 2.5 min | exists |
-| 17 | District level licensing: map once, pay once | 3 min | to produce |
+| 17 | District level licensing: map once, pay once | 3 min | exists |
 | 18 | Next steps: governance that attracts funding | 3 min | n/a |
 
 `exists` = ready to drop in. `partly exists` = a figure in this repository 
@@ -189,19 +189,21 @@ So the answer to "we have no baseline" is: you have more of one than you think.
 
 **Key message:** Copernicus gives Kosovo a free, harmonised land-cover change baseline today, in the same classes its neighbours use.
 
-**Visual:** A before/after pair of Sentinel-2 true-colour scenes, 2016 and 2025, over one Kosovo extent with visible land-take.
+**Visual:** A before/after pair of Sentinel-2 true-colour scenes, 15 August 2016 and 10 August 2025, over 5 km of the eastern edge of Bjeshkët e Nemuna National Park above Pejë: a new road cut through the forest inside the boundary.
 
-**Source:** Copernicus Browser (Copernicus Data Space Ecosystem). Author to capture. &nbsp;&middot;&nbsp; **Status:** `to produce`
+**Source:** make-eo-figures.R, from Sentinel-2 L2A (Planetary Computer), same satellite and orbit, one fixed stretch. &nbsp;&middot;&nbsp; **Status:** `exists`
 
 **Speaker notes:**
 
-Here is what that archive looks like in practice. The same piece of Kosovo, the
-same season, nine years apart. You do not need to be a remote-sensing
-specialist to read this slide – and that is the point. A minister can read it.
+Here is what that archive looks like in practice. The edge of Bjeshkët e Nemuna
+National Park, directly above Pejë – the yellow line is the park boundary.
+August 2016, and August 2025. In 2016 the slope is forest. By 2025 a new road
+climbs through it in switchbacks, inside the boundary. Whether it was permitted
+is a question for the files; that it happened, and when, is now on record.
 
-Two products carry most of the value. Sentinel-2 gives ten-metre optical imagery
+Two products carry the value. Sentinel-2 gives ten-metre optical imagery
 of the whole country every few days, free and openly licensed, back to 2015.
-It is the raw evidence. CORINE Land Cover is the interpreted layer: a
+CORINE Land Cover is the interpreted layer: a
 harmonised land-cover map, with change layers between reference years, produced
 by the European Environment Agency for thirty-nine countries – and Kosovo is
 inside that extent. That matters: your land-cover classes are the same classes
@@ -215,10 +217,9 @@ against. Today, when an assessment says the site is unchanged, you take the
 assessor's word for it. With this, you can check.
 
 For the academics, a word on rigour. Change detection from satellite imagery
-has error, and it must be validated against ground reference points – a
-classification without an accuracy assessment is a picture, not evidence. But
-that validation is a normal, publishable piece of work, and a good thesis
-topic.
+has error, and must be validated against ground reference points – a
+classification without an accuracy assessment is a picture, not evidence. That
+validation is publishable work, and a good thesis topic.
 
 Land cover tells you how much habitat there is. The next question is whether it
 still functions as habitat – and that is about its shape.
@@ -231,22 +232,22 @@ still functions as habitat – and that is about its shape.
 
 **Key message:** Fragmentation – patch size, isolation, effective mesh size, barriers – is what decides whether habitat still functions; EO shows it, but cannot see species or condition.
 
-**Visual:** Habitat patches from a Copernicus layer with motorways and main roads over them, for one Kosovo landscape.
+**Visual:** Forest patches at the Kaçanik gorge: the two largest connected patches (about 174 and 156 km²) either side of the R6 motorway, over 9,000 smaller ones, Sharri National Park outlined.
 
-**Source:** Copernicus Land Monitoring Service (Tree Cover Density or CLC+ Backbone) and the road network. Author to produce. &nbsp;&middot;&nbsp; **Status:** `to produce`
+**Source:** make-eo-figures.R, from CLC+ Backbone 2021 (10 m, EEA image service) and OpenStreetMap roads. &nbsp;&middot;&nbsp; **Status:** `exists`
 
 **Speaker notes:**
 
-Fragmentation is the harder concept and the more important one for species. A
-forest can keep its total area and still fail as habitat, if a motorway cuts it
-into pieces too small or too isolated for the animals that need it. Bears, lynx
-and amphibians care less about hectares than about getting from one piece to the
-next.
+Fragmentation is the harder concept, and matters more for species. This is the Kaçanik gorge, just east of Sharri National Park. The forest here
+is two blocks, of about 175 and 155 square kilometres – and between them runs
+one gorge carrying the R6 motorway, the old road, the river and the railway.
+For a bear or a lynx, whether that is one habitat or two depends on the
+crossings.
 
-Three measures do most of the work. Patch size and isolation: how much habitat,
+Three measures do the work. Patch size and isolation: how much habitat,
 in how many pieces, how far apart. Effective mesh size: one number for how
 connected a landscape still is. The European Environment Agency uses it across
-Europe, so Kosovo's figure can sit in the same table as its neighbours'. And
+Europe, so Kosovo's figure sits in the same table as its neighbours'. And
 barriers: roads, fences, reservoirs.
 
 For policymakers: this is how you see, before a motorway is built, which
@@ -254,9 +255,9 @@ alignment cuts a corridor and which runs along an existing one. That is cheaper
 to learn on a map than in a court.
 
 Now the limit, bluntly: satellites cannot replace the field programme. There is
-no spectral signature for a yellow-bellied toad, and no band combination that
-finds a bat roost. Earth observation answers *where* and *how much*. Field survey
-answers *what* and *in what condition*. The first tells you where to spend the
+no spectral signature for a yellow-bellied toad, or a bat roost. Earth
+observation answers *where* and *how much*. Field survey answers *what* and *in
+what condition*. The first tells you where to spend the
 second – that is what makes a small field budget behave like a larger one.
 
 And when a Natura 2000 boundary comes to be drawn, these are the edges it should
@@ -462,7 +463,7 @@ at what precision, under what agreement. The Czech answer is a working example.
 
 **Visual:** NDOP public view of a sensitive species shown generalised to a grid square.
 
-**Source:** AOPK ČR NDOP. Author to capture. &nbsp;&middot;&nbsp; **Status:** `to produce`
+**Source:** AOPK ČR NDOP. Captured by the author. &nbsp;&middot;&nbsp; **Status:** `exists`
 
 **Speaker notes:**
 
@@ -538,7 +539,7 @@ planner always can.
 
 **Visual:** Pair: the raw Kosovo CSV as text, clipped at the right; beside it the UNCG viewer's legal-status report for one area.
 
-**Source:** CSV from data_exports/kosovo_overall_biodiversity.csv (exists, set as text); viewer report screenshot to capture. &nbsp;&middot;&nbsp; **Status:** `partly exists`
+**Source:** CSV from data_exports/kosovo_overall_biodiversity.csv (exists, set as text); viewer report captured by the author. &nbsp;&middot;&nbsp; **Status:** `exists`
 
 **Speaker notes:**
 
@@ -577,7 +578,7 @@ On the right is somebody who built exactly that.
 
 **Visual:** Screenshot of the viewer with an area selected, filtered records on the map and the conservation-list filter panel.
 
-**Source:** Biodiversity Viewer (UNCG / The Habitat Foundation). Author to capture. &nbsp;&middot;&nbsp; **Status:** `to produce`
+**Source:** Biodiversity Viewer (UNCG / The Habitat Foundation). Captured by the author. &nbsp;&middot;&nbsp; **Status:** `exists`
 
 **Speaker notes:**
 
@@ -678,7 +679,7 @@ failure. Here is what they did about it.
 
 **Visual:** A published great crested newt impact risk zone map for one English district.
 
-**Source:** Natural England or NatureSpace. Licence for reuse to be checked; redraw schematically if it cannot be cleared. &nbsp;&middot;&nbsp; **Status:** `to produce`
+**Source:** Natural England or NatureSpace, supplied by the author. Licence for reuse to be checked; redraw schematically if it cannot be cleared. &nbsp;&middot;&nbsp; **Status:** `exists`
 
 **Speaker notes:**
 

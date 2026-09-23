@@ -131,17 +131,18 @@ newer than it.
 ### Publishing
 
 Pages serves `docs/` from the branch, and `docs/` is built locally rather than
-in CI. The deck is published by copying both built files into it, side by side
-so that the handout link on the title slide resolves:
+in CI. Rendering the website at the repository root copies both built files
+into `docs/slides/data-collection/`, side by side so that the handout link on
+the title slide resolves, and lists the deck on the site's landing page. The
+deck's row in [`../data/workshop_decks.csv`](../data/workshop_decks.csv) drives
+both. After rebuilding the deck alone, republish it from the repository root
+without re-rendering the site:
 
 ```bash
-mkdir -p ../docs/slides/data-collection
-cp spatial-data-collection.html spatial-data-collection.pdf \
-   ../docs/slides/data-collection/
+Rscript publish_slides.R
 ```
 
-Both are self-contained single files, so nothing else has to go with them. If a
-future root render ever prunes them, re-run the copy.
+Both are self-contained single files, so nothing else has to go with them.
 
 ---
 
