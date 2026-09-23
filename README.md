@@ -16,6 +16,14 @@ conservation* (Day 2) and *Replicable and automated map and report production
 for biodiversity conservation* (Day 3), which is about the site-level tool
 below.
 
+[`natura2000.qmd`](natura2000.qmd) is a second page of the site. It answers the
+Ministry's questions on moving towards Natura 2000, as far as they fall within
+these sessions: evidence tiers, grid to boundary, habitat mapping, sufficiency,
+the database, bird data and SPAs, and a two-site pilot. Its figures are computed
+from the same pipeline outputs. The Important Bird Areas it lists come from
+BirdLife's DataZone through [`R/fetch_iba.R`](R/fetch_iba.R), as attributes
+only; the boundaries are released on request.
+
 ---
 
 ## What the report contains

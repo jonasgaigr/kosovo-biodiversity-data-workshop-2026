@@ -211,18 +211,19 @@ as a map of where people go.
 
 ## How precisely are the records placed?
 
-| Stated coordinate uncertainty | Records | Per cent |
-|---|---:|---:|
-| 100 m or better | 3,180 | 6.8 |
-| 100 m – 1 km | 2,193 | 4.7 |
-| 1 – 10 km | 9,364 | 20.0 |
-| coarser than 10 km | 90 | 0.2 |
-| **not stated** | **32,004** | **68.3** |
+| Stated coordinate uncertainty | Records | Per cent | Good enough for |
+|---|---:|---:|---|
+| 100 m or better | 3,180 | 6.8 | a site boundary, once verified |
+| 100 m – 1 km | 2,193 | 4.7 | screening at 1–5 km |
+| 1 – 10 km | 9,364 | 20.0 | screening at 10 km |
+| coarser than 10 km | 90 | 0.2 | presence in the country |
+| **not stated** | **32,004** | **68.3** | screening, after a check |
 
 - Two thirds of records **say nothing about their own accuracy**. That is not
   the same as being accurate.
-- The site reports this as a profile and offers it as a *filter*, rather than
-  discarding two thirds of the data on a missing field.
+- By precision alone, **one record in fifteen** could help draw a Natura 2000
+  boundary — and **one Annex I bird record in twenty**. GBIF is a screening
+  layer, and a good one.
 
 ## Fitness for use: screen, don't just select
 
@@ -251,8 +252,8 @@ A reproducible evidence base for one territory, built from the routes above.
 ::: {}
 - A **static website**: summary statistics, six interactive maps, a
   browser-side record explorer and open data downloads.
-- Built by **one R pipeline** and **one Quarto document**, served from GitHub
-  Pages.
+- **One R pipeline** — acquire, screen, annotate, export, credit — and **one
+  Quarto document**. Re-running does not mint a new DOI.
 - **No server, no database, no hosting cost** — and nothing to keep patched.
 - Audience: ministry and agency staff who need the evidence, not the code.
 :::
@@ -261,21 +262,6 @@ A reproducible evidence base for one territory, built from the routes above.
 ![](images/site-top.png)
 :::
 :::
-
-## One command, one pipeline
-
-`Rscript pipeline.R` — twelve steps, in five stages:
-
-| Stage | What happens |
-|---|---|
-| **Acquire** | The asynchronous download; the **DOI** recorded and cached |
-| **Screen** | `CoordinateCleaner`, against the OpenStreetMap border |
-| **Annotate** | Backbone taxonomy, EU annexes, IUCN category, municipality, protected area |
-| **Export** | Six thematic subsets × GeoPackage / CSV / Excel, plus the site register |
-| **Credit** | Every dataset and publisher resolved from the GBIF registry |
-
-- **Idempotent.** The download key is cached, so re-running does not mint a new
-  DOI. Delete one file to force a fresh extract.
 
 ## Six thematic extracts
 
@@ -342,6 +328,34 @@ filtered. The Birds Annex I checklist holds 128 of the 193 listed taxa — and
 the omissions are exactly the ones that matter here. *Alectoris graeca* is
 absent, as are the Balkan endemics. Using it would have quietly under-reported
 the most conservation-relevant taxa in the country.
+:::
+
+## Birds: from records to an SPA case {.no-leaf}
+
+::: {.aopk-cols}
+::: {.smaller}
+**What the records give**
+
+- **4,215** Annex I bird records of **70** species — **82 %** from eBird,
+  which states **no uncertainty** at all.
+- The richest site, **Ligatina e Hencit**, holds **43** of the 70 species, and
+  is **not an IBA**.
+- Kosovo's IBAs — Sara mountain and Prokletije, with Mokra Gora and Kopaonik on
+  the boundary — are **mountain sites**, estimated in breeding pairs, several
+  from 2008–2013.
+:::
+
+::: {.smaller}
+**What an SPA case needs**
+
+- **One bird table**, the layers as views of it: Annex I, regular migrant, SDF
+  population type (`p` `r` `c` `w`), breeding code, a count **with its unit**.
+- For each trigger species, a **population estimate from standardised counts**
+  over two or three seasons, and the **criterion** it meets.
+- A boundary around **what the birds use** — not the IBA outline.
+- **eBird's own dataset** for effort and non-detections; the GBIF copy is
+  presence-only.
+:::
 :::
 
 ## The record explorer

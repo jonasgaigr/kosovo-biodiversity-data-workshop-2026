@@ -1,0 +1,279 @@
+/*-- scss:rules --*/
+
+// Deck-specific additions, loaded after `custom.scss`. Everything here exists
+// because the framework's own vocabulary is a four-point colour scale and a
+// two-by-two decision matrix: both are read at a glance in a projected room,
+// and neither survives being set as a bulleted list.
+
+// ───────────────────────────────────────────────────────────────────────────
+// THE CONDITION SCALE
+//
+// Four cards across the slide, one per condition class, each carrying the
+// class name, the criterion that puts a feature in it, and what the class
+// means for the feature's future. The colours are the ones the evaluation
+// itself uses in ISOP and in the published tables — light green, orange, red,
+// grey — so a reader who has seen a result page recognises them here.
+// ───────────────────────────────────────────────────────────────────────────
+.reveal .slides section .state-scale {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5em;
+  margin-top: 0.3em;
+
+  // A card is a coloured header over a white body, so the class name carries
+  // the colour and the explanatory copy stays on the slide's own background —
+  // body text on saturated orange or red would not clear contrast.
+  > div {
+    border: 2px solid currentColor;
+    display: flex;
+    flex-direction: column;
+    // The four cards carry different amounts of copy, so without a floor the
+    // grid sizes to the tallest and the short ones end in dead space. With
+    // one, and with the consequence line pushed to the foot, the four
+    // consequences read across as a row.
+    min-height: 7.4em;
+  }
+
+  // The class name is a span rather than a heading on purpose: Pandoc turns a
+  // heading inside a fenced div into a <section>, and reveal.js reads every
+  // section as a slide, so a card headed `#### Good` silently becomes a slide
+  // of its own.
+  .state-name {
+    display: block;
+    padding: 0.28em 0.45em;
+    font-size: $aopk-size-body * 0.72;
+    font-weight: $aopk-weight-heavy;
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    line-height: 1.1;
+    color: $aopk-black;
+  }
+
+  p {
+    margin: 0;
+    font-size: $aopk-size-body * 0.54;
+    line-height: 1.25;
+  }
+
+  // Padding goes on the paragraphs rather than the card, so the coloured
+  // header band runs the full width of the card.
+  p:not(:first-child) { padding: 0.4em 0.5em; }
+
+  // The consequence line is the one a site manager acts on, so it is set apart
+  // from the criterion above it rather than running on as a second sentence.
+  p:not(:first-child) + p {
+    border-top: 1px solid $aopk-gray;
+    font-weight: $aopk-weight-demi;
+    margin-top: auto;
+  }
+}
+
+.reveal .slides section .state-scale .state-unknown      { color: $aopk-gray; }
+.reveal .slides section .state-scale .state-good         { color: $aopk-green-light; }
+.reveal .slides section .state-scale .state-deteriorated { color: $aopk-orange; }
+.reveal .slides section .state-scale .state-bad          { color: #C4272E; }
+
+.reveal .slides section .state-scale .state-unknown      .state-name { background: $aopk-gray; }
+.reveal .slides section .state-scale .state-good         .state-name { background: $aopk-green-light; }
+.reveal .slides section .state-scale .state-deteriorated .state-name { background: $aopk-orange; }
+.reveal .slides section .state-scale .state-bad          .state-name { background: #C4272E;
+                                                              color: $aopk-white; }
+
+// ───────────────────────────────────────────────────────────────────────────
+// RESULT SWATCHES IN RUNNING TEXT AND TABLES
+//
+// The two-by-two matrices — the simplified species rule and the management
+// effectiveness rule — are ordinary Markdown tables whose outcome column is a
+// condition class. A word set in a colour is illegible at 8 pt on a projector;
+// a filled chip with the word inside it is not.
+// ───────────────────────────────────────────────────────────────────────────
+.reveal .slides section .chip {
+  display: inline-block;
+  padding: 0.05em 0.5em;
+  font-size: 0.92em;
+  font-weight: $aopk-weight-demi;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: $aopk-black;
+}
+
+.reveal .slides section .chip-good         { background: $aopk-green-light; }
+.reveal .slides section .chip-deteriorated { background: $aopk-orange; }
+.reveal .slides section .chip-bad          { background: #C4272E; color: $aopk-white; }
+.reveal .slides section .chip-unknown      { background: $aopk-gray; }
+
+// ───────────────────────────────────────────────────────────────────────────
+// FIGURE CAPTIONS
+//
+// Every figure in this deck is a capture of a Czech-language system or a chart
+// with Czech axis labels — they are the real outputs, not mock-ups, and
+// relabelling them would make them something other than what the audience is
+// being shown. The caption carries the translation, so it does real work here
+// and is set to be read rather than tucked away.
+//
+// `.figcaption p` has to be in the selector list, not left to inherit. The
+// theme sets `font-size` on the PARAGRAPH — `.reveal p, .reveal li` — so a
+// size set on the wrapping div is overridden inside it and the caption comes
+// out at full body size, which pushes it through the footer bar. The theme's
+// own `.smaller` carries `p` in its selector for exactly this reason.
+// ───────────────────────────────────────────────────────────────────────────
+.reveal .slides section figure figcaption,
+.reveal .slides section .figcaption,
+.reveal .slides section .figcaption p {
+  font-size: $aopk-size-body * 0.5;
+  line-height: 1.3;
+  color: #4A4A4A;
+  text-align: left;
+}
+.reveal .slides section figure figcaption,
+.reveal .slides section .figcaption { margin-top: 0.25em; }
+.reveal .slides section .figcaption p { margin: 0; }
+
+// ───────────────────────────────────────────────────────────────────────────
+// FIGURES
+//
+// Two things every figure here needs, and one way of reaching them that does
+// not work.
+//
+// The hairline: each figure is a screenshot or a chart on a white ground, so
+// its edge would otherwise dissolve into the slide.
+//
+// The height cap: the theme lets a picture fill the whole safe area, which is
+// right when the picture is the only thing on the slide. Here every picture is
+// followed by a caption that translates it, so it has to leave that caption
+// its room — otherwise the caption is laid out below the safe area and prints
+// straight through the footer bar. The reserve is four caption lines plus the
+// gap. The second rule mirrors the theme's own pair, so a `.no-leaf` slide
+// keeps the extra height it is entitled to.
+//
+// What does not work: matching on `src`. `embed-resources` inlines every
+// picture as a base64 data URI, so no `src` in the built deck contains its
+// path. A `height` Markdown attribute is no better — Pandoc emits it as a
+// presentational HTML attribute, which reveal.js's own `img { height: auto }`
+// outranks. A lone image in its own paragraph survives both, and it is the
+// shape every figure in this deck has.
+// ───────────────────────────────────────────────────────────────────────────
+.reveal .slides section p > img:only-child {
+  border: 1px solid $aopk-gray;
+  max-height: calc(var(--aopk-content-h) - 4.6em);
+}
+.reveal .slides section.no-leaf p > img:only-child {
+  max-height: calc(var(--aopk-content-h) + #{$aopk-dvojlist-h} - 4.6em);
+}
+
+// The worked examples sit side by side and are read as a pair, so they need a
+// visible boundary between them rather than the column gap alone.
+.reveal .slides section .worked {
+  border-left: 4px solid $aopk-green-light;
+  padding-left: 0.6em;
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// A PAIR OF FIGURES
+//
+// Two slides here set two pictures against each other rather than a picture
+// against text: the same hillside with and without the mapping layer, and one
+// indicator seen two ways. The theme's `.aopk-cols` is deliberately asymmetric
+// — 42 % text, 54 % picture, matching the graphic manual's image block — so it
+// cannot be reused for a pair that has to be read as equal halves.
+//
+// The margin resets mirror `.aopk-cols` for the same reason it needs them: a
+// grid item establishes its own formatting context, so the "first child of the
+// slide body" rule never reaches column two, and Pandoc wraps every bare image
+// in a <p> of its own.
+// ───────────────────────────────────────────────────────────────────────────
+.reveal .slides section .aopk-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 3%;
+  align-items: start;
+
+  > * { margin-top: 0; }
+  > * > :first-child { margin-top: 0; }
+  p { margin-top: 0; }
+  img { display: block; margin-left: auto; margin-right: auto; }
+}
+
+// Half-width halves the natural height, so the shared cap rarely binds here;
+// what does bind is a slide that carries a pair AND a note under it. Both of
+// those slides are `.no-leaf`, and the note is the last thing on them, so the
+// reserve is the four caption lines plus a note line.
+.reveal .slides section.no-leaf .aopk-pair p > img:only-child {
+  max-height: calc(var(--aopk-content-h) + #{$aopk-dvojlist-h} - 7.4em);
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// A PHOTOGRAPH ON A SECTION DIVIDER
+//
+// The divider is a solid dark-green field with the heading anchored at 42 % of
+// slide height and the standfirst under it, which leaves the whole top of the
+// slide empty. A photograph of what the section is about goes in that band.
+//
+// It is positioned, not laid out. An absolutely positioned child of the slide
+// resolves its offsets against the section's PADDING box, which here is the
+// whole 1280 × 720 canvas — the same reason the theme's own footer bar reaches
+// both edges with `left: 0; right: 0` — so this is full bleed and the heading
+// anchor never moves.
+//
+// The gradient carries the picture down into the green instead of ending it on
+// a hard line, and it keeps the foot of the band dark enough that a pale
+// photograph cannot crowd the white heading below it.
+// ───────────────────────────────────────────────────────────────────────────
+.reveal .slides section.aopk-section .aopk-section-photo {
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  height: $aopk-canvas-h * 0.36;
+  margin: 0 !important;
+  overflow: hidden;
+
+  &::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    // A third of the band. Deeper than that and the fade starts veiling the
+    // subject — the pinks on the Dianthus slide sit low in their frame.
+    height: 34%;
+    background: linear-gradient(to bottom,
+                  rgba($aopk-green-dark, 0) 0%, $aopk-green-dark 100%);
+  }
+}
+
+// The deck's figure rules — the hairline border and the height cap measured off
+// the safe area — are written for a figure in the content flow and would both
+// fight this one. They are overridden here, at higher specificity, rather than
+// carved out there.
+.reveal .slides section.aopk-section .aopk-section-photo p { margin: 0; }
+.reveal .slides section.aopk-section .aopk-section-photo p > img:only-child {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  object-fit: cover;
+  object-position: center;
+  border: 0;
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// THE LOGO LOCKUP ON THE CLOSING SLIDE
+//
+// The hairline above is written for a figure — a screenshot or a chart on a
+// white ground, which would otherwise dissolve into the slide. The closing
+// slide's logo+slogan lockup has the same shape in the markup, a lone image in
+// its own paragraph, so it was picking the hairline up too.
+//
+// On a screenshot the frame is harmless; on this asset it is not. The lockup's
+// SVG viewBox is cut tight to the ink, so the frame lands directly on the leaf
+// and on the baselines of both wordmarks, and the rule that divides the
+// wordmark from the slogan ends up boxed in with them — at slide size the
+// three verticals read as a stray letter beside "OF THE CZECH REPUBLIC"
+// rather than as the separator it is. The height cap fights it as well: the
+// theme sizes this lockup itself, at the 12.09 % of slide height the graphic
+// manual specifies.
+//
+// Overridden here at higher specificity rather than carved out above, the same
+// way `.aopk-section-photo` is.
+// ───────────────────────────────────────────────────────────────────────────
+.reveal .slides section.aopk-closing .aopk-lockup p > img:only-child {
+  border: 0;
+  max-height: none;
+}

@@ -1443,33 +1443,38 @@ margin-right: 0; }
 <div class="aopk-cols">
 <div>
 <p>An output is rebuilt when any input is newer than it — and <strong>the code counts as an input</strong>. A changed template with unchanged data regenerates, or the tool would quietly republish last month’s layout.</p>
+<p>Every run appends to <code>outputs/run_manifest.csv</code>: one row per site per run, with the counts, the file sizes, the seconds and the status. <strong>The log is a table, not prose</strong> — so a run can be audited with a query rather than by reading it.</p>
 </div>
 <div>
-<p>From the run manifest, two consecutive passes over the whole register:</p>
 <table class="caption-top">
-<thead>
-<tr class="header">
-<th>Pass</th>
-<th>Sites</th>
-<th>Wall time</th>
-</tr>
-</thead>
 <tbody>
 <tr class="odd">
-<td>First</td>
-<td>237 written</td>
-<td><strong>47.5 min</strong></td>
+<td>Sites</td>
+<td><strong>237</strong></td>
 </tr>
 <tr class="even">
-<td>Second, nothing changed</td>
-<td>237 skipped</td>
+<td>First pass</td>
+<td><strong>47.5 min</strong></td>
+</tr>
+<tr class="odd">
+<td>Second pass, nothing changed</td>
 <td><strong>3 s</strong></td>
+</tr>
+<tr class="even">
+<td>Median per site</td>
+<td>11.7 s</td>
+</tr>
+<tr class="odd">
+<td>GeoPackages · PDFs</td>
+<td>92.6 MB · 23.7 MB</td>
 </tr>
 </tbody>
 </table>
+<div class="smaller">
+<p>On a laptop, with the network unplugged. <strong>116 MB</strong> is the entire site-level evidence base for the network — no server, no licence, no procurement.</p>
 </div>
 </div>
-<p>Every run appends to <code>outputs/run_manifest.csv</code>: one row per site per run, with the counts, the file sizes, the seconds and the status. <strong>The log is a table, not prose</strong> — so a run can be audited with a query rather than by reading it.</p>
+</div>
 <div class="aopk-bar"><span class="aopk-bar-left">Replicable and automated map and report production · TAIEX, Pristina · 30 September 2026</span><span class="aopk-bar-right">AOPK ČR | aopk.gov.cz</span></div>
 </section>
 <section class="slide level2">
@@ -1496,52 +1501,6 @@ margin-right: 0; }
 <div class="aopk-bar"><span class="aopk-bar-left">Replicable and automated map and report production · TAIEX, Pristina · 30 September 2026</span><span class="aopk-bar-right">AOPK ČR | aopk.gov.cz</span></div>
 </section>
 <section class="slide level2">
-<h2>What one run costs</h2>
-<div class="aopk-cols">
-<div>
-<table class="caption-top">
-<tbody>
-<tr class="odd">
-<td>Sites</td>
-<td><strong>237</strong></td>
-</tr>
-<tr class="even">
-<td>Wall time</td>
-<td><strong>47.5 min</strong></td>
-</tr>
-<tr class="odd">
-<td>Median per site</td>
-<td>11.7 s</td>
-</tr>
-<tr class="even">
-<td>Slowest site</td>
-<td>16.6 s</td>
-</tr>
-<tr class="odd">
-<td>GeoPackages</td>
-<td>92.6 MB</td>
-</tr>
-<tr class="even">
-<td>PDFs</td>
-<td>23.7 MB</td>
-</tr>
-</tbody>
-</table>
-</div>
-<div>
-<p>On a laptop, with the network unplugged, from data already on disk.</p>
-<ul>
-<li><strong>116 MB</strong> is the entire site-level evidence base for the country’s protected-area network, in two open formats.</li>
-<li>Nothing in that table needs a server, a licence or a procurement.</li>
-</ul>
-<div class="smaller">
-<p>It is also small enough to regenerate on every register update and simply replace what was there, which is the only version-control strategy that survives contact with a busy office.</p>
-</div>
-</div>
-</div>
-<div class="aopk-bar"><span class="aopk-bar-left">Replicable and automated map and report production · TAIEX, Pristina · 30 September 2026</span><span class="aopk-bar-right">AOPK ČR | aopk.gov.cz</span></div>
-</section>
-<section class="slide level2">
 <h2>The finding the machine keeps producing</h2>
 <div class="aopk-cols">
 <div>
@@ -1557,6 +1516,68 @@ margin-right: 0; }
 <div class="smaller">
 <p>Read the other way, those 215 sites are a <strong>survey priority list</strong>, produced at no cost as a by-product of the reporting.</p>
 </div>
+</div>
+</div>
+<div class="aopk-bar"><span class="aopk-bar-left">Replicable and automated map and report production · TAIEX, Pristina · 30 September 2026</span><span class="aopk-bar-right">AOPK ČR | aopk.gov.cz</span></div>
+</section>
+<section class="slide level2 no-leaf">
+<h2>A pilot, end to end</h2>
+<div class="aopk-cols">
+<div class="smaller">
+<ol type="1">
+<li><strong>QA</strong> — every record placed in its evidence tier.</li>
+<li><strong>Gap report</strong> — this tool, on the site and a ring around it.</li>
+<li><strong>Field verification</strong> — habitat mapping; standardised bird counts.</li>
+<li><strong>Delineation</strong> — along habitats, catchments and visible features, never along grid lines.</li>
+<li><strong>Assessment</strong> — Annex III, or the SPA criteria species by species.</li>
+<li><strong>Network review</strong> — the site’s share of each feature, as a range.</li>
+<li><strong>Draft SDF</strong> — and a lessons log, which is the real product.</li>
+</ol>
+</div>
+<div class="smaller">
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th></th>
+<th>Sharri NP</th>
+<th>Ligatina e Hencit</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Route</td>
+<td>habitats, SCI/SAC</td>
+<td>birds, SPA</td>
+</tr>
+<tr class="even">
+<td>Area</td>
+<td>535.5 km²</td>
+<td>1.1 km²</td>
+</tr>
+<tr class="odd">
+<td>Records</td>
+<td>2,645</td>
+<td>13,346</td>
+</tr>
+<tr class="even">
+<td>Annex I bird species</td>
+<td>18</td>
+<td>43</td>
+</tr>
+<tr class="odd">
+<td>1 km cells with no record</td>
+<td>69 %</td>
+<td>0 %</td>
+</tr>
+<tr class="even">
+<td>IBA</td>
+<td>Sara mountain</td>
+<td>none</td>
+</tr>
+</tbody>
+</table>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href aria-hidden="true" tabindex="-1"></a><span class="ex">Rscript</span> site_reports.R <span class="at">--site</span> NP_001 <span class="at">--site</span> SAC_001</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Point <code>path_register</code> at a file of candidate polygons, and the same report shows what a draft boundary leaves out.</p>
 </div>
 </div>
 <div class="aopk-bar"><span class="aopk-bar-left">Replicable and automated map and report production · TAIEX, Pristina · 30 September 2026</span><span class="aopk-bar-right">AOPK ČR | aopk.gov.cz</span></div>

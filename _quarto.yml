@@ -1,13 +1,21 @@
 project:
   type: website
   output-dir: docs
-  # presentation/ is a separate Quarto project holding the TAIEX deck. Without
-  # this, `quarto render` would sweep its .qmd into the website, apply the
-  # `format: html` block below to a reveal.js document and add it to the
-  # navigation and the search index.
+  # presentation/, presentation-n2k-condition/, presentation-data-collection/
+  # and presentation-spatial-analysis/ are separate Quarto projects, each holding
+  # reveal.js decks. Without this, `quarto render` would sweep their .qmd files
+  # into the website, apply the `format: html` block below to a reveal.js
+  # document and add them to the navigation and the search index.
   render:
     - "*.qmd"
     - "!presentation/"
+    - "!presentation-n2k-condition/"
+    - "!presentation-data-collection/"
+    - "!presentation-spatial-analysis/"
+    # The site-report template is its own Typst project (see
+    # reports/_quarto.yml). Without this, "*.qmd" reaches into it and writes
+    # docs/reports/site_report.pdf, which is no part of the site.
+    - "!reports/"
   # The exported data files are copied into the rendered site so that the
   # download buttons resolve on GitHub Pages.
   resources:
@@ -35,6 +43,8 @@ website:
     left:
       - href: index.qmd
         text: Report
+      - href: natura2000.qmd
+        text: Natura 2000 questions
     right:
       - href: https://www.gbif.org
         text: GBIF

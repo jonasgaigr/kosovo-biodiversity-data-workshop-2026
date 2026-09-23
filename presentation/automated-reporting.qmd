@@ -296,21 +296,27 @@ config <- list(
 An output is rebuilt when any input is newer than it — and **the code counts as
 an input**. A changed template with unchanged data regenerates, or the tool
 would quietly republish last month's layout.
-:::
-
-::: {}
-From the run manifest, two consecutive passes over the whole register:
-
-| Pass | Sites | Wall time |
-|---|---|---|
-| First | 237 written | **47.5 min** |
-| Second, nothing changed | 237 skipped | **3 s** |
-:::
-:::
 
 Every run appends to `outputs/run_manifest.csv`: one row per site per run, with
 the counts, the file sizes, the seconds and the status. **The log is a table,
 not prose** — so a run can be audited with a query rather than by reading it.
+:::
+
+::: {}
+| | |
+|---|---|
+| Sites | **237** |
+| First pass | **47.5 min** |
+| Second pass, nothing changed | **3 s** |
+| Median per site | 11.7 s |
+| GeoPackages · PDFs | 92.6 MB · 23.7 MB |
+
+::: {.smaller}
+On a laptop, with the network unplugged. **116 MB** is the entire site-level
+evidence base for the network — no server, no licence, no procurement.
+:::
+:::
+:::
 
 ## Maps built to render in ten years
 
@@ -343,35 +349,6 @@ reviewer check a figure by re-running rather than by trusting it.
   of one computed in EPSG:3035; two areas differing in the third decimal place
   are worse than one.
 
-## What one run costs
-
-::: {.aopk-cols}
-::: {}
-| | |
-|---|---|
-| Sites | **237** |
-| Wall time | **47.5 min** |
-| Median per site | 11.7 s |
-| Slowest site | 16.6 s |
-| GeoPackages | 92.6 MB |
-| PDFs | 23.7 MB |
-:::
-
-::: {}
-On a laptop, with the network unplugged, from data already on disk.
-
-- **116 MB** is the entire site-level evidence base for the country's
-  protected-area network, in two open formats.
-- Nothing in that table needs a server, a licence or a procurement.
-
-::: {.smaller}
-It is also small enough to regenerate on every register update and simply
-replace what was there, which is the only version-control strategy that
-survives contact with a busy office.
-:::
-:::
-:::
-
 ## The finding the machine keeps producing
 
 ::: {.aopk-cols}
@@ -393,6 +370,39 @@ table for an assessment will reach exactly the wrong conclusion.
 Read the other way, those 215 sites are a **survey priority list**, produced at
 no cost as a by-product of the reporting.
 :::
+:::
+:::
+
+## A pilot, end to end {.no-leaf}
+
+::: {.aopk-cols}
+::: {.smaller}
+1. **QA** — every record placed in its evidence tier.
+2. **Gap report** — this tool, on the site and a ring around it.
+3. **Field verification** — habitat mapping; standardised bird counts.
+4. **Delineation** — along habitats, catchments and visible features, never
+   along grid lines.
+5. **Assessment** — Annex III, or the SPA criteria species by species.
+6. **Network review** — the site's share of each feature, as a range.
+7. **Draft SDF** — and a lessons log, which is the real product.
+:::
+
+::: {.smaller}
+| | Sharri NP | Ligatina e Hencit |
+|---|---|---|
+| Route | habitats, SCI/SAC | birds, SPA |
+| Area | 535.5 km² | 1.1 km² |
+| Records | 2,645 | 13,346 |
+| Annex I bird species | 18 | 43 |
+| 1 km cells with no record | 69 % | 0 % |
+| IBA | Sara mountain | none |
+
+```bash
+Rscript site_reports.R --site NP_001 --site SAC_001
+```
+
+Point `path_register` at a file of candidate polygons, and the same report
+shows what a draft boundary leaves out.
 :::
 :::
 

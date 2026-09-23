@@ -1,0 +1,20 @@
+# This deck is its own Quarto project, deliberately separate from the website
+# project in the repository root and from `presentation/`,
+# `presentation-n2k-condition/` and `presentation-data-collection/`. Sharing any
+# of them would apply that project's format block, navigation and output-dir to
+# a reveal.js deck that has nothing to do with it.
+project:
+  type: default
+  output-dir: .
+
+lang: en-GB
+
+execute:
+  # The deck carries no computation. The Kosovo figures on the data-reality
+  # slide are read off `../outputs/national_site_statistics.csv` by hand and
+  # written into the slide as text – see the README for the arithmetic and for
+  # why they are not computed here.
+  echo: false
+  warning: false
+  message: false
+  freeze: false

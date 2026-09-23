@@ -430,17 +430,33 @@ The GBIF Viewer developed for Ukraine discards records whose stated uncertainty
 exceeds a threshold, on the reasonable grounds that a record placed to the
 nearest 10 km cannot support a decision about a particular field.
 
-Applied here, that rule would remove more than half the dataset. Around 54 per
-cent of Kosovo records carry an uncertainty of exactly 7,071 m, which is the
-half-diagonal of a 10 km square: these are atlas records, and they are perfectly
-good evidence that a species occurs in a landscape even though they say nothing
-about where in it. Discarding them would make the country look emptier than it
-is, which is the more dangerous error for conservation planning.
+```{r}
+#| label: coarse-shares
+
+unc <- overall_flat$coordinateUncertaintyInMeters
+share <- function(x) sprintf("%.0f", 100 * sum(x) / length(unc))
+coarse_share      <- share(!is.na(unc) & unc > 1000)
+coarse_or_na      <- share(is.na(unc) | unc > 1000)
+atlas_share       <- share(!is.na(unc) & round(unc) == 7071)
+```
+
+Applied here with a 1 km threshold, that rule would remove `r coarse_share` per
+cent of the records. If records that state no uncertainty at all were dropped as
+well, since they cannot show that they are precise, it would remove
+`r coarse_or_na` per cent. `r atlas_share` per cent carry an uncertainty of
+exactly 7,071 m, which is the half-diagonal of a 10 km square: these are atlas
+records, and they are perfectly good evidence that a species occurs in a
+landscape even though they say nothing about where in it. Discarding them would
+make the country look emptier than it is, which is the more dangerous error for
+conservation planning.
 
 The pipeline therefore reports the precision profile, keeps
 `coordinateUncertaintyInMeters` in every export, and offers precision as a
 filter in the record explorer below. The threshold is available as
 `coord_uncertainty_max` in `pipeline.R` for anyone who does want it applied.
+Which precision is enough depends on the decision; the
+[Natura 2000 questions](natura2000.qmd#q1) page sets out three tiers, from
+national screening to the Standard Data Form.
 :::
 
 ## Where the records are

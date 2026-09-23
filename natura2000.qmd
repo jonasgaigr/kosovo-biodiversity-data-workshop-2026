@@ -1,0 +1,687 @@
+---
+title: "Towards Natura 2000"
+subtitle: "Answers to the Ministry's questions from the GIS and biodiversity-data sessions of the TAIEX Expert Mission, Pristina, 28–30 September 2026"
+date: today
+date-format: "D MMMM YYYY"
+lang: en-GB
+---
+
+```{r}
+#| label: setup
+
+suppressPackageStartupMessages({
+  library(dplyr)
+  library(sf)
+})
+
+source("R/functions.R")
+
+meta <- readRDS("data/run_metadata.rds")
+run_year <- as.integer(format(as.Date(meta$run_date), "%Y"))
+
+read_export <- function(name) {
+  read.csv(file.path("data_exports", paste0(name, ".csv")), encoding = "UTF-8")
+}
+
+overall  <- read_export("kosovo_overall_biodiversity")
+birds    <- read_export("kosovo_birds")
+birds_i  <- read_export("kosovo_birds_annex_I")
+hd_ii    <- read_export("kosovo_habitats_annex_II")
+annexes  <- read.csv("data/eu_directives_species.csv", encoding = "UTF-8")
+ibas     <- read.csv("data/kosovo_ibas.csv", encoding = "UTF-8")
+iba_spp  <- read.csv("data/kosovo_iba_species.csv", encoding = "UTF-8")
+
+# The register as the pipeline published it, in a metric CRS for buffering.
+register <- st_read("data/kosovo_protected_areas.gpkg", quiet = TRUE) |>
+  st_transform(3035)
+
+# The two pilot sites, by their register identifiers.
+pilot_ids <- c(sharri = "NP_001", hencit = "SAC_001")
+pilot_slug <- c(sharri = "parku-kombetar-sharri",
+                hencit = "ligatina-e-hencit-radeves")
+
+pct <- function(x, n, digits = 0) {
+  formatC(100 * x / n, format = "f", digits = digits)
+}
+
+# eBird Observation Dataset, as GBIF indexes it.
+ebird_key <- "4fa7b334-ce0d-4e88-aaae-2e0c138d049e"
+
+as_points <- function(d) {
+  st_as_sf(d, coords = c("decimalLongitude", "decimalLatitude"), crs = 4326) |>
+    st_transform(3035)
+}
+```
+
+The Ministry put a set of questions to the expert team about moving from
+Kosovo's present biodiversity data towards a Natura 2000 network. This page
+answers them as far as they fall within five sessions of the mission: spatial
+analysis, condition evaluation, GBIF data, field data collection and automated
+reporting. How sites are proposed, how Article 17 reporting works and how the
+institutions divide the work are the subject of the sessions by Karel Chobot
+and Martin Koška, and are not answered here. The numbering follows the
+Ministry's list; question 7 lies outside these sessions.
+
+Each answer gives the recommendation first, then what Kosovo's own data show
+about it. Those figures are computed from the same GBIF extract, protected-area
+register and pipeline as the [main report](index.qmd), so they move with it.
+
+| Question | Answered here | Discussed in |
+|---|---|---|
+| [1. Data-quality thresholds](#q1) | Three evidence tiers, computed per record | GBIF data (Day 2) · Field data collection (Day 3) |
+| [2. From grid to site boundary](#q2) | A seven-step GIS workflow and a test that catches grid-shaped sites | Spatial analysis (Day 1) · Automated reporting (Day 3) |
+| [3. Annex I habitat mapping](#q3) | A minimum mapping standard; what typical species from GBIF can and cannot do | Condition evaluation (Day 2) · Field data collection (Day 3) |
+| [4. Sufficiency without national totals](#q4) | Interim denominators, and the EU's own conclusion codes | Spatial analysis (Day 1) |
+| [5. The national database](#q5) | Identifiers, provenance, duplicates, versions, sensitive data | Spatial analysis (Day 1) |
+| [6. Bird data and SPAs](#q6) | One bird table, the evidence an SPA case needs, Kosovo's IBAs | GBIF data (Day 2) |
+| [8. A pilot](#q8) | Sharri National Park and Ligatina e Hencit/Radevës, end to end | Automated reporting (Day 3) · Spatial analysis (Day 1) |
+
+## 1. Which data are good enough for which decision {#q1}
+
+**Treat fitness for use as a property of each record, computed by a written
+rule, in three tiers:** national screening, candidate-site delineation and the
+Standard Data Form (SDF). A record moves up a tier by gaining precision,
+currency, documentation and validation, never because the decision it is
+wanted for is more important.
+
+| | National screening | Candidate-site delineation | Standard Data Form |
+|---|---|---|---|
+| **Spatial precision** | Within the screening cell; 10 km atlas records for 10 km screening only | Points to 100 m or better; habitat polygons mapped at 1:10,000 | As for delineation, and tied to a survey unit: plot, transect, polygon |
+| **Currency** | Any date; records before 2000 flagged as historical | Observed within the last 12 years, two six-year reporting cycles | From a standardised survey, ideally within the current reporting cycle |
+| **Documentation** | A citable source (dataset DOI or reference); name resolved against a taxonomic backbone | + observer, date and method; a photograph or specimen for difficult taxa | + survey protocol, effort, and counts with their units |
+| **Validation** | Automated: coordinates, country, outliers, name matching | Verified by a named specialist for the taxonomic group | + checked at site level, and given an SDF data-quality code: G, M, P or VP |
+| **Can support** | Where to look; gap analysis; survey planning | Drawing and justifying a boundary | The population, area and assessment fields of the SDF |
+
+The values are proposals for national agreement, not established standards.
+Keep them as rows in a table rather than sentences in a guideline, so that
+moving a threshold is a one-line change anyone can review, and the tier of
+every record can be recomputed when it moves.
+
+Two rules hold at every tier. A missing record is not evidence of absence; only
+surveys that record effort and non-detections can support one. And a name
+resolved by a backbone can still be the wrong taxon: synonymy in a global
+backbone can fold a Balkan endemic into a widespread species, or a domestic
+animal into its wild ancestor. A record whose name changed during matching is
+one for a specialist to look at.
+
+### What Kosovo's data show
+
+```{r}
+#| label: q1-tiers
+
+tier_counts <- function(d, label) {
+  u <- d$coordinateUncertaintyInMeters
+  precise <- !is.na(u) & u <= 100
+  current <- precise & !is.na(d$year) & d$year >= run_year - 12
+  documented <- current & !is.na(d$recordedBy) & trimws(d$recordedBy) != ""
+  data.frame(
+    Records = label,
+    All = fmt_int(nrow(d)),
+    `Stated uncertainty ≤ 100 m` = fmt_int(sum(precise)),
+    `… and observed since` = fmt_int(sum(current)),
+    `… and observer named` = sprintf("%s (%s %%)", fmt_int(sum(documented)),
+                                     pct(sum(documented), nrow(d), 1)),
+    check.names = FALSE
+  )
+}
+
+tiers <- rbind(
+  tier_counts(overall, "All records"),
+  tier_counts(birds_i, "Birds Directive, Annex I"),
+  tier_counts(hd_ii,   "Habitats Directive, Annex II")
+)
+names(tiers)[4] <- paste("… and observed since", run_year - 12)
+knitr::kable(tiers, align = "lrrrr")
+
+u <- overall$coordinateUncertaintyInMeters
+n_delineation <- sum(!is.na(u) & u <= 100 & !is.na(overall$year) &
+                       overall$year >= run_year - 12 &
+                       !is.na(overall$recordedBy) & trimws(overall$recordedBy) != "")
+```
+
+By these rules, `r pct(n_delineation, nrow(overall), 1)` % of GBIF records
+could support a boundary, and even those still need a specialist's
+verification. No GBIF record reaches the SDF tier on its own: the extract
+carries neither a survey protocol nor a measure of effort, and that tier needs
+both.
+
+The Annex I bird row shows why the tiers matter.
+**`r pct(sum(birds_i$datasetKey == ebird_key), nrow(birds_i))` % of Kosovo's
+Annex I bird records come from eBird**, which publishes the checklist's location
+without a stated uncertainty. For a stationary count at a wetland that point is
+close to the birds; for a travelling checklist they may be kilometres away. The
+rule cannot tell the two apart, so it places both at the screening tier until
+the effort fields are read from eBird's own dataset
+([question 6](#q6)).
+
+For Natura 2000 purposes GBIF is a screening layer, and a good one: it says
+where the evidence is and where it is missing. The
+[precision profile](index.qmd#data-quality-control) in the main report gives
+the full distribution.
+
+*Discussed in:* GBIF data (Day 2), "How precisely are the records placed?"; Field
+data collection (Day 3), "What a form enforces at the point of capture". A
+15 m accuracy constraint on the device makes a new record delineation-grade at
+the moment it is captured.
+
+## 2. From the screening grid to a site boundary {#q2}
+
+**The grid says where to look; the boundary comes from the ground.** Use the
+5 × 5 km cells to rank where evidence concentrates, then discard the cell edges
+entirely. Draw the candidate boundary from ecological and physical units at
+1:10,000, and record the reason for each stretch of it.
+
+1. **Screen.** Score the cells from screening-tier evidence: listed features,
+   records, survey effort. Keep the evidence score and the effort count in
+   separate columns, so that a cell that is merely well visited is not mistaken
+   for one that is rich.
+2. **Form search areas.** Merge adjacent priority cells and buffer them
+   generously. This is an analysis envelope, never a draft boundary; from here
+   on, cell edges play no part.
+3. **Assemble the ecological layers inside it.** Annex I habitat polygons from
+   field mapping ([question 3](#q3)); the habitat around delineation-grade
+   species records, which means breeding and feeding areas and not just the
+   point; catchments and a terrain model; Copernicus land-cover layers; roads
+   and settlements as barriers.
+4. **Draw along those units.** Use a habitat edge, a watershed, a forest-stand
+   edge or a river. Snap the line to features visible on the orthophoto or the
+   cadastre at 1:10,000, so that it can be found on the ground and in the land
+   register.
+5. **Record why.** Give every boundary segment a `boundary_basis` attribute:
+   habitat edge, watershed, road, cadastral parcel, expert judgement. A
+   boundary whose reasons are written down can be defended; one whose reasons
+   are not will be reopened at every consultation.
+6. **Test it automatically.** Flag any candidate whose boundary runs along grid
+   lines for more than a small share of its length (10 % is a reasonable
+   start). Flag any long straight segment that follows no mapped feature. A
+   site shaped like its screening cells fails the test by construction.
+7. **Check what the line leaves out.** Run the site evidence report on the
+   candidate polygon and a 1 km ring around it. Records just outside a boundary
+   are the best guide to what it has cut off.
+
+Keep the grid for what it does well: screening, planning surveys and, later,
+the distribution maps of Article 17-style reporting. Store every record at its
+own precision and derive the grid from it, never the reverse. The one exception
+is an atlas record, whose true precision is the cell.
+
+### What Kosovo's data show
+
+```{r}
+#| label: q2-ring
+
+hencit <- register[register$national_id == pilot_ids[["hencit"]], ]
+bi_pts <- as_points(birds_i)
+inside <- lengths(st_intersects(bi_pts, hencit)) > 0
+ring   <- st_difference(st_buffer(st_geometry(hencit), 5000), st_geometry(hencit))
+in_ring <- lengths(st_intersects(bi_pts, ring)) > 0
+
+sp_inside <- unique(bi_pts$speciesKey[inside])
+sp_ring   <- unique(bi_pts$speciesKey[in_ring])
+n_ring_only <- length(setdiff(sp_ring, sp_inside))
+
+# The richest Annex I locality in the ring, and how far it lies from the site.
+ring_loc <- bi_pts[in_ring, ] |>
+  mutate(cell = paste(round(st_coordinates(geometry)[, 1], -2),
+                      round(st_coordinates(geometry)[, 2], -2))) |>
+  group_by(cell) |>
+  summarise(species = n_distinct(speciesKey),
+            locality = names(sort(table(locality), decreasing = TRUE))[1],
+            .groups = "drop") |>
+  arrange(desc(species)) |>
+  slice(1)
+ring_loc_km <- round(as.numeric(st_distance(ring_loc, hencit)) / 1000, 1)
+```
+
+Ligatina e Hencit/Radevës is the country's richest site for Annex I birds, and
+its designated polygon covers
+`r formatC(as.numeric(st_area(hencit)) / 1e6, format = "f", digits = 1)` km².
+Inside it, GBIF holds `r fmt_int(sum(inside))` Annex I bird records of
+`r length(sp_inside)` species. Within 5 km outside it lie a further
+**`r fmt_int(sum(in_ring))` records of `r length(sp_ring)` species**, about
+`r pct(sum(in_ring), sum(inside) + sum(in_ring))` % of all the Annex I bird
+records in and around the site. `r n_ring_only` of those species were never
+recorded inside. The richest locality in that ring, "`r ring_loc$locality`", lies
+`r ring_loc_km` km from the boundary and holds `r ring_loc$species` Annex I
+species.
+
+The birds use more of the landscape than the designated wetland. An SPA
+boundary copied from the national designation, or from a screening cell, would
+leave that out. The ring in step 7 is what shows it.
+
+*Discussed in:* Spatial analysis (Day 1), "Fragmentation: connection, not just
+cover"; Automated reporting (Day 3), "A pilot, end to end". Karel Chobot's case
+study (Day 1) covers how the Czech sites were proposed.
+
+## 3. Mapping Annex I habitats before assessing them {#q3}
+
+**Several Annex III criteria need both an area and a condition, and only a
+polygon map carries both.** These include representativity, relative surface,
+and the degree of conservation of structure and function. Points, localities
+and centroids say where to map first; they cannot be summed into an area. Map
+in the field at 1:10,000, record condition as attributes scored by a written
+rule, and validate a random sample independently before any figure goes into
+an assessment.
+
+| Element | Recommended minimum | Czech practice, for comparison |
+|---|---|---|
+| Base and scale | Field mapping on a colour orthophoto, drawn at 1:10,000 (1:5,000 where detail requires) | Orthophoto at 1:10,000 or 1:5,000 |
+| Minimum mapping unit | About 0.25 ha for habitats that normally form large stands; smaller for rare or high-value stands | 0.15–0.25 ha recommended for extensive types; smaller only for rarer or high-quality stands |
+| Small and linear habitats | Springs, fens, small wetlands and caves as points or lines, with the true area or width recorded | Points and lines for occurrences under about 2,500 m² or narrower than 50 m, with true area or width recorded |
+| Mosaics | One segment may hold several habitats, each with its share (%) and its own condition | Mosaic segments; more than five components referred to the methodologist |
+| Boundary changes | Recorded when a boundary moves by more than about 30 m | About 30 m |
+| Attributes per habitat | Annex I and national code; share of the segment; representativity; degradation; structure and function; typical species present; pressures; surveyor; date; photograph | Share and area per habitat; representativity, degradation, structure and function, regional context; surveyor and date per segment |
+| Condition score | Derived from the attributes by a published lookup table, not judged afresh for each site | A quality lookup table, amended when a new combination occurs |
+| Validation | Independent re-survey of a random 5–10 % of segments, reported as agreement on the habitat code and on the condition class | — |
+
+Czech practice follows the AOPK ČR methodology for updating the national
+habitat-mapping layer (Lustyk & Guth 2011). The recommended column is written
+for a first national map; a country mapping for the first time can hold to the
+same standard from the start and avoid retrofitting it.
+
+### Typical species from GBIF
+
+**Yes, to decide where to map first, but not for what is reported.** The
+*Interpretation Manual of European Union Habitats* lists characteristic species
+for each Annex I type. Where several of them are recorded together in one 1 km
+cell, that cell is a candidate for early field mapping. The method works where
+the typical species are conspicuous and well recorded: aquatic and riparian
+types, and dry grasslands with their orchids and butterflies. It works poorly
+for forests defined by their dominant trees, and for habitats whose indicators
+are bryophytes or small sedges. It cannot give an area, a condition or an SDF
+figure. Co-occurrence is not a diagnosis either: most typical species also
+occur outside the habitat they characterise.
+
+```{r}
+#| label: q3-plants
+
+plants <- overall[overall$kingdom == "Plantae", ]
+sharri <- register[register$national_id == pilot_ids[["sharri"]], ]
+plants_sharri <- sum(lengths(st_intersects(as_points(plants), sharri)) > 0)
+plants_precise <- sum(!is.na(plants$coordinateUncertaintyInMeters) &
+                        plants$coordinateUncertaintyInMeters <= 100)
+```
+
+In Kosovo the plant record limits it further. Plants make up
+`r pct(nrow(plants), nrow(overall))` % of GBIF records: `r fmt_int(nrow(plants))`
+records of `r fmt_int(length(unique(plants$speciesKey)))` species, of which
+`r fmt_int(plants_precise)` state an uncertainty of 100 m or better.
+`r fmt_int(plants_sharri)` lie in Sharri National Park, which covers more than
+500 km². Two or three habitat types chosen for well-recorded indicators are a
+fair test of the method; a national screen would mostly show where botanists
+have been.
+
+*Discussed in:* Condition evaluation (Day 2), "A first habitat map: the minimum
+standard"; Field data collection (Day 3), "When the map is the working
+document" and "Where to start on Monday". Karel Chobot's habitat session
+(Day 1) covers monitoring design.
+
+## 4. Judging sufficiency without national totals {#q4}
+
+**Do not wait for the denominator; make its uncertainty explicit.** Estimate
+each national total as a range, compute the network's share at both ends, and
+record a conclusion for every feature in the categories the EU's own
+sufficiency process uses. Where the honest answer is that more research is
+needed, that process has a category for it.
+
+| Interim approach | How | Suits |
+|---|---|---|
+| **The total as a range** | Lower bound: the mapped or known area or population. Upper bound: modelled potential from land cover, terrain, geology and known records. Compute the network's share against both. | Habitats with partial mapping |
+| **Occupied cells, allowing for effort** | Share of occupied grid cells (the EEA 10 km grid) that fall in the network, counting only cells actually surveyed for that group | Species with scattered records |
+| **Representation across the range** | Every main part of the range covered: massif, catchment, altitude belt | Every feature, whatever the data |
+| **All significant known localities** | Where a feature is known from only a few sites, include every significant one | Rare and priority features |
+| **The neighbours' figures** | Article 17 estimates of neighbouring Member States and Emerald Network data of neighbouring Bern Convention Parties, as a check on plausibility | Transboundary features |
+
+The Commission's working reference values are often quoted as a pass mark. A
+network holding more than 60 % of a feature's resource is generally taken as
+sufficient, and one holding 20 % or less as a priority for scrutiny. They were
+designed as a pre-selection filter, and the current criteria say they "can
+never be used in isolation". With a denominator given as a range, judge rare and
+priority features on the smaller of the two shares.
+
+The conclusion codes of the EU sufficiency process are an honest way to record
+an interim result:
+
+| Code | Meaning |
+|---|---|
+| SUF | Sufficient: no further sites needed |
+| IN MIN | Insufficient, minor: the feature should be added to the SDFs of sites already proposed |
+| IN MOD | Insufficient, moderate: one or more further sites or extensions needed |
+| IN MAJ | Insufficient, major: no site for the feature has been proposed yet |
+| SR | Scientific reserve: further research needed to identify the most appropriate sites |
+| SR Ref List | Scientific reserve on the reference list: regular occurrence still to be confirmed |
+| CD | Correction of data: the SDF information needs correcting or completing |
+
+Keep one row per feature in a *sufficiency ledger*. Each row records the
+denominator range and its method, a data-quality code, the network's share, the
+conclusion code, its date, and **what evidence would change it**. That last
+column turns every SR into a survey commission with a deadline, and makes the
+interim state as transparent as the final one.
+
+*Discussed in:* Spatial analysis (Day 1), "A missing baseline is not a reason
+for inaction". The biogeographical process itself is part of Karel Chobot's
+sessions.
+
+## 5. Records that survive being shared {#q5}
+
+**This page answers the data side of the question.** Every record needs a
+permanent identifier, a traceable source, a version history and a validation
+status. Duplicates are linked, not deleted. Sensitivity is handled by
+generalising the public view, not by hiding the record. Ownership and the
+arrangement between the institutions are the subject of the joint
+database-architecture session (Day 1) and Martin Koška's governance session
+(Day 2).
+
+| Element | Recommendation |
+|---|---|
+| **Identifiers** | A permanent UUID for every record, survey event and dataset, never re-used, with the provider's own identifier kept alongside (Darwin Core `occurrenceID`). A site keeps its code through every boundary version. |
+| **Provenance** | Dataset, source document, observer and method, stored as fields rather than a note. |
+| **Duplicates** | Link, do not delete. Records of the same taxon, date and place from different sources share a cluster identifier; analyses count the cluster once and cite every source. |
+| **Versions** | Every change to a record logged: who, when, what. Every analysis and every SDF submission made from a dated snapshot with its own DOI. Boundaries and SDFs released as numbered versions. |
+| **Validation** | A status on every record, advanced in order: automated checks at import; the taxon specialist for the group; sign-off at site level; approval for SDF use. |
+| **Sensitive data** | One store at full precision. The public view generalises listed sensitive species; named users under a data-use agreement see full precision, and access is logged. The sensitive list has an owner, a review cycle, and species can come off it. |
+| **Interoperability** | Darwin Core for occurrences; INSPIRE *Protected sites*, *Species distribution* and *Habitats and biotopes* for services, through the national geoportal; one taxonomic backbone and shared code lists. |
+
+```{r}
+#| label: q5-duplicates
+
+dups <- overall |>
+  filter(!is.na(speciesKey), nchar(eventDate) >= 10) |>
+  mutate(date = substr(eventDate, 1, 10),
+         lat = round(decimalLatitude, 3), lon = round(decimalLongitude, 3)) |>
+  group_by(speciesKey, date, lat, lon) |>
+  filter(n_distinct(datasetKey) > 1) |>
+  ungroup()
+n_clusters <- nrow(distinct(dups, speciesKey, date, lat, lon))
+```
+
+Duplication is already present in the published record. **`r n_clusters` groups
+of records, `r nrow(dups)` records in all, describe the same species on the
+same day at the same place** (to about 100 m) and were published in different
+datasets. Counted as they stand, they inflate the evidence; deleted, they lose a
+source. Linked, both counts are right. GBIF performs the same kind of linking
+across its whole index, and a national system can take its clusters as a
+starting point.
+
+*Discussed in:* Spatial analysis (Day 1), "One central Biodiversity Information
+System" and "NDOP: open by default, precise by permission".
+
+## 6. Bird data for Special Protection Areas {#q6}
+
+**Keep one table of bird records and derive the layers from it.** Annex I
+species (Article 4(1)) and regularly occurring migratory species (Article 4(2))
+belong in attributes, not in separate datasets that drift apart. To move from
+IBA, KBA and occurrence data to an SPA proposal, each species that is to
+qualify the site needs three things. It needs a current population estimate
+from standardised counts, and a stated criterion that estimate meets. It also
+needs a boundary drawn around the habitat the population actually uses.
+
+| Field | Content | Why |
+|---|---|---|
+| Annex I | Yes or no, from the consolidated Directive | The Article 4(1) trigger |
+| Regular migrant | Yes or no, from a national list the Ministry adopts and versions | The Article 4(2) trigger; the list is a decision, not a lookup |
+| Population type | `p` permanent, `r` reproducing, `c` concentration, `w` wintering: the SDF codes | One species can need different sites in different seasons |
+| Breeding evidence | Possible, probable or confirmed, as in the European breeding bird atlas | A record in the breeding season is not a breeding record |
+| Count and unit | A number, with its unit: pairs, individuals, males, calling males | Only counts with units can be summed or set against a threshold |
+| Method and effort | Protocol, duration, distance, whether all species were reported | Turns a record into a survey, and makes absence usable |
+
+The working layers are views over that one table: Annex I breeding, Annex I
+passage and wintering, regular migrants, and congregations. When a record is
+corrected, every layer follows.
+
+**What an SPA proposal needs, beyond the IBA:**
+
+- **The IBA inventory is the starting point.** The Court of Justice has treated
+  it as the best available scientific reference for judging whether enough SPAs
+  have been classified (Case C-3/96, *Commission v Netherlands*). An IBA is
+  still not an SPA proposal: its boundary is often coarse, and some of its
+  qualifying species cannot trigger an SPA at all (see below).
+- **A population estimate for each trigger species**, given as minimum and
+  maximum with a unit, a year and an SDF data-quality code. It should come from
+  standardised surveys over at least two or three seasons:
+  - territory mapping or point counts for breeding birds;
+  - nest surveys for raptors;
+  - International Waterbird Census counts for wintering waterbirds;
+  - standardised counts at passage bottlenecks.
+- **The criterion it meets.** BirdLife's EU-level criteria are tested
+  definitions: C2, the site regularly holds at least 1 % of a flyway or EU
+  population of a species threatened in the EU; C6, the site is one of the five
+  most important in its region for such a species.
+- **A boundary around what the birds use**: nesting, feeding and roosting areas,
+  including the fields or river they commute to. Check it against the IBA
+  outline; do not copy it.
+- **eBird's own dataset for analysis.** Request the eBird Basic Dataset from the
+  Cornell Lab of Ornithology. It carries the effort fields and whether each
+  checklist reports every species detected, which turns a checklist's missing
+  species into non-detections. The copy on GBIF is presence-only.
+
+### Kosovo's IBAs and KBAs
+
+```{r}
+#| label: q6-ibas
+
+n_qual <- table(iba_spp$iba_code)
+iba_tab <- ibas |>
+  mutate(
+    Site = sprintf("[%s](%s) (%s)", name, factsheet, code),
+    `Qualifying populations` = as.integer(n_qual[code]),
+    Area = sprintf("%s km²", fmt_int(area_km2)),
+    KBA = ifelse(kbaClassification == "-", "no", tolower(kbaClassification))
+  ) |>
+  select(Site, `Where it lies` = relation, Area,
+         `IBA criteria` = ibaCriteria, KBA, `Qualifying populations`)
+knitr::kable(iba_tab, align = "llrlll")
+```
+
+BirdLife's inventory lists these four sites for Kosovo. It holds them under
+Serbia, where the inventory was compiled; BirdLife has no separate country
+record for Kosovo. The digital boundaries are released on request through the
+[World Database of Key Biodiversity Areas](https://www.keybiodiversityareas.org/),
+free for non-commercial use, so this page uses each site's published centroid
+only. How much of Kopaonik and Mokra Gora lies inside Kosovo can be settled only
+from those boundaries, and requesting them is a first, cheap step.
+
+```{r}
+#| label: q6-species
+
+annex_i_keys <- annexes$gbif_species_key[annexes$directive == "Birds" &
+                                         annexes$annex == "I"]
+key_of <- function(name) {
+  k <- birds$speciesKey[birds$species == name]
+  if (length(k)) k[1] else NA
+}
+qual <- iba_spp |>
+  group_by(scientific_name, common_name) |>
+  summarise(
+    IBAs = paste(sprintf("%s: %s %s", iba_name, population,
+                         sub("breeding ", "", units)), collapse = "; "),
+    season = paste(sort(unique(season)), collapse = ", "),
+    .groups = "drop"
+  ) |>
+  rowwise() |>
+  mutate(
+    key = key_of(scientific_name),
+    in_annex_i = scientific_name %in% annexes$scientific_name[
+                   annexes$directive == "Birds" & annexes$annex == "I"] |
+                 (!is.na(key) && key %in% annex_i_keys),
+    records = sum(birds$species == scientific_name)
+  ) |>
+  ungroup() |>
+  mutate(Route = case_when(
+    in_annex_i ~ "Annex I: Art. 4(1)",
+    grepl("breeding|passage|winter|non-breeding", season) ~
+      "Art. 4(2), if listed as a regular migrant",
+    TRUE ~ "Cannot trigger an SPA"
+  )) |>
+  arrange(Route, scientific_name)
+
+n_no_trigger <- sum(qual$Route == "Cannot trigger an SPA")
+knitr::kable(
+  qual |> transmute(Species = sprintf("*%s*, %s", scientific_name, common_name),
+                    `IBA populations (pairs)` = IBAs, Season = season, Route,
+                    `GBIF records in Kosovo` = fmt_int(records)),
+  align = "lllr"
+)
+```
+
+Every qualifying population in these sites is a mountain or forest bird,
+estimated in breeding pairs. **`r n_no_trigger` of the
+`r nrow(qual)` qualifying species are neither on Annex I nor migratory**:
+biome-restricted residents such as the Wallcreeper. They qualify an IBA but
+cannot trigger an SPA. The Annex I species need current counts; several
+estimates date from 2008–2013.
+
+### The best bird site in the data is not an IBA
+
+```{r}
+#| label: q6-seasons
+
+season_of <- function(m) {
+  case_when(m %in% 4:7 ~ "Breeding season (Apr–Jul)",
+            m %in% 8:10 ~ "Autumn passage (Aug–Oct)",
+            m %in% c(11, 12, 1, 2) ~ "Winter (Nov–Feb)",
+            m == 3 ~ "Spring passage (Mar)",
+            TRUE ~ "Month not given")
+}
+birds_i$season <- season_of(birds_i$month)
+birds_i$at_hencit <- inside
+season_tab <- birds_i |>
+  group_by(Season = season) |>
+  summarise(`Records, Kosovo` = fmt_int(n()),
+            `Species, Kosovo` = n_distinct(speciesKey),
+            `Records, Ligatina e Hencit` = fmt_int(sum(at_hencit)),
+            `Species, Ligatina e Hencit` = n_distinct(speciesKey[at_hencit]),
+            .groups = "drop") |>
+  arrange(match(Season, c("Breeding season (Apr–Jul)", "Autumn passage (Aug–Oct)",
+                          "Winter (Nov–Feb)", "Spring passage (Mar)",
+                          "Month not given")))
+
+hencit_never_breeding <- birds_i |>
+  filter(at_hencit) |>
+  group_by(speciesKey) |>
+  summarise(br = any(season == "Breeding season (Apr–Jul)")) |>
+  summarise(n = sum(!br)) |>
+  pull(n)
+```
+
+Ligatina e Hencit/Radevës holds `r length(sp_inside)` of the
+`r length(unique(birds_i$speciesKey))` Annex I bird species recorded in Kosovo.
+It is designated nationally as a wetland and appears in no IBA inventory. It is
+therefore the case for the occurrence-data route to an SPA, and it is where
+standardised counts are most obviously missing. Its birds also differ by
+season, which is the population-type field at work.
+`r hencit_never_breeding` of its Annex I species were never recorded there in
+the breeding season: they are passage or wintering birds, and an SDF would list
+them as `c` or `w`.
+
+```{r}
+#| label: q6-season-table
+knitr::kable(season_tab, align = "lrrrr")
+```
+
+The months are a coarse proxy for population type: early migrants arrive in
+April, and some wintering birds stay into March. With breeding-evidence codes
+on the records, the proxy would not be needed.
+
+*Discussed in:* GBIF data (Day 2), "Birds: from records to an SPA case".
+
+## 8. A pilot, end to end {#q8}
+
+**Yes.** Take two contrasting areas through the whole workflow in one field
+season before applying the method nationally: **Sharri National Park** for the
+habitat route and **Ligatina e Hencit/Radevës** for the bird route. A pilot
+tests the method, the data model and the division of work at a scale where
+mistakes are cheap. It also produces the first draft Standard Data Forms along
+the way.
+
+```{r}
+#| label: q8-pilots
+
+site_stats <- lapply(names(pilot_slug), function(k) {
+  gpkg <- file.path("outputs/protected_areas", pilot_slug[[k]],
+                    paste0(pilot_slug[[k]], ".gpkg"))
+  st_drop_geometry(st_read(gpkg, layer = "site_boundary", quiet = TRUE))
+})
+names(site_stats) <- names(pilot_slug)
+
+annex_i_species <- function(site) {
+  n_distinct(bi_pts$speciesKey[lengths(st_intersects(bi_pts, site)) > 0])
+}
+sara <- ibas[ibas$code == "RS024", ]
+
+pilot_row <- function(label, sharri, hencit) {
+  data.frame(` ` = label, `Sharri National Park` = sharri,
+             `Ligatina e Hencit/Radevës` = hencit, check.names = FALSE)
+}
+s <- site_stats$sharri; h <- site_stats$hencit
+pilots <- rbind(
+  pilot_row("Register", sprintf("%s · %s, %s", s$national_id, s$designation, s$designation_year),
+      sprintf("%s · %s, %s", h$national_id, h$designation, h$designation_year)),
+  pilot_row("Area", sprintf("%s km²", formatC(as.numeric(s$computed_area_km2), format = "f", digits = 1)),
+      sprintf("%s km²", formatC(as.numeric(h$computed_area_km2), format = "f", digits = 1))),
+  pilot_row("GBIF records · species", sprintf("%s · %s", fmt_int(as.integer(s$records)), fmt_int(as.integer(s$species))),
+      sprintf("%s · %s", fmt_int(as.integer(h$records)), fmt_int(as.integer(h$species)))),
+  pilot_row("Annex I bird species recorded", annex_i_species(sharri), annex_i_species(hencit)),
+  pilot_row("Plant records", fmt_int(plants_sharri),
+      fmt_int(sum(lengths(st_intersects(as_points(plants), hencit)) > 0))),
+  pilot_row("1 km cells with no record", sprintf("%s %% of %s", pct(as.numeric(s$unrecorded_share), 1),
+                                            s$grid_cells),
+      sprintf("%s %% of %s", pct(as.numeric(h$unrecorded_share), 1), h$grid_cells)),
+  pilot_row("IBA / KBA", sprintf("Within %s (%s); BirdLife records the park as contained by it",
+                           sara$name, sara$code), "None"),
+  pilot_row("Route it tests", "SCI/SAC: Annex I habitats and Annex II species, across a border",
+      "SPA: Annex I and migratory birds, from counts"),
+  pilot_row("Biggest gap", "A habitat map; most of the park unrecorded",
+      "Standardised counts; the land the birds use beyond the boundary")
+)
+knitr::kable(pilots, align = "lll")
+```
+
+| Step | Sharri National Park | Ligatina e Hencit/Radevës | Produces |
+|---|---|---|---|
+| **1. Database QA** | Evidence tiers applied to every record ([question 1](#q1)) | The same | A tiered record set |
+| **2. Gap report** | Site report: unrecorded cells, missing groups | Site report, plus the 5 km ring ([question 2](#q2)) | A survey plan |
+| **3. Field verification** | Habitat mapping of a representative sector at 1:10,000; Annex II species surveys | Standardised counts in the breeding season, on passage and in winter | Validated field data |
+| **4. Delineation** | From habitat polygons and terrain; IBA boundary requested for comparison | From the area the birds use | A candidate polygon with its `boundary_basis` |
+| **5. Assessment** | Annex III stage 1: representativity, relative surface, conservation, global | The SPA criteria, species by species | An assessment table |
+| **6. Network review** | The site's share of each feature, given as a range ([question 4](#q4)) | The same, for Annex I species and migrants | Rows in the sufficiency ledger |
+| **7. Draft SDF** | With data-quality codes on every value | With population types on every species | Two draft SDFs and a lessons log |
+
+**The lessons log is the main product.** It records every step that took
+longer than planned, every attribute nobody could fill in, and every rule that
+had to change. The national method is revised from it before roll-out, which is
+the point of doing two sites first rather than two hundred.
+
+The evidence packs for step 2 can be produced today, from data already in this
+repository:
+
+```bash
+Rscript site_reports.R --site NP_001 --site SAC_001
+```
+
+*Discussed in:* Automated reporting (Day 3), "A pilot, end to end"; Spatial
+analysis (Day 1), "Next steps: governance that attracts funding".
+
+## Sources
+
+- BirdLife International (2026). Important Bird Area factsheets: *Sara
+  mountain*, *Prokletije*, *Kopaonik*, *Mokra Gora*. DataZone,
+  datazone.birdlife.org, accessed `r fmt_date_en(as.Date(ibas$accessed[1]))`.
+  Built into `data/kosovo_ibas.csv` by `R/fetch_iba.R`.
+- Court of Justice of the European Union (1998). Case C-3/96, *Commission v
+  Kingdom of the Netherlands*.
+- European Commission (1997). *Criteria for assessing national lists of pSCI at
+  biogeographical level*, Hab. 97/2 rev. 4.
+  [eionet.europa.eu](https://www.eionet.europa.eu/etcs/etc-be/activities/hab_97_2_criter_en.pdf)
+- European Commission (2011). Implementing Decision 2011/484/EU concerning a
+  site information format for Natura 2000 sites.
+  [EUR-Lex](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32011D0484)
+- European Commission (2013). *Interpretation Manual of European Union Habitats*,
+  EUR28.
+- European Topic Centre on Biological Diversity (2016). *Criteria for assessing
+  sufficiency of sites designation*, further adapted criteria.
+  [eionet.europa.eu](https://www.eionet.europa.eu/etcs/etc-be/activities/further_adapted_criteria.pdf)
+- Lustyk, P. & Guth, J. (2011). *Metodika aktualizace vrstvy mapování biotopů*.
+  AOPK ČR, Praha.
+- GBIF.org. Occurrence download
+  [doi:`r meta$download$doi`](https://doi.org/`r meta$download$doi`), the
+  extract behind every figure on this page.

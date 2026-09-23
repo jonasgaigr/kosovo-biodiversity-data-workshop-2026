@@ -1,0 +1,105 @@
+/*-- scss:defaults --*/
+
+// The manual's 74.2 px title is measured off a mockup carrying a three-word
+// name. This deck's title runs to 48 characters, which wraps to three lines at
+// that size and runs straight into the AUTOR line anchored at 57.02 % of slide
+// height. Stepping the type down to 58 px fits it on two lines and leaves every
+// measured anchor — including the title's own, which is computed from this
+// size — where the manual puts it.
+$aopk-size-title: 58px;
+
+/*-- scss:rules --*/
+
+// The theme caps a picture to the safe-area height as well as to the column
+// width, so a PORTRAIT figure ends up narrower than its column and would sit
+// flush left with the gap on its right. Centre it in the column instead;
+// landscape pictures already fill the width, so this is a no-op for them.
+.reveal .slides section .aopk-cols img {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+// The hairline that gives a screenshot of a white page an edge is set in
+// `n2k-condition-evaluation.scss`, beside the height cap that keeps a figure
+// from crowding out its caption.
+
+// Several slides carry a table AND a note under it. Both are body size by
+// default, which overflows the safe area. Tables are a denser medium than
+// prose, so step them down rather than shrinking the whole slide.
+.reveal .slides section table {
+  font-size: $aopk-size-body * 0.72;
+  th, td { padding: 0.18em 0.55em; }
+}
+.reveal .slides section .smaller table { font-size: $aopk-size-body * 0.62; }
+
+// Inline code in a table cell or a dense paragraph inherits the surrounding
+// size; at 0.62em of body it becomes unreadable in a projected room.
+.reveal .slides section code {
+  font-size: 0.95em;
+}
+
+// The theme suppresses the native list marker and draws its own bullet and
+// counter in ::before, but Quarto emits its reveal defaults — including
+// `.reveal ol { list-style-type: decimal }` — AFTER the theme block, at the
+// same specificity. So an ordered list carries the browser's marker and the
+// theme's counter at once and numbers every item twice. Winning it back needs
+// specificity rather than order: `.slides` is a second class on the selector.
+.reveal .slides ul,
+.reveal .slides ol {
+  list-style: none;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PRINT-PDF LAYOUT
+//
+// reveal.js's `?print-pdf` mode re-parents every slide into a wrapper and then
+// flattens it:
+//
+//     html.reveal-print .reveal .slides section { margin:0!important;
+//                                                 padding:0!important; … }
+//
+// The theme establishes the whole content column as PADDING on the section, so
+// that rule erases the entire layout in the printed deck: the copy starts at
+// the very top of the page and runs under the absolutely positioned heading,
+// which keeps its own measured anchor and so appears struck through the text.
+//
+// Re-asserting it takes both halves. The selector must out-specify reveal's —
+// hence `.pdf-page >`, which exists only in print — and every declaration must
+// carry `!important`, because reveal's does. Restricting the whole block to
+// `html.reveal-print` keeps it out of the on-screen cascade, where the theme's
+// own rule is already correct.
+//
+// The top inset is not hard-coded: it is the canvas less the content height and
+// the content bottom, both of which the theme exposes as custom properties, so
+// it stays correct if those measurements are ever revised.
+// ═══════════════════════════════════════════════════════════════════════════
+html.reveal-print .reveal .slides .pdf-page > section,
+html.reveal-print .reveal .slides .pdf-page > section > section {
+  box-sizing: border-box !important;
+  text-align: left !important;
+  // The theme's first invariant: a section fills the whole 720 px canvas, so
+  // that the footer bar, the dvojlist and every measured vertical anchor
+  // resolve against the SLIDE and not against however much content happens to
+  // sit on it. Print does not inherit that either, and a slide whose content is
+  // all absolutely positioned — the title slide — then collapses to a couple of
+  // hundred pixels, dragging the bar and the leaf up to a third of the page.
+  height: 720px !important;
+  padding-top: calc(720px - var(--aopk-content-h) - var(--aopk-content-bottom)) !important;
+  padding-right: var(--aopk-margin-right) !important;
+  padding-bottom: var(--aopk-content-bottom) !important;
+  padding-left: var(--aopk-margin-left) !important;
+}
+
+// Same exceptions as on screen: nothing decorative sits at the foot of these,
+// so the copy may run down as far as the bar.
+html.reveal-print .reveal .slides .pdf-page > section.no-leaf,
+html.reveal-print .reveal .slides .pdf-page > section.aopk-title-slide {
+  padding-bottom: var(--aopk-footer-h) !important;
+}
+
+// The section divider anchors its heading at 42 % and flows any standfirst
+// under it, so its top inset is set from the heading rather than from the
+// body anchor. 0.56 is the theme's own figure.
+html.reveal-print .reveal .slides .pdf-page > section.aopk-section {
+  padding-top: 720px * 0.56 !important;
+}

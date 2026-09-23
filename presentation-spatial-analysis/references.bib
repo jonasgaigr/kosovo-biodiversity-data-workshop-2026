@@ -1,0 +1,242 @@
+% ═══════════════════════════════════════════════════════════════════════════
+% Sources for "Analysing spatial data for biodiversity conservation".
+%
+% NOTE ON `urldate`. An entry carries an `urldate` ONLY if it was opened and the
+% claim the deck makes from it was checked against it on that day. The
+% case-study entries – NDOP, the Ukrainian viewer, district level licensing,
+% CORINE coverage and the Kosovo geoportal – were checked on 22 September 2026
+% when the deck was rebuilt, and carry that date.
+%
+% Entries WITHOUT an `urldate` are standing references – the text of a directive,
+% the home page of a standard – that the deck cites for a general point and that
+% were not re-opened. The absence of a date is deliberate: it would otherwise
+% assert a check that did not happen. `% [VERIFY]` marks an entry whose citation
+% detail itself is uncertain.
+% ═══════════════════════════════════════════════════════════════════════════
+
+% ── Kosovo figures: the repository's own pipeline ──────────────────────────
+
+@misc{gbif_kosovo_download,
+  author       = {{Global Biodiversity Information Facility}},
+  title        = {{GBIF} Occurrence Download: Kosovo},
+  year         = {2026},
+  note         = {Download key 0003504-260903145123482: the extract behind every
+                  Kosovo figure in this deck, taken by the pipeline in this
+                  repository. [VERIFY] the minted DOI is recorded in
+                  data/run\_metadata.rds and printed in the published report;
+                  quote the DOI, not the download key},
+  url          = {https://www.gbif.org/occurrence/download/0003504-260903145123482}
+}
+
+@misc{kosovo_report,
+  author       = {Gaigr, Jonáš},
+  title        = {Biodiversity of {Kosovo} – {GBIF} data analysis},
+  year         = {2026},
+  howpublished = {Quarto website and reproducible {R} workflow},
+  url          = {https://jonasgaigr.github.io/kosovo-biodiversity-data-workshop-2026/}
+}
+
+@misc{eea_natda,
+  author       = {{European Environment Agency}},
+  title        = {Nationally designated areas ({NatDA}, formerly {CDDA})},
+  year         = {2026},
+  note         = {Version 24, July 2026. CC-BY 4.0. The source of the Kosovo
+                  protected-area boundaries and of the 237 sites / 1,261 km² /
+                  11.6 \% figures},
+  doi          = {10.2909/028003e7-7585-4d69-92fc-7f81e0cc2340},
+  url          = {https://doi.org/10.2909/028003e7-7585-4d69-92fc-7f81e0cc2340}
+}
+
+% ── Earth observation ──────────────────────────────────────────────────────
+
+@misc{copernicus_dataspace,
+  author       = {{European Union} and {European Space Agency}},
+  title        = {Copernicus Data Space Ecosystem},
+  note         = {The current free access route to Sentinel data, and the
+                  successor to the Copernicus Open Access Hub},
+  url          = {https://dataspace.copernicus.eu/}
+}
+
+@misc{sentinel2,
+  author       = {{European Space Agency}},
+  title        = {Sentinel-2 mission guide},
+  note         = {Multispectral Instrument; 10 m, 20 m and 60 m bands. Data from
+                  2015. The deck says "every few days" and quotes no revisit
+                  interval},
+  url          = {https://sentiwiki.copernicus.eu/web/sentinel-2}
+}
+
+@misc{clms_clc,
+  author       = {{European Environment Agency}},
+  title        = {{CORINE} Land Cover},
+  howpublished = {Copernicus Land Monitoring Service},
+  note         = {Produced for the EEA39 – the 33 EEA member countries and six
+                  cooperating countries, Kosovo under UNSCR 1244/99 among them.
+                  [VERIFY] which reference years actually carry Kosovo data
+                  before quoting a change period},
+  url          = {https://land.copernicus.eu/en/products/corine-land-cover},
+  urldate      = {2026-09-22}
+}
+
+@techreport{eea_fragmentation,
+  author       = {{European Environment Agency} and {Swiss Federal Office for
+                  the Environment}},
+  title        = {Landscape fragmentation in {Europe}},
+  institution  = {European Environment Agency},
+  year         = {2011},
+  number       = {EEA Report No 2/2011},
+  note         = {The effective mesh size and effective mesh density measures},
+  url          = {https://www.eea.europa.eu/publications/landscape-fragmentation-in-europe}
+}
+
+% ── Standards, publishing and infrastructure ───────────────────────────────
+
+@misc{darwin_core,
+  author       = {{Biodiversity Information Standards (TDWG)}},
+  title        = {Darwin Core},
+  note         = {The term vocabulary and the Darwin Core Archive packaging},
+  url          = {https://dwc.tdwg.org/}
+}
+
+@misc{gbif_ipt,
+  author       = {{Global Biodiversity Information Facility}},
+  title        = {Integrated Publishing Toolkit ({IPT})},
+  url          = {https://www.gbif.org/ipt}
+}
+
+@misc{inspire_directive,
+  author       = {{European Parliament and Council of the European Union}},
+  title        = {Directive 2007/2/{EC} establishing an Infrastructure for
+                  Spatial Information in the European Community ({INSPIRE})},
+  year         = {2007},
+  note         = {Annex I \emph{Protected sites}; Annex III \emph{Species
+                  distribution} and \emph{Habitats and biotopes}},
+  url          = {https://eur-lex.europa.eu/eli/dir/2007/2/oj}
+}
+
+@inproceedings{kca_geoportal,
+  author       = {Meha, Murat and Crompvoets, Joep and Çaka, Muzafer and
+                  Pitarka, Denis},
+  title        = {Implementing a National Spatial Data Infrastructure for a
+                  Modern {Kosovo}},
+  booktitle    = {FIG Working Week 2015},
+  year         = {2015},
+  note         = {The Kosovo Cadastral Agency launched the national geoportal in
+                  June 2013, "developed in accordance to INSPIRE standards",
+                  with network services for search, view and download},
+  url          = {http://www.fig.net/resources/proceedings/fig_proceedings/fig2015/papers/ts04d/TS04D_meha_crompvoets_et_al_7451.pdf},
+  urldate      = {2026-09-22}
+}
+
+@misc{habitats_directive,
+  author       = {{Council of the European Communities}},
+  title        = {Council Directive 92/43/{EEC} on the conservation of natural
+                  habitats and of wild fauna and flora},
+  year         = {1992},
+  note         = {Article 6(3). The "no reasonable scientific doubt" test is from
+                  the Court of Justice, Case C-127/02 (Waddenzee), 2004},
+  url          = {https://eur-lex.europa.eu/eli/dir/1992/43/oj}
+}
+
+@misc{bern_convention,
+  author       = {{Council of Europe}},
+  title        = {Convention on the Conservation of European Wildlife and
+                  Natural Habitats},
+  year         = {1979},
+  note         = {{ETS} No.\ 104, Bern. The Emerald Network is established under
+                  it. The deck names Kosovo's neighbours as Parties building the
+                  network and asserts nothing about Kosovo's own position},
+  url          = {https://www.coe.int/en/web/bern-convention/emerald-network}
+}
+
+% ── Best practice 1: the Czech occurrence database ─────────────────────────
+
+@misc{ndop,
+  author       = {{Nature Conservation Agency of the Czech Republic}},
+  title        = {Nálezová databáze ochrany přírody ({NDOP}) – Species
+                  Occurrence Database},
+  note         = {"Hledejte v 42 116 850 zveřejněných záznamech" on the search
+                  page on the access date. The great majority of records public;
+                  data provided under contract for other uses. [VERIFY] the
+                  precision sensitive species are generalised to in the public
+                  view},
+  url          = {https://portal23.nature.cz/nd/},
+  urldate      = {2026-09-22}
+}
+
+% ── Best practice 2: the GBIF viewer built for Ukraine ─────────────────────
+
+@misc{uncg_viewer,
+  author       = {{The Habitat Foundation} and {Ukrainian Nature Conservation
+                  Group}},
+  title        = {Biodiversity Viewer},
+  howpublished = {Open-source {R} Shiny application, MIT licence},
+  note         = {"An open web-based biodiversity conservation decision-making
+                  tool for policy and governance", supported by NLBIF, grant
+                  nlbif2022.014. Feature list checked against the repository's
+                  \texttt{about\_en.md}, \texttt{Code\_Explanation.md} and the
+                  columns of its protected-species list},
+  url          = {https://github.com/ABiatov/gbif_shiny_onlineviewer},
+  urldate      = {2026-09-22}
+}
+
+% ── Best practice 3: district level licensing in England ───────────────────
+
+@misc{ne_dll,
+  author       = {{Natural England}},
+  title        = {Great crested newts: district level licensing schemes for
+                  developers, ecologists and landowners},
+  note         = {Where the Natural England and NatureSpace schemes operate},
+  url          = {https://www.gov.uk/government/publications/great-crested-newts-district-level-licensing-schemes-for-developers},
+  urldate      = {2026-09-22}
+}
+
+@misc{naturespace,
+  author       = {{NatureSpace Partnership}},
+  title        = {Great crested newt district licensing scheme: {FAQs}},
+  note         = {Red and amber impact risk zones; no seasonal survey in the
+                  3-month breeding season (March–June); at least four ponds
+                  created or restored for each occupied pond lost; half of
+                  direct costs endowed for 25 years of management},
+  url          = {https://naturespaceuk.com/district-licensing/faqs/},
+  urldate      = {2026-09-22}
+}
+
+@misc{chsr_2017,
+  author       = {{United Kingdom}},
+  title        = {The Conservation of Habitats and Species Regulations 2017},
+  year         = {2017},
+  note         = {S.I. 2017/1012. The regulations under which the licences are
+                  issued in England},
+  url          = {https://www.legislation.gov.uk/uksi/2017/1012/contents}
+}
+
+% ── Funding and framing ────────────────────────────────────────────────────
+
+@misc{ipa3,
+  author       = {{European Parliament and Council of the European Union}},
+  title        = {Regulation ({EU}) 2021/1529 establishing the Instrument for
+                  Pre-Accession assistance ({IPA} {III})},
+  year         = {2021},
+  url          = {https://eur-lex.europa.eu/eli/reg/2021/1529/oj}
+}
+
+@misc{green_agenda,
+  author       = {{Leaders of the Western Balkans}},
+  title        = {Sofia Declaration on the Green Agenda for the {Western
+                  Balkans}},
+  year         = {2020},
+  note         = {10 November 2020. Biodiversity is one of its five pillars.
+                  [VERIFY] a stable URL for the declaration text}
+}
+
+@misc{taiex_agenda,
+  author       = {{European Commission, Directorate-General for Neighbourhood
+                  and Enlargement Negotiations}},
+  title        = {{TAIEX} Expert Mission on Geographic Information Systems
+                  ({GIS}) and biodiversity data management},
+  year         = {2026},
+  howpublished = {Case ID {ETT IND/EXP} 82606, Pristina, 28--30 September 2026},
+  note         = {The agenda carries the status designation footnote reproduced
+                  on the first slide of this deck}
+}
