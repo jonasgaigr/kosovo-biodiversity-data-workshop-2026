@@ -4,19 +4,35 @@
 % Every pricing figure, free-tier limit, licence and hosting location in the
 % deck and in data/comparison.csv comes from one of the vendor pages below,
 % checked on the urldate given. These change often; re-check before reuse.
+%
+% Re-checked on 23 September 2026. Corrected in that pass: Kobo's Community
+% Plan is open to government agencies (the pricing page puts them in the
+% "Nonprofit" category, and its $25 Starter plan is n/a to that category);
+% Esri's product pages carry no price, which is narrower than "no list price is
+% published"; Wildlife Insights exports its own CSV set, not Camtrap DP; and
+% Fulcrum stores WGS84 only, which closes the one TODO in the comparison.
 
 @misc{kobo_pricing,
   title        = {Pricing},
   author       = {{KoboToolbox}},
   url          = {https://www.kobotoolbox.org/pricing/},
-  urldate      = {2026-09-21}
+  urldate      = {2026-09-23}
 }
 
 @misc{kobo_free_limits,
   title        = {Update about limits for free accounts},
   author       = {{KoboToolbox}},
   url          = {https://community.kobotoolbox.org/t/update-about-limits-for-free-accounts/44198},
-  urldate      = {2026-09-21}
+  urldate      = {2026-09-23}
+}
+
+@misc{kobo_servers,
+  title        = {Creating a KoboToolbox account: choosing a server},
+  author       = {{KoboToolbox}},
+  note         = {The European Union server is "hosted in Ireland for
+                  organizations that require or prefer data hosting in the EU"},
+  url          = {https://support.kobotoolbox.org/creating_account.html},
+  urldate      = {2026-09-23}
 }
 
 @misc{kobo_kpi,
@@ -37,7 +53,7 @@
   title        = {ODK: collect data anywhere},
   author       = {{ODK}},
   url          = {https://getodk.org/},
-  urldate      = {2026-09-21}
+  urldate      = {2026-09-23}
 }
 
 @misc{odk_central_repo,
@@ -65,14 +81,29 @@
   title        = {What is Epicollect5},
   author       = {{Centre for Genomic Pathogen Surveillance}},
   url          = {https://docs.epicollect.net/},
-  urldate      = {2026-09-21}
+  urldate      = {2026-09-23}
 }
 
 @misc{epicollect_inputs,
   title        = {Epicollect5 input types},
   author       = {{Centre for Genomic Pathogen Surveillance}},
   url          = {https://docs.epicollect.net/formbuilder/input-types},
-  urldate      = {2026-09-21}
+  urldate      = {2026-09-23}
+}
+
+@misc{epicollect_api,
+  title        = {Epicollect5 API},
+  author       = {{Centre for Genomic Pathogen Surveillance}},
+  note         = {"Epicollect5 is currently a read-only API"},
+  url          = {https://developers.epicollect.net/},
+  urldate      = {2026-09-23}
+}
+
+@misc{epicollect_server,
+  title        = {epicollect5/epicollect5-server (MIT)},
+  author       = {{Centre for Genomic Pathogen Surveillance}},
+  url          = {https://github.com/epicollect5/epicollect5-server},
+  urldate      = {2026-09-23}
 }
 
 @misc{qfield,
@@ -86,49 +117,65 @@
   title        = {QFieldCloud pricing},
   author       = {{OPENGIS.ch}},
   url          = {https://qfield.cloud/pricing},
-  urldate      = {2026-09-21}
+  urldate      = {2026-09-23}
 }
 
 @misc{mergin_pricing,
   title        = {Mergin Maps pricing},
   author       = {{Lutra Consulting}},
   url          = {https://merginmaps.com/pricing},
-  urldate      = {2026-09-21}
+  urldate      = {2026-09-23}
 }
 
 @misc{mergin_licensing,
   title        = {Mergin Maps licensing},
   author       = {{Lutra Consulting}},
   url          = {https://merginmaps.com/docs/misc/licensing/},
-  urldate      = {2026-09-21}
+  urldate      = {2026-09-23}
 }
 
 @misc{survey123_buy,
   title        = {ArcGIS Survey123: pricing and licensing},
   author       = {{Esri}},
   url          = {https://www.esri.com/en-us/arcgis/products/arcgis-survey123/buy},
-  urldate      = {2026-09-21}
+  urldate      = {2026-09-23}
 }
 
 @misc{fieldmaps_buy,
   title        = {ArcGIS Field Maps: pricing and licensing},
   author       = {{Esri}},
   url          = {https://www.esri.com/en-us/arcgis/products/arcgis-field-maps/buy},
-  urldate      = {2026-09-21}
+  urldate      = {2026-09-23}
 }
 
 @misc{arcgis_user_types,
   title        = {ArcGIS user types},
   author       = {{Esri}},
   url          = {https://www.esri.com/en-us/arcgis/products/user-types/buy},
-  urldate      = {2026-09-21}
+  urldate      = {2026-09-23}
 }
 
 @misc{fulcrum_pricing,
   title        = {Fulcrum pricing},
   author       = {{Fulcrum}},
   url          = {https://www.fulcrumapp.com/pricing/},
-  urldate      = {2026-09-21}
+  urldate      = {2026-09-23}
+}
+
+@misc{fulcrum_projection,
+  title        = {What projection does Fulcrum use?},
+  author       = {{Fulcrum}},
+  note         = {WGS 84 (EPSG:4326), for stored and exported locations},
+  url          = {https://help.fulcrumapp.com/en/articles/1382864-what-projection-does-fulcrum-use},
+  urldate      = {2026-09-23}
+}
+
+@misc{fulcrum_security,
+  title        = {Security and compliance},
+  author       = {{Fulcrum}},
+  note         = {Deployed on AWS; no region or data-residency option stated},
+  url          = {https://www.fulcrumapp.com/security/},
+  urldate      = {2026-09-23}
 }
 
 @misc{qgis,
@@ -144,7 +191,7 @@
   year         = {2026},
   note         = {R package version 1.6.2},
   url          = {https://cran.r-project.org/package=robotoolbox},
-  urldate      = {2026-09-21}
+  urldate      = {2026-09-23}
 }
 
 @misc{ruodk,
@@ -153,7 +200,7 @@
   organization = {rOpenSci},
   note         = {Not on CRAN; install from r-universe or GitHub},
   url          = {https://github.com/ropensci/ruODK},
-  urldate      = {2026-09-21}
+  urldate      = {2026-09-23}
 }
 
 @misc{inat_gbif,
@@ -161,7 +208,7 @@
   author       = {{iNaturalist}},
   note         = {GBIF dataset, CC BY-NC 4.0},
   url          = {https://www.gbif.org/dataset/50c9509d-22c7-4a22-a47d-8c48425ef4a7},
-  urldate      = {2026-09-21}
+  urldate      = {2026-09-23}
 }
 
 @misc{obsorg_gbif,
@@ -169,7 +216,7 @@
   author       = {{Observation.org}},
   note         = {GBIF dataset, CC BY-NC 4.0},
   url          = {https://www.gbif.org/dataset/8a863029-f435-446a-821e-275f4f641165},
-  urldate      = {2026-09-21}
+  urldate      = {2026-09-23}
 }
 
 @misc{ebird_gbif,
@@ -177,7 +224,7 @@
   author       = {{Cornell Lab of Ornithology}},
   note         = {GBIF dataset, CC BY 4.0},
   url          = {https://www.gbif.org/dataset/4fa7b334-ce0d-4e88-aaae-2e0c138d049e},
-  urldate      = {2026-09-21}
+  urldate      = {2026-09-23}
 }
 
 @misc{inat_gbif_export,
@@ -191,14 +238,14 @@
   title        = {SMART: spatial monitoring and reporting tool},
   author       = {{SMART Partnership}},
   url          = {https://smartconservationtools.org/},
-  urldate      = {2026-09-21}
+  urldate      = {2026-09-23}
 }
 
 @misc{cybertracker_pricing,
   title        = {CyberTracker pricing},
   author       = {{CyberTracker Conservation}},
   url          = {https://cybertracker.org/pricing/},
-  urldate      = {2026-09-21}
+  urldate      = {2026-09-23}
 }
 
 @misc{agouti,
@@ -212,7 +259,16 @@
   title        = {Subscriptions and pricing},
   author       = {{Wildlife Insights}},
   url          = {https://www.wildlifeinsights.org/pricing},
-  urldate      = {2026-09-21}
+  urldate      = {2026-09-23}
+}
+
+@misc{wildlife_insights_download,
+  title        = {Private project downloads},
+  author       = {{Wildlife Insights}},
+  note         = {Delivered as projects.csv, cameras.csv, deployments.csv and
+                  images.csv or sequences.csv; Camtrap DP is not offered},
+  url          = {https://www.wildlifeinsights.org/get-started/download/private},
+  urldate      = {2026-09-23}
 }
 
 @article{camtrapdp,
@@ -232,7 +288,7 @@
   title        = {Camtrap DP: camera trap data package},
   author       = {{Biodiversity Information Standards (TDWG)}},
   url          = {https://camtrap-dp.tdwg.org/},
-  urldate      = {2026-09-21}
+  urldate      = {2026-09-23}
 }
 
 @misc{gbif_camera_trap_guide,
@@ -285,7 +341,7 @@
   title        = {EPSG:9141 -- KOSOVAREF01 / Balkans zone 7},
   author       = {{IOGP Geomatics Committee}},
   url          = {https://epsg.io/9141},
-  urldate      = {2026-09-21}
+  urldate      = {2026-09-23}
 }
 
 @misc{biodivpond,
@@ -295,7 +351,7 @@
   author       = {{BiodivPond consortium}},
   note         = {Biodiversa+ pilot, 2026--2028},
   url          = {https://biodivpond.github.io/},
-  urldate      = {2026-09-21}
+  urldate      = {2026-09-23}
 }
 
 @misc{xlsform,

@@ -56,9 +56,10 @@ slide works as text. `n/a` = deliberately no figure.
 
 **Speaker notes:**
 
-Good afternoon. This morning Karel and Martin covered how a monitoring scheme is
-designed and how the database behind it is modelled. I take the layer above
-that: what spatial data does for decisions – and for money.
+Good afternoon. This morning Karel covered how a monitoring scheme is designed,
+Martin the European policy framework, and Karel and I how the database behind
+it is modelled. I take the layer above that: what spatial data does for
+decisions – and for money.
 
 There are three groups in this room, and each needs something different from
 the next thirty-five minutes. For the ministry: what alignment with European
@@ -332,7 +333,8 @@ and deposited in one national system that keeps one
 authoritative, versioned copy. The ministry asked what that copy needs: a
 permanent identifier on every record, so a correction can be traced; its source
 stored as fields; and duplicates linked, not deleted. Kosovo's published record
-already holds seventy-seven observations published twice.
+already holds seventy-seven observations published in more than one dataset –
+a hundred and sixty-three records for seventy-seven sightings.
 
 What comes out: the same record doing three jobs. It is published
 to GBIF with a DOI, and the citation returns to the person who collected it –
@@ -977,7 +979,7 @@ Generated from `references.bib`, which is what the deck cites. An entry marked *
 - **Nálezová databáze ochrany přírody (NDOP) – Species Occurrence Database** – Nature Conservation Agency of the Czech Republic
   <https://portal23.nature.cz/nd/>
   **Checked** 2026-09-22.
-  *"Hledejte v 42 116 850 zveřejněných záznamech" on the search page on the access date. The great majority of records public; data provided under contract for other uses. [VERIFY] the precision sensitive species are generalised to in the public view*
+  *"Hledejte v 42 116 850 zveřejněných záznamech" on the search page on the access date. The great majority of records public; data provided under contract for other uses. Generalisation of sensitive species in the public view confirmed by the author (AOPK ČR), 23 September 2026*
 - **Great crested newt district licensing scheme: FAQs** – NatureSpace Partnership
   <https://naturespaceuk.com/district-licensing/faqs/>
   **Checked** 2026-09-22.

@@ -85,7 +85,7 @@ be found by someone else.
 | | **Occurrence data** | **Thematic data** |
 |---|---|---|
 | What it is | Who saw what, where, when | What the ground is, and what the law says about it |
-| Here | 46,831 quality-checked GBIF records, 4,096 species | Designated areas, municipalities, national boundary, annex lists, Red List categories |
+| Here | 46,831 quality-checked GBIF records, 4,095 species | Designated areas, municipalities, national boundary, annex lists, Red List categories |
 | Source | GBIF download service, one DOI | EEA NatDA v24, OpenStreetMap, EUR-Lex, GBIF species API |
 | Changes | Continuously — new records every week | Rarely — a register version, a legal amendment |
 | Geometry | Points, with a stated uncertainty | Polygons, and the occasional point |

@@ -57,7 +57,7 @@ One aggregator, four doors, and only one of them gives you a citation.
   citizen-science platforms publish; GBIF indexes and serves.
 - Every record keeps its **publisher, licence and identifier**. GBIF adds a
   taxonomic backbone and a quality-flag layer on top.
-- For the territory of Kosovo: **46,831 quality-checked records**, **4,096
+- For the territory of Kosovo: **46,831 quality-checked records**, **4,095
   species**, from **125 datasets** and **80 publishers**.
 :::
 
@@ -197,8 +197,8 @@ Occurrence data answer a narrower question than they appear to.
   municipality in the country.
 - **Mamushë / Mamuša:** 1 record.
 - 13,346 of Graçanicë's records come from **one wetland of 1.10 km²**.
-- 81 % of all records date from 2015 or later; trend analysis before then rests
-  on thin ground.
+- 81 % of dated records are from 2015 or later; trend analysis before then
+  rests on thin ground.
 
 **Dense cells mark well-visited places, not rich ones.** Read the density map
 as a map of where people go.

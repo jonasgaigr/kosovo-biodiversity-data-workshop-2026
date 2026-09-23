@@ -39,29 +39,41 @@ options are not assumed to win.
 ## Accuracy
 
 **Every price, free-tier limit, licence and hosting location was checked
-against the vendor's own page on 21 September 2026.** The comparison slide
-carries that date on the slide itself, `data/comparison.csv` carries it per row
-alongside the source URL, and `references.bib` carries an `urldate` on every
-entry. These move constantly. **Re-check before the deck is given again**, and
-re-check anything quoted from it.
+against the vendor's own page on 21 September 2026, and re-checked on 23
+September 2026.** The comparison slide carries the check date on the slide
+itself, `data/comparison.csv` carries it per row alongside the source URL, and
+`references.bib` carries an `urldate` on every entry. These move constantly.
+**Re-check before the deck is given again**, and re-check anything quoted from
+it.
 
-Figures that could NOT be verified from an official source are marked
-`TODO: verify` in the CSV rather than guessed. There is one:
+The 23 September pass corrected four things, all now fixed in the deck, the CSV
+and the bibliography:
 
-- **Fulcrum, `crs` column.** Fulcrum's documentation states point, line and
-  polygon capture and offline basemaps, but nothing authoritative was found on
-  which CRS it stores or reprojects to.
+- **KoboToolbox is free for government bodies.** The pricing page's
+  "Nonprofit" category is defined as "nonprofits, government agencies, UN
+  organizations, and educational institutions", so a ministry gets the free
+  Community Plan (5 000 submissions a month, 1 GB). The $25 Starter plan is
+  marked n/a for that category; the next tier open to a public body is
+  Professional, $159 a month or $129 billed annually. The earlier text said the
+  opposite on three slides.
+- **Esri's product pages carry no price.** The Survey123, Field Maps, ArcGIS
+  Online and user-type pages all route to sales, and the cells say exactly
+  that. Third-party sources quote Esri's own store for a Creator seat, so "no
+  list price is published anywhere" would overstate it.
+- **Wildlife Insights does not export Camtrap DP.** Its private downloads are
+  its own CSV set. Only Agouti, of the two, emits the standard, and Camtrap DP
+  is described as maintained by a TDWG interest group rather than as a ratified
+  TDWG standard.
+- **Fulcrum stores WGS84 only** (EPSG:4326, per its help centre). That closes
+  what was the one `TODO: verify` in the CSV.
 
-Two more facts are stated more narrowly than the obvious phrasing, because the
-narrow version is what the source supports:
+One fact is stated more narrowly than the obvious phrasing, because the narrow
+version is what the source supports:
 
-- **Esri publishes no list price.** Neither the Survey123, Field Maps nor
-  ArcGIS Online pages give a per-user figure; all three route to sales. The
-  cell says so rather than repeating a third-party number.
 - **KoboToolbox paid tiers** are $25–$359 a month depending on plan, billing
-  period and whether the account is a non-profit. The slide quotes only the
-  entry point and the Community Plan limits, which are the two figures that
-  actually decide anything for this audience.
+  period and category. The slide quotes the Community Plan limits and the first
+  tier open to a public body, which are the two figures that actually decide
+  anything for this audience.
 
 The record counts on the licensing slide were read from the GBIF API on the
 same date, not from a vendor page.
@@ -226,28 +238,29 @@ same number.
 
 ## What is still to write
 
-The case study carries three `<!-- TODO: author to add -->` slots, all on
-**"BiodivPond: what worked, what hurt"**, and they are the half of that case
-study worth showing:
+The "What was painful" half of **"BiodivPond: what worked, what hurt"** is now
+written, from the author: versioning the form, building it under time
+pressure, and not testing it enough. The speaker notes tie all three to the
+pitfalls slide and to "Where to start on Monday".
 
-- what multi-country form versioning actually cost,
-- what the citizen-science arm cost in moderation,
-- how eDNA and PAM outputs fit — or did not fit — an occurrence-shaped form.
-
-They were left empty on purpose. Nothing about them could be verified from the
-public project site, and an invented lesson learned is worse than a missing
-one.
+One `<!-- TODO: author to add -->` slot remains, in the "What the design got
+right" column: one concrete thing that worked, with the evidence. **The three
+bullets already in that column – the EU server chosen first, one row per
+occurrence, names matched to the GBIF backbone in the pipeline – and the
+pipeline diagram itself are not in any public source** (the analysis pipeline
+is not public). Confirm them before delivery.
 
 The verified public facts about the pilot are in the speaker notes of the
 pipeline slide: a Biodiversa+ project running 2026–2028; standardised sampling
-of a minimum of six ponds per partner, sixty in total, in spring 2026; a
+of a minimum of six ponds per partner, sixty in total, in late spring 2026; a
 citizen-science component targeting five hundred more ponds; amphibians, fish,
 aquatic macro-invertebrates and bats, by traditional methods, eDNA and passive
-acoustic monitoring. The organisation at `github.com/BiodivPond` has three
-public repositories — the `.github` profile, the project site, and a
+acoustic monitoring. The partner count – AOPK ČR coordinating, with nine
+partners – is from the author's own partner briefing of 4 March 2026
+(`BiodivPond_slidy.pptx`). The organisation at `github.com/BiodivPond` has
+three public repositories — the `.github` profile, the project site, and a
 conference poster — so **the analysis pipeline is not public**, and the deck
-does not claim it is. Add partner countries and counts only from your own
-records.
+does not claim it is.
 
 ---
 

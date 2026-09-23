@@ -69,9 +69,10 @@ independence.
 :::
 
 ::: notes
-Good afternoon. This morning Karel and Martin covered how a monitoring scheme is
-designed and how the database behind it is modelled. I take the layer above
-that: what spatial data does for decisions – and for money.
+Good afternoon. This morning Karel covered how a monitoring scheme is designed,
+Martin the European policy framework, and Karel and I how the database behind
+it is modelled. I take the layer above that: what spatial data does for
+decisions – and for money.
 
 There are three groups in this room, and each needs something different from
 the next thirty-five minutes. For the ministry: what alignment with European
@@ -425,7 +426,8 @@ and deposited in one national system that keeps one
 authoritative, versioned copy. The ministry asked what that copy needs: a
 permanent identifier on every record, so a correction can be traced; its source
 stored as fields; and duplicates linked, not deleted. Kosovo's published record
-already holds seventy-seven observations published twice.
+already holds seventy-seven observations published in more than one dataset –
+a hundred and sixty-three records for seventy-seven sightings.
 
 What comes out: the same record doing three jobs. It is published
 to GBIF with a DOI, and the citation returns to the person who collected it –
@@ -586,7 +588,6 @@ at what precision, under what agreement. The Czech answer is a working example.
 - **42 million** published records – the great majority public.
 - **Public view:** sensitive species are **generalised**, not hidden – the
   species visibly occurs in the area; the exact site does not show.
-  [VERIFY]{.verify} the unit.
 - **Professional view:** full precision for public administration and named
   users under a **data-use agreement**. Access is logged.
 - **Governance, not software:** a named owner of the sensitive list, a review

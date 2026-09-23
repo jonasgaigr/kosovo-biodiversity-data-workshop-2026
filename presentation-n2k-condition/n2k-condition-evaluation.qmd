@@ -557,8 +557,9 @@ rules to the two national holdings. Nothing is done by hand.
 - **Re-runnable.** A correction reaches the published result by re-running,
   not by editing it.
 - **Attributable.** Every rule change has an author, a date and a diff.
-- **The cascade is the method.** `21` records → `22` periods → `24` subsites →
-  `25` sites → `27` export; a step that fails stops it.
+- **The cascade is the method.** `21` records → `22` periods → `23` last
+  record → `24` subsites → `25` sites → `27` export; a step that fails stops
+  it.
 :::
 
 ::: {}
