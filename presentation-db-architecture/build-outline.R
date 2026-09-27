@@ -123,7 +123,7 @@ for (i in seq_len(nrow(deck))) {
 }
 
 md <- c(md,
-  "## The data-flow diagram (slide 3) as Mermaid",
+  "## The data-flow diagram (slide 4) as Mermaid",
   "",
   paste0(
     "The source is `data-flow.mmd`; the deck includes it with `%%| file:`, ",

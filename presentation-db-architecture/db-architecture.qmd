@@ -43,6 +43,40 @@ format:
       - db-architecture.scss
 ---
 
+## About me {.no-leaf}
+
+::: {.aopk-cols .speaker}
+::: {.speaker-photo}
+![](images/gaigr-ento.jpg){fig-alt="Jonáš Gaigr in the field, looking at an insect in a sweep net."}
+:::
+
+::: {}
+- **Nature Conservation Agency of the Czech Republic** (AOPK ČR) – since 2020
+- **Biodiversa+** – lead development and coordination of the **BiodivPond**
+  pond-monitoring pilot
+- **TAIEX** – expert mission to Kosovo, December 2023
+- **ConNatur LIFE** – with Ukrainian partners, the path to Natura 2000 and to
+  implementing the Birds and Habitats Directives in Ukraine
+:::
+:::
+
+::: notes
+First, briefly, who I am. Since 2020 I have worked at the Nature Conservation
+Agency of the Czech Republic, the government body for nature conservation.
+
+In Biodiversa+, the European biodiversity partnership, I led the development of
+BiodivPond, a pilot on monitoring the biodiversity of ponds, and I now coordinate
+it. You will hear more about it on Wednesday.
+
+This is not my first time in Kosovo. I was here in December 2023 on a TAIEX
+expert mission. And in the ConNatur LIFE project I work with Ukrainian partners
+on the path for Ukraine to Natura 2000 and to the two directives, Birds and
+Habitats.
+
+In all of this, the question is the same: how data get from the field to a
+decision. That is today's topic.
+:::
+
 ## A national database in five layers {.no-leaf}
 
 ::: {.layers}

@@ -12,17 +12,17 @@ work. Built on the AOPK ČR reveal.js template.
 |---|---|
 | Source | [`db-architecture.qmd`](db-architecture.qmd) |
 | Slides | `db-architecture.html` – reveal.js, 16:9, one self-contained file |
-| Slides as PDF | `db-architecture.pdf` – 11 pages, one slide per page |
+| Slides as PDF | `db-architecture.pdf` – 12 pages, one slide per page |
 | One-page handout | `db-architecture-handout.pdf`, from [`db-architecture-handout.qmd`](db-architecture-handout.qmd) (Typst, A4) |
 | Outline | [`OUTLINE.md`](OUTLINE.md) – per slide: time, key message, on-slide text, visual, speaker notes; then the Mermaid diagram. **Generated** |
-| Diagram | [`data-flow.mmd`](data-flow.mmd) – the slide 3 data-flow diagram, Mermaid |
-| Length | 15–17 minutes; notes are ~1,980 spoken words |
+| Diagram | [`data-flow.mmd`](data-flow.mmd) – the slide 4 data-flow diagram, Mermaid |
+| Length | 15–17 minutes; notes are ~2,100 spoken words |
 | Audience | Kosovo nature-protection and biodiversity-data staff; strong on biology, mixed on databases and standards |
 
-**Ten slides and a closing slide.** Title and bridge · five layers · data-flow
-diagram · Flow A (structured monitoring) · Flow B (trusted experts) · Flow C
-(citizen science) · feedback loops · Darwin Core · six habits · takeaways and
-discussion · AOPK closing.
+**Eleven slides and a closing slide.** Title and bridge · about me · five layers ·
+data-flow diagram · Flow A (structured monitoring) · Flow B (trusted experts) ·
+Flow C (citizen science) · feedback loops · Darwin Core · six habits · takeaways
+and discussion · AOPK closing.
 
 **Dashes are en dashes throughout**, spaced; the deck is `lang: en-GB`.
 
@@ -74,7 +74,7 @@ sits under the resources in the left-hand column, which has room.
 | Output | Built from |
 |---|---|
 | `OUTLINE.md` | `db-architecture.qmd` (titles, on-slide text, notes) + `data/slide-plan.csv` (timings, key messages, visuals) + `data-flow.mmd` |
-| slide 3 | `data-flow.mmd`, included with `%%| file:` |
+| slide 4 | `data-flow.mmd`, included with `%%| file:` |
 | pacing table | `db-architecture.qmd` + `data/slide-plan.csv` |
 
 Both scripts read the deck through [`parse-deck.R`](parse-deck.R), so they
@@ -132,8 +132,8 @@ resolves to Demi on this machine (`pdffonts db-architecture-handout.pdf` lists
 
 | Where | Placeholder | Filled by |
 |---|---|---|
-| slide 9, card 1 | `Here: [to be named]` – the data steward | the hosts, before or in the session |
-| slide 10, discussion box | which flow first · who owns the checklist · who validates each group | the room – they are the discussion questions |
+| slide 10, card 1 | `Here: [to be named]` – the data steward | the hosts, before or in the session |
+| slide 11, discussion box | which flow first · who owns the checklist · who validates each group | the room – they are the discussion questions |
 | handout, first bullet | legal basis and steward – to be confirmed | the hosts |
 | handout, orange box | checklist owner, data steward, validators | participants, by hand |
 
@@ -155,16 +155,16 @@ Part 1 is not repeated. Each slide refers back to it in at most one sentence
 
 | Claim | Source |
 |---|---|
-| Survey123 → coordinator marks the data as guaranteed → automatic integration into the species database (slide 4) | `taiex_kosovo_monitoring.pptx` (2 Dec 2024), slide 12 |
-| The NDOP validation scale 0/1/3/6/9; validation by regional staff, guarantee by the monitoring department; compulsory for specially protected species, species of Community interest and Annex I birds (slide 5) | `data_druhovka.pptx` (11 Jul 2024), slide 45; `ndop_plzensky.pptx` (6 Jun 2025), slide 19 |
-| BioLog: automatic transfer for selected users; other users' records checked, usually against evidence (slide 5) | `ndop_plzensky.pptx`, slide 31 |
-| NDOP takes in research-grade iNaturalist records and a BirdLife partner database; two-step validation (slide 6) | `ncis_connatur_202603.pptx` (11 Mar 2026), slide 5 |
+| Survey123 → coordinator marks the data as guaranteed → automatic integration into the species database (slide 5) | `taiex_kosovo_monitoring.pptx` (2 Dec 2024), slide 12 |
+| The NDOP validation scale 0/1/3/6/9; validation by regional staff, guarantee by the monitoring department; compulsory for specially protected species, species of Community interest and Annex I birds (slide 6) | `data_druhovka.pptx` (11 Jul 2024), slide 45; `ndop_plzensky.pptx` (6 Jun 2025), slide 19 |
+| BioLog: automatic transfer for selected users; other users' records checked, usually against evidence (slide 6) | `ndop_plzensky.pptx`, slide 31 |
+| NDOP takes in research-grade iNaturalist records and a BirdLife partner database; two-step validation (slide 7) | `ncis_connatur_202603.pptx` (11 Mar 2026), slide 5 |
 | The Nature Conservation Information System is set up in law by Act No. 364/2021 Coll., with AOPK ČR as operator and EU reporting among its purposes (handout) | `validace_slide.pptx` (26 Mar 2025), slide 4 |
 
 No Czech statistics are quoted: record counts are Part 1's, and the afternoon
 deck has its own.
 
-**ndopred** (slide 7) is described from its own code
+**ndopred** (slide 8) is described from its own code
 (`Documents/ndopred`, github.com/jonasgaigr/ndopred): `calculate_eoo()` applies
 no outlier trimming, citing IUCN Guidelines v16 section 4.9, and
 `get_assessment_data()` drops negative records and those with validation status
@@ -197,8 +197,8 @@ this one and also explains `coordinateUncertaintyInMeters` and absences on its
 *Interoperability* slide, and NDOP's sensitive-species generalisation on
 *NDOP: open by default, precise by permission*.
 
-This deck points forward instead of repeating: slide 9 says the Czech
-sensitive-species solution comes "this afternoon", and slide 10 ends on the
+This deck points forward instead of repeating: slide 10 says the Czech
+sensitive-species solution comes "this afternoon", and slide 11 ends on the
 afternoon talk. **The afternoon notes may want one line –** "as we saw before
 lunch" – where they re-explain uncertainty and absences. They have not been
 changed.
