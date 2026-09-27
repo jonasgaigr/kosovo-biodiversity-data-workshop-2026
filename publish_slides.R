@@ -37,6 +37,11 @@ for (i in seq_len(nrow(decks))) {
          "re-render the deck before publishing it.", call. = FALSE)
   }
 
+  # A deck with a separate one-page handout links to it from its title slide
+  # by a relative path, so the handout travels with the slides when it exists.
+  handout <- file.path(decks$folder[i], paste0(decks$file[i], "-handout.pdf"))
+  if (file.exists(handout)) src <- c(src, handout)
+
   dest <- file.path("docs", "slides", decks$slug[i])
   dir.create(dest, recursive = TRUE, showWarnings = FALSE)
   ok <- file.copy(src, dest, overwrite = TRUE, copy.date = TRUE)

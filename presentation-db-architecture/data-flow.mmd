@@ -1,0 +1,35 @@
+%%{init: {"flowchart": {"wrappingWidth": 320, "rankSpacing": 28, "nodeSpacing": 22, "padding": 10}, "themeVariables": {"fontSize": "20px"}}}%%
+flowchart LR
+  A["<b>A · Monitoring</b><br>forms, fixed protocol"]
+  B["<b>B · Trusted experts</b><br>nightly import"]
+  C["<b>C · Citizen science</b><br>on demand"]
+
+  S["<b>Staging</b><br>raw data,<br>never edited"]
+  V["<b>Validation</b><br>a status on<br>every record"]
+  K["<b>Core</b><br>verified,<br>interpreted"]
+
+  P1["<b>Portal and API</b><br>sensitive species<br>generalised"]
+  P2["<b>GBIF</b><br>via the IPT"]
+  P3["<b>Reporting and use</b><br>Art. 17 and 12 · Red List<br>EIA · site plans"]
+
+  R["<b>Reference layer</b><br>checklist · grids<br>sites · vocabularies"]
+
+  A --> S
+  B --> S
+  C --> S
+  S --> V
+  V -- accepted --> K
+  K --> P1
+  K --> P2
+  K --> P3
+  R -.-> V
+  P3 -. "users flag errors" .-> V
+
+  classDef source fill:#FFFFFF,stroke:#006B4D,stroke-width:2px,color:#000000
+  classDef layer fill:#006B4D,stroke:#006B4D,color:#FFFFFF
+  classDef out fill:#E8F4D8,stroke:#8CC83C,stroke-width:2px,color:#000000
+  classDef ref fill:#F1F1F1,stroke:#B1B1B1,stroke-dasharray:5 4,color:#000000
+  class A,B,C source
+  class S,V,K layer
+  class P1,P2,P3 out
+  class R ref

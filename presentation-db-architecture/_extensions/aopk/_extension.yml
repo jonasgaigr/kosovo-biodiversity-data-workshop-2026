@@ -1,0 +1,46 @@
+title: AOPK ČR — reveal.js (16:9)
+author: Generated from Grafický manuál AOPK ČR 2026
+version: 1.0.0
+quarto-required: ">=1.4.0"
+contributes:
+  formats:
+    revealjs:
+      # ---------------------------------------------------------------------
+      # CANVAS
+      # Manual p.18 "POWERPOINTOVÁ PREZENTACE": FORMÁT — Úzký 4:3 / Široký 16:9.
+      # This extension implements the 16:9 ("široký") variant.
+      # 1280x720 is the logical canvas; reveal.js scales it to the viewport, so
+      # every px below is a stable fraction of the slide, not a device pixel.
+      # ---------------------------------------------------------------------
+      width: 1280
+      height: 720
+
+      # We place all margins ourselves in aopk.scss (left 7.7 %, right 4.08 %,
+      # measured off the manual's mockups), so reveal must not add its own.
+      margin: 0
+      min-scale: 0.2
+      max-scale: 2.0
+
+      # Content slides are top-aligned in the manual's mockups (the TITULEK sits
+      # at 11.25 % of slide height, not vertically centred).
+      center: false
+
+      theme: [default, aopk-assets.scss, aopk.scss]
+      template-partials:
+        - title-slide.html
+      filters:
+        # Injects the AOPK footer bar into each slide. See the header comment
+        # in the filter for why reveal.js's own `footer:` cannot be used.
+        - aopk-slides.lua
+      # Sensible defaults for AOPK decks; override in the document YAML.
+      lang: cs
+      slide-level: 2
+      transition: none
+      progress: true
+      slide-number: false
+      history: true
+      hash-type: number
+      preview-links: auto
+      fig-align: center
+      code-line-numbers: true
+      highlight-style: github

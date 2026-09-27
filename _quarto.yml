@@ -1,17 +1,19 @@
 project:
   type: website
   output-dir: docs
-  # presentation/, presentation-n2k-condition/, presentation-data-collection/
-  # and presentation-spatial-analysis/ are separate Quarto projects, each holding
-  # reveal.js decks. Without this, `quarto render` would sweep their .qmd files
-  # into the website, apply the `format: html` block below to a reveal.js
-  # document and add them to the navigation and the search index.
+  # presentation/, presentation-n2k-condition/, presentation-data-collection/,
+  # presentation-spatial-analysis/ and presentation-db-architecture/ are
+  # separate Quarto projects, each holding reveal.js decks. Without this,
+  # `quarto render` would sweep their .qmd files into the website, apply the
+  # `format: html` block below to a reveal.js document and add them to the
+  # navigation and the search index.
   render:
     - "*.qmd"
     - "!presentation/"
     - "!presentation-n2k-condition/"
     - "!presentation-data-collection/"
     - "!presentation-spatial-analysis/"
+    - "!presentation-db-architecture/"
     # The site-report template is its own Typst project (see
     # reports/_quarto.yml). Without this, "*.qmd" reaches into it and writes
     # docs/reports/site_report.pdf, which is no part of the site.

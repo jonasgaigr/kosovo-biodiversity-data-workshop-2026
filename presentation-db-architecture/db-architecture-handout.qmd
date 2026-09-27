@@ -1,0 +1,192 @@
+---
+# One A4 page, printed on one side: what did not fit in the talk. It is set in
+# Typst (bundled with Quarto, no LaTeX needed) because the page is a two-column
+# layout with a dense table, which Typst sets cleanly and reveal.js cannot.
+#
+#   quarto render db-architecture-handout.qmd
+#
+# The page limit is real – it is printed for the room – so after any edit
+# check that the PDF still has exactly one page (see the README).
+#
+# No `title:` on purpose: Quarto would set its own title block in the first
+# column, and the banner below spans both.
+format:
+  typst:
+    papersize: a4
+    margin:
+      x: 1.15cm
+      y: 1.0cm
+    columns: 2
+    fontsize: 7.9pt
+    mainfont: "Franklin Gothic Book"
+    page-numbering: false
+    include-in-header:
+      text: |
+        // Quarto's article template sets `justify: true` INSIDE its show
+        // rule, after this header, so the same rule is repeated at the top of
+        // the body – see the first typst block below.
+        #set par(leading: 0.5em, spacing: 0.66em, justify: false)
+        #set columns(gutter: 0.5cm)
+        // Bold. Typst files Windows' Franklin Gothic Demi, Medium and Heavy
+        // under ONE family, "Franklin Gothic", every cut at weight 400 – so
+        // `weight: "bold"` on Book finds nothing heavier and fakes nothing,
+        // and a weight cannot pick between the three. Asking for the family
+        // at 400 resolves to Demi here (checked in the rendered PDF's font
+        // list: FranklinGothic-Demi). Re-check with `pdffonts` on another
+        // machine.
+        #show strong: it => text(font: "Franklin Gothic", weight: "regular", it.body)
+        #show heading: set text(font: "Franklin Gothic", weight: "regular", fill: rgb("#006B4D"))
+        #show heading.where(level: 2): set text(size: 9.6pt)
+        #show heading.where(level: 2): set block(above: 0.9em, below: 0.45em)
+        #show link: set text(fill: rgb("#006B4D"))
+        #show raw: set text(font: "Consolas", size: 7.1pt, fill: rgb("#006B4D"))
+        #set list(indent: 0.2em, body-indent: 0.45em, spacing: 0.42em, marker: text(fill: rgb("#8CC83C"))[■])
+        #set table(stroke: (x, y) => (bottom: 0.4pt + rgb("#D9D9D9"), top: if y == 0 { 1pt + rgb("#006B4D") }), inset: (x: 3pt, y: 2.4pt))
+        #show table.cell.where(y: 0): set text(font: "Franklin Gothic", fill: rgb("#006B4D"))
+lang: en-GB
+---
+
+```{=typst}
+#set par(justify: false)
+#place(top, scope: "parent", float: true, clearance: 0.45cm)[
+  #block(width: 100%, inset: (x: 0pt, bottom: 5pt), stroke: (bottom: 2.2pt + rgb("#006B4D")))[
+    #text(font: "Franklin Gothic", size: 15pt, fill: rgb("#006B4D"))[DATA FLOW, QUALITY AND STANDARDS]
+    #h(1fr)
+    #text(size: 8.5pt, fill: rgb("#4A4A4A"))[Handout · what did not fit in the talk]
+    #v(1pt)
+    #text(size: 8pt)[Biodiversity Database Architecture and Data Modelling – Part 2 · Jonáš Gaigr, Nature Conservation Agency of the Czech Republic (AOPK ČR) \ TAIEX Expert Mission on GIS and biodiversity data management · Pristina · 28 September 2026]
+  ]
+]
+```
+
+## Running the database: the fuller list
+
+**Governance**
+
+- **A named data steward**, with a written mandate and a deputy, and a
+  **network of validators** per species group. In Czechia the Nature
+  Conservation Information System is set up in law (Act No. 364/2021 Coll.),
+  which names its operator and its purposes, EU reporting among them.
+  Here: [*legal basis and steward – to be confirmed*]{.underline}.
+- **Data-sharing agreements** with every institution that sends or receives
+  data: which data, how often, in what format, under which licence, and how
+  sensitive records are handled.
+- **A sensitive-species policy** with an owner and a review cycle: generalise
+  the location in public; full precision for named users under agreement.
+
+**Procedures**
+
+- **SOPs and a data dictionary.** One written procedure for each flow
+  (monitoring, trusted experts, citizen science); one definition for each
+  field, with its Darwin Core term – the crosswalk opposite is its core.
+- **A data management plan for every funded project**: format, schedule,
+  licence and where the data are deposited – agreed at contract signature,
+  checked at hand-over. The data, not the report, are the deliverable.
+- **Raw data never overwritten**; provenance and a change history on every
+  record. Persistent `occurrenceID` and `eventID`, never reused.
+- **Backups** that run automatically, with at least one copy off-site, and a
+  restore that has actually been tested.
+
+**Publishing and people**
+
+- **Metadata for every dataset in EML** (Ecological Metadata Language) – who,
+  what, where, when, how, licence. GBIF's IPT writes it for you.
+- **Clear licensing and citation** – CC0, CC BY or CC BY-NC, stated per
+  dataset; a GBIF DOI gives each dataset a citable identifier.
+- **Regular public exports** – a versioned snapshot at fixed intervals, so an
+  analysis can be repeated on the same data.
+- **Training for data providers** – the forms, the checklist, what coordinate
+  uncertainty means – and feedback to them on their own records.
+- **Start simple, then iterate**: a checklist, one validated flow, one dataset
+  on GBIF; then the next flow.
+
+## Which standard, and how settled is it?
+
+| Piece | Status |
+|:---|:---|
+| Darwin Core, Occurrence and Event cores | TDWG standard since 2009, maintained |
+| Measurement or Fact (`dwc:`) | part of Darwin Core |
+| Extended Measurement or Fact | from OBIS; registered with GBIF, not a TDWG standard |
+| Humboldt Extension (`eco:`) | TDWG-ratified 28 Feb 2024; in GBIF's registry for the Event core; tool support still growing |
+| GBIF taxonomy | now the Catalogue of Life eXtended Release; the old GBIF Backbone is frozen (last built 2023) |
+
+## Key resources
+
+- Darwin Core terms – <https://dwc.tdwg.org/terms/>
+- Humboldt Extension – <https://eco.tdwg.org/>
+- Extended Measurement or Fact – <https://manual.obis.org/format_emof.html>
+- GBIF IPT – <https://www.gbif.org/ipt> · manual <https://ipt.gbif.org/manual/>
+- GBIF metadata profile (EML) – <https://ipt.gbif.org/manual/en/ipt/latest/gbif-metadata-profile>
+- Catalogue of Life – <https://www.catalogueoflife.org/>
+- Art. 17 reporting (Eionet) – <https://cdr.eionet.europa.eu/help/habitats_art17>
+- *ndopred*, Red List metrics from occurrence records – <https://github.com/jonasgaigr/ndopred>
+- This workshop – <https://github.com/jonasgaigr/kosovo-biodiversity-data-workshop-2026>
+
+```{=typst}
+#v(0.8em)
+#text(size: 6.4pt, fill: rgb("#4A4A4A"))[Kosovo\* – \*This designation is without prejudice to positions on status, and is in line with UNSCR 1244/1999 and the ICJ Opinion on the Kosovo declaration of independence.]
+#colbreak()
+```
+
+## Full crosswalk: survey spreadsheet → Darwin Core
+
+One visit is an **event**; what was found on it are **occurrences**; anything
+measured hangs from either as a **measurement**. Terms without a prefix are
+Darwin Core; `eco:` is the Humboldt Extension; `dcterms:` is Dublin Core,
+which Darwin Core uses for licence and rights.
+
+```{=typst}
+// Set in Typst rather than as a pipe table: the Darwin Core terms are long
+// unbreakable identifiers, and a pipe table can neither put two of them on
+// separate lines in one cell nor let a group heading span the row.
+#let t(x) = text(font: "Consolas", size: 6.5pt, fill: rgb("#006B4D"), x)
+#let grp(x) = table.cell(colspan: 3, fill: rgb("#EEF6E4"), text(font: "Franklin Gothic", fill: rgb("#006B4D"), x))
+#table(
+  columns: (21%, 50%, 29%),
+  table.header([Your column], [Darwin Core term], [Note]),
+  grp[Event – the visit],
+  [Visit no.], t[eventID], [persistent, never reused],
+  [Site / plot code], t[locationID], [from the site register],
+  [Date, time], t[eventDate], [ISO 8601: 2026-06-18T21:30],
+  [Latitude, longitude], t[decimalLatitude \ decimalLongitude], [decimal degrees],
+  [Coordinate system], t[geodeticDatum], [e.g. EPSG:4326 (WGS 84)],
+  [GPS accuracy (m)], t[coordinateUncertaintyInMeters], [mandatory],
+  [Place name], t[locality], [as written in the field],
+  [Method], t[samplingProtocol], [from a controlled list],
+  [Plot size], t[sampleSizeValue \ sampleSizeUnit], [e.g. 25 · square metre],
+  [Time spent, traps set], [#t[samplingEffort] or \ #t[eco:samplingEffortValue] \ #t[eco:samplingEffortUnit]], [Humboldt splits value and unit],
+  [Target group], t[eco:targetTaxonomicScope], [what was searched for],
+  [All targets recorded?], t[eco:isAbsenceReported \ eco:isTaxonomicScopeFullyReported], [what makes an absence usable],
+  [Surveyor(s)], t[recordedBy \ eco:samplingPerformedBy], [person; team or body],
+  grp[Occurrence – what was found],
+  [Record no.], t[occurrenceID], [persistent, never reused],
+  [Species], t[scientificName \ taxonID], [taxonID from the national checklist],
+  [Found? yes / no], t[occurrenceStatus], [present / absent],
+  [Count], [#t[individualCount] or \ #t[organismQuantity] \ #t[organismQuantityType]], [e.g. 12 · individuals],
+  [Life stage, sex], t[lifeStage \ sex], [controlled values],
+  [Identified by], t[identifiedBy], [],
+  [Checked by an expert?], t[identificationVerificationStatus], [free text in DwC – agree a national list],
+  [Record type], t[basisOfRecord], [HumanObservation, PreservedSpecimen …],
+  [Project, source], t[datasetName \ datasetID], [keeps the source visible],
+  [Location generalised?], t[dataGeneralizations \ informationWithheld], [for sensitive species],
+  [Remarks], t[occurrenceRemarks], [],
+  grp[Measurement – linked by eventID or occurrenceID],
+  [Water depth, cover %, …], t[measurementType \ measurementValue \ measurementUnit], [Extended Measurement or Fact],
+  grp[Dataset – once, in the EML metadata],
+  [Licence], t[dcterms:license], [e.g. CC BY 4.0],
+  [Rights holder], t[dcterms:rightsHolder], [],
+)
+```
+
+```{=typst}
+#v(0.5em)
+#block(width: 100%, inset: 6pt, fill: rgb("#FFF3E3"), stroke: (left: 3pt + rgb("#F68B1F")))[
+    #text(font: "Franklin Gothic", fill: rgb("#9A4A00"))[To fill in locally]
+  #v(1pt)
+  #grid(columns: (auto, 1fr), column-gutter: 6pt, row-gutter: 7pt,
+    [National checklist owner:], align(bottom, line(length: 100%, stroke: 0.5pt + rgb("#9A4A00"))),
+    [Data steward:], align(bottom, line(length: 100%, stroke: 0.5pt + rgb("#9A4A00"))),
+    [Validators per species group:], align(bottom, line(length: 100%, stroke: 0.5pt + rgb("#9A4A00"))),
+  )
+]
+```

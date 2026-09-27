@@ -1,0 +1,5 @@
+/.quarto/
+**/*.quarto_ipynb
+
+# Pages rasterised by pdftoppm for the overflow check - see the README.
+/_pages/

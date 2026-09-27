@@ -29,7 +29,7 @@ fmt_day <- function(date) {
 }
 ```
 
-This page gathers the material from the five sessions Jonáš Gaigr of the Nature
+This page gathers the material from the six sessions Jonáš Gaigr of the Nature
 Conservation Agency of the Czech Republic gave at the mission. Every
 presentation is here as slides to view in the browser and as a PDF handout to
 download, next to the GBIF data site that several of the sessions used as their

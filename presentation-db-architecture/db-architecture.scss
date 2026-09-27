@@ -1,0 +1,398 @@
+/*-- scss:rules --*/
+
+// Deck-specific additions, loaded after `custom.scss`.
+//
+// The first half of this file is lifted from `presentation-spatial-analysis/`
+// (which lifted most of it from the n2k and data-collection decks): the caption
+// and note sizes, the equal-halves `.aopk-pair`, the handout link on the title
+// slide, and the Mermaid sizing rules. The comments there explain what each one
+// costs to get wrong; they are shortened here. Each deck is its own Quarto
+// project and resolves its theme relative to itself, so they are copied rather
+// than shared. Keep them in step if the sibling is revised.
+//
+// The second half is this deck's own: the layer stack (slide 2), the event tree
+// (slide 4), the validation-code and crosswalk tables (slides 5, 6, 8), the six
+// habit cards (slide 9), the takeaway list (slide 10), and the loud marker for
+// a Kosovo fact still to be supplied.
+//
+// Dashes are en dashes (–), spaced, never em dashes. Keep it so.
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LIFTED FROM THE SIBLING DECKS
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Captions and the footnote block. The size has to be set on the PARAGRAPH as
+// well as the wrapper: the theme sets `font-size` on `.reveal p, .reveal li`,
+// so a size set on the div alone never reaches the text and the caption comes
+// out at body size – which pushes it through the footer bar.
+.reveal .slides section .figcaption,
+.reveal .slides section .figcaption p {
+  font-size: $aopk-size-body * 0.62;
+  line-height: 1.3;
+  color: #4A4A4A;
+  text-align: left;
+}
+.reveal .slides section .figcaption { margin-top: 0.35em; }
+.reveal .slides section .figcaption p { margin: 0; }
+
+.reveal .slides section .note,
+.reveal .slides section .note p {
+  font-size: $aopk-size-body * 0.58;
+  color: $aopk-black;
+  margin-top: 0.7em;
+}
+
+// Two columns that read as equal halves. The theme's `.aopk-cols` is 42/54 on
+// purpose (the manual's image block) and cannot carry two peers.
+.reveal .slides section .aopk-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 3%;
+  align-items: start;
+
+  > * { margin-top: 0; min-width: 0; }
+  > * > :first-child { margin-top: 0; }
+  p { margin-top: 0; }
+}
+
+// The handout link on the title slide. The AOPK title slide is a fixed partial
+// that prints title, author and institute only, so `institute` is the one field
+// that takes markup; the link is hidden in print from here, because it is of no
+// use to somebody already reading the PDF.
+.reveal .aopk-title-slide .aopk-handout {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 0.5em);
+  font-size: $aopk-size-institute * 0.62;
+
+  a {
+    color: $aopk-green-dark;
+    text-decoration: underline;
+  }
+}
+html.reveal-print .reveal .aopk-handout { display: none; }
+
+// Mermaid. The selector must be `div.cell svg`: mermaid.js REPLACES the
+// `<pre class="mermaid">` Quarto writes with the finished `<svg>` at load time.
+// The `<svg>` carries `width="100%"` and a viewBox, so it is sized through its
+// WIDTH alone – a `height` would only crop the box.
+//
+// Mermaid lays out in the browser against whatever width its container has, and
+// reveal's print layout is not its screen layout, so the diagram has TWO
+// geometries and the print one is the one that can reach the footer bar. The
+// width cap under `.diagram-tall` is derived from the print render; see
+// "The data-flow diagram" in the README for the measured viewBoxes and how to
+// re-measure them if a node is added or a label reworded.
+.reveal .slides section div.cell svg {
+  width: 100%;
+  max-width: 100%;
+  border: 0;
+}
+.reveal .slides section.diagram-tall div.cell svg {
+  width: 92%;
+  display: block;
+  margin: 0 auto;
+}
+
+.reveal .slides section code {
+  overflow-wrap: anywhere;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// A KOSOVO FACT STILL TO BE SUPPLIED
+//
+// The brief for this deck forbids inventing facts about Kosovo's institutions,
+// systems or law. Where a slide needs one, it carries a placeholder instead, set
+// loud on purpose – orange, not the red of the sibling decks' [VERIFY], because
+// it is not a doubtful claim but a blank for the hosts to fill, and on the
+// discussion slide it is meant to be seen and answered.
+// ═══════════════════════════════════════════════════════════════════════════
+.reveal .slides section .placeholder {
+  font-weight: $aopk-weight-demi;
+  color: #9A4A00;
+  background: #FFF3E3;
+  border: 2px dashed $aopk-orange;
+  padding: 0 0.3em;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SLIDE 2 – THE LAYER STACK
+//
+// Drawn in HTML rather than as a picture so its text is real, sharp and large
+// enough. The reference layer is a column on the left spanning all four rows,
+// because it serves every one of them; the four layers are a stack with an
+// arrow between each pair, because data travels through them in one direction.
+// Its grey dashed box matches the reference node in the Mermaid diagram on the
+// next slide, so the two pictures read as the same system.
+// ═══════════════════════════════════════════════════════════════════════════
+.reveal .slides section .layers {
+  display: grid;
+  grid-template-columns: 34% 1fr;
+  grid-template-rows: repeat(4, auto);
+  gap: 26px 3%;
+  align-items: stretch;
+}
+.reveal .slides section .layers > * { margin: 0; min-width: 0; }
+
+.reveal .slides section .lyr-ref {
+  grid-column: 1;
+  grid-row: 1 / span 4;
+  background: #F1F1F1;
+  border: 2px dashed $aopk-gray;
+  padding: 0.55em 0.8em;
+  position: relative;
+
+  // A notch on the right edge, pointing at the stack: "used by every layer".
+  &::after {
+    content: "";
+    position: absolute;
+    right: -16px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-top: 14px solid transparent;
+    border-bottom: 14px solid transparent;
+    border-left: 14px solid $aopk-gray;
+  }
+}
+.reveal .slides section .lyr-ref p,
+.reveal .slides section .lyr-ref li {
+  font-size: $aopk-size-body * 0.84;
+  line-height: 1.25;
+}
+.reveal .slides section .lyr-ref ul { margin: 0.3em 0 0 0; }
+.reveal .slides section .lyr-ref li { margin-top: 0.3em; }
+
+.reveal .slides section .lyr {
+  grid-column: 2;
+  background: $aopk-green-dark;
+  color: $aopk-white;
+  padding: 0.55em 0.8em;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.reveal .slides section .lyr p {
+  font-size: $aopk-size-body * 0.88;
+  line-height: 1.25;
+  color: $aopk-white;
+  margin: 0;
+}
+.reveal .slides section .lyr strong { color: $aopk-white; }
+// The last layer is what the outside world sees, so it takes the light green
+// the Mermaid diagram gives its outputs.
+.reveal .slides section .lyr.lyr-out {
+  background: #E8F4D8;
+  border: 2px solid $aopk-green-light;
+}
+.reveal .slides section .lyr.lyr-out p,
+.reveal .slides section .lyr.lyr-out strong { color: $aopk-black; }
+
+// The arrow between two layers sits in the 22 px row gap above each layer
+// after the first.
+.reveal .slides section .lyr + .lyr::before {
+  content: "";
+  position: absolute;
+  left: 1.2em;
+  top: -21px;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 14px solid $aopk-green-light;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SLIDE 4 – ONE VISIT STORED AS AN EVENT
+//
+// The event is the parent box; its occurrences and measurements are indented
+// under it with a rule down the left, which is the shape of the Event core with
+// its extensions. Each line starts with a tag naming the Darwin Core class, so
+// the picture teaches the vocabulary as well as the structure.
+// ═══════════════════════════════════════════════════════════════════════════
+.reveal .slides section .evt {
+  border: 2px solid $aopk-green-dark;
+  padding: 0.5em 0.7em 0.55em;
+}
+.reveal .slides section .evt p {
+  font-size: $aopk-size-body * 0.78;
+  line-height: 1.3;
+  margin: 0;
+}
+.reveal .slides section .evt-kids {
+  margin: 0.45em 0 0 0.5em;
+  padding-left: 0.8em;
+  border-left: 3px solid $aopk-green-light;
+}
+.reveal .slides section .evt-kids p { margin-top: 0.3em; }
+.reveal .slides section .evt-tag {
+  display: inline-block;
+  min-width: 7.2em;
+  margin-right: 0.4em;
+  padding: 0.02em 0.4em;
+  font-size: 0.82em;
+  font-weight: $aopk-weight-demi;
+  text-align: center;
+  color: $aopk-white;
+  background: $aopk-green-dark;
+}
+.reveal .slides section .evt-tag.occ { background: $aopk-green-light; color: $aopk-black; }
+.reveal .slides section .evt-tag.mof { background: $aopk-gray; color: $aopk-black; }
+.reveal .slides section .evt-kids .absent { font-weight: $aopk-weight-demi; color: #C4272E; }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SLIDES 5, 6 AND 8 – SMALL REFERENCE TABLES
+//
+// Three tables in the same dress: rules top and bottom, hairlines between rows,
+// no header shading. `.codes` has a short code in its first column (the NDOP
+// validation scale); `.xwalk` and `.dwc` have a Darwin Core term, in monospace
+// because it is an identifier spelled exactly as the standard spells it – in
+// the second column for the crosswalk, the first for a record.
+// ═══════════════════════════════════════════════════════════════════════════
+.reveal .slides section .codes table,
+.reveal .slides section .xwalk table,
+.reveal .slides section .dwc table {
+  width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+  border-top: 2px solid $aopk-green-dark;
+  border-bottom: 2px solid $aopk-green-dark;
+}
+.reveal .slides section .codes th,
+.reveal .slides section .xwalk th {
+  // The theme gives every <th> its dark-green band with white type; that is
+  // kept, only the size and alignment are set here.
+  font-size: $aopk-size-body * 0.66;
+  text-align: left;
+  color: $aopk-white;
+  padding: 0.3em 0.5em;
+}
+.reveal .slides section .dwc th { display: none; }
+.reveal .slides section .codes td,
+.reveal .slides section .xwalk td,
+.reveal .slides section .dwc td {
+  font-size: $aopk-size-body * 0.74;
+  line-height: 1.25;
+  padding: 0.28em 0.5em;
+  border-bottom: 1px solid #E2E2E2;
+  vertical-align: top;
+}
+.reveal .slides section .codes td:first-child {
+  font-weight: $aopk-weight-demi;
+  color: $aopk-green-dark;
+  text-align: center;
+  width: 2.2em;
+}
+.reveal .slides section .xwalk td:last-child,
+.reveal .slides section .dwc td:first-child {
+  font-family: Consolas, "Courier New", monospace;
+  color: $aopk-green-dark;
+}
+.reveal .slides section .dwc td:first-child { white-space: nowrap; }
+
+// A heading line above a table or a column, smaller than a slide title and
+// set as a paragraph – a Markdown heading inside a fenced div becomes a
+// <section>, which reveal reads as another slide.
+.reveal .slides section .col-head,
+.reveal .slides section .col-head p {
+  font-size: $aopk-size-body * 0.86;
+  font-weight: $aopk-weight-demi;
+  color: $aopk-green-dark;
+  margin: 0 0 0.35em 0;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SLIDE 7 – THE LOOP STRIP
+//
+// The slide's argument is a cycle – use, flag, review, tell, correct, and back
+// to use – and two lists of text do not show a cycle. A row of steps closed by
+// a return arrow does, and it sits under the lists as their summary.
+// ═══════════════════════════════════════════════════════════════════════════
+.reveal .slides section .loop {
+  display: flex;
+  align-items: center;
+  gap: 0.35em;
+  margin-top: 1.1em;
+}
+.reveal .slides section .loop p {
+  display: contents;
+}
+.reveal .slides section .loop .step {
+  flex: 1 1 auto;
+  padding: 0.35em 0.5em;
+  text-align: center;
+  font-size: $aopk-size-body * 0.78;
+  font-weight: $aopk-weight-demi;
+  color: $aopk-white;
+  background: $aopk-green-dark;
+}
+.reveal .slides section .loop .step.use {
+  background: #E8F4D8;
+  color: $aopk-black;
+  border: 2px solid $aopk-green-light;
+}
+.reveal .slides section .loop .arr {
+  font-size: $aopk-size-body * 1.0;
+  font-weight: $aopk-weight-heavy;
+  color: $aopk-green-light;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SLIDE 9 – SIX HABITS
+//
+// Six peers, so a grid of six equal cards rather than one long list: three by
+// two fits the content width at a readable size, and the big number on each
+// card is what the speaker points to ("habit four").
+// ═══════════════════════════════════════════════════════════════════════════
+.reveal .slides section .habits {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px 2.4%;
+}
+.reveal .slides section .habits > div {
+  border-top: 4px solid $aopk-green-dark;
+  background: #F6F6F6;
+  padding: 0.4em 0.65em 0.55em;
+  margin: 0;
+}
+.reveal .slides section .habits p {
+  font-size: $aopk-size-body * 0.86;
+  line-height: 1.28;
+  margin: 0;
+}
+.reveal .slides section .habits p + p { margin-top: 0.3em; }
+.reveal .slides section .habits .num {
+  display: block;
+  font-size: 1.5em;
+  font-weight: $aopk-weight-heavy;
+  line-height: 1;
+  color: $aopk-green-light;
+  margin-bottom: 0.15em;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SLIDE 10 – TAKEAWAYS AND THE DISCUSSION BOX
+// ═══════════════════════════════════════════════════════════════════════════
+.reveal .slides section .takeaways p {
+  font-size: $aopk-size-body;
+  line-height: 1.25;
+  margin: 0 0 0.5em 0;
+  padding-left: 1.6em;
+  text-indent: -1.6em;
+}
+.reveal .slides section .takeaways .num {
+  display: inline-block;
+  width: 1.6em;
+  text-indent: 0;
+  font-weight: $aopk-weight-heavy;
+  color: $aopk-green-light;
+}
+.reveal .slides section .discuss {
+  margin-top: 0.6em;
+  padding: 0.45em 0.8em 0.5em;
+  background: #F6F6F6;
+  border-left: 6px solid $aopk-orange;
+}
+.reveal .slides section .discuss p {
+  font-size: $aopk-size-body * 0.8;
+  line-height: 1.45;
+  margin: 0;
+}
+.reveal .slides section .discuss p + p { margin-top: 0.25em; }
