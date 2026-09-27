@@ -1,0 +1,5 @@
+"code","name","name_national","relation","centroid_to_boundary_km","area_km2","alt_min","alt_max","ibaClassification","kbaClassification","ibaCriteria","yearOfLastAssessment","lat","lon","factsheet","accessed"
+"RS023","Prokletije","Prokletije","centroid inside Kosovo",6.3,1067,460,2656,"Global","Regional","A3, B1a, B1b, C6","2019",42.637166666667,20.184666666667,"https://datazone.birdlife.org/site/factsheet/3093-prokletije","2026-09-23"
+"RS024","Sara mountain","Šar-Planina","centroid inside Kosovo",3.2,1056,450,2651,"Global","Regional","A3, B1a, B1b, C2, C6","2019",42.166666666667,20.95,"https://datazone.birdlife.org/site/factsheet/3126-sara-mountain","2026-09-23"
+"RS022","Kopaonik","Kopaonik","centroid within 1 km of the boundary",0.8,739,650,2016,"Regional","Regional","B1a, B1b, C6","2019",43.196333333333,20.885333333333,"https://datazone.birdlife.org/site/factsheet/3092-kopaonik","2026-09-23"
+"RS062","Mokra Gora","Mokra Gora","centroid within 1 km of the boundary",0,515,486,2156,"Subregional","-","C6","2019",42.862833333333,20.481333333333,"https://datazone.birdlife.org/site/factsheet/49033-mokra-gora","2026-09-23"

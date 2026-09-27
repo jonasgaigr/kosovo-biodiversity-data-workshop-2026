@@ -1,0 +1,527 @@
+/*-- scss:rules --*/
+
+// Deck-specific additions, loaded after `custom.scss`.
+//
+// Most of this file is lifted from the two sibling decks rather than reinvented
+// – `.figcaption`, the figure hairline and height cap, `.aopk-pair`, `.note` and
+// the `#refs` block come from `presentation-n2k-condition/` and
+// `presentation-data-collection/`, where the comments explain what each one
+// costs to get wrong. They are copied rather than shared because each deck is
+// its own Quarto project and Quarto resolves a theme path relative to the
+// document. Keep them in step if either sibling is revised.
+//
+// This deck's own blocks: `.aopk-trio`, because three of its slides are
+// genuinely three-part; `.aopk-cols-wide`, which gives a screenshot enough width
+// to be read; the missing-picture box written by `image-slot.lua`; the Darwin
+// Core record table; the raw-CSV block; the survey calendar; and the risk-zone
+// chips for the licensing case study.
+//
+// Dashes in this deck are en dashes (–), spaced, never em dashes. Keep it so.
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FIGURE CAPTIONS
+//
+// Every figure in this deck is a map or a chart whose own legend is too small
+// to read from the back of a room, so the caption carries the reading of it and
+// has to be legible in its own right.
+//
+// `.figcaption p` has to be in the selector list, not left to inherit: the
+// theme sets `font-size` on the PARAGRAPH – `.reveal p, .reveal li` – so a size
+// set on the wrapping div is overridden inside it and the caption comes out at
+// full body size, which pushes it through the footer bar.
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// 0.62 of body, i.e. 16 px on the 1280 px canvas, rather than the siblings'
+// 0.5. At 0.5 the caption came out at 13 px, which is below what can be read
+// from the back of a room, and in this deck the caption is where each
+// screenshot is translated and explained.
+.reveal .slides section figure figcaption,
+.reveal .slides section .figcaption,
+.reveal .slides section .figcaption p {
+  font-size: $aopk-size-body * 0.62;
+  line-height: 1.3;
+  color: #4A4A4A;
+  text-align: left;
+}
+.reveal .slides section figure figcaption,
+.reveal .slides section .figcaption { margin-top: 0.25em; }
+.reveal .slides section .figcaption p { margin: 0; }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FIGURES
+//
+// The hairline: every figure here is a map or a screenshot on a white ground,
+// so its edge would otherwise dissolve into the slide.
+//
+// The height cap: the theme lets a picture fill the whole safe area, which is
+// right when the picture is the only thing on the slide. Here every picture is
+// followed by a caption, so it has to leave that caption its room – otherwise
+// the caption lays out below the safe area and prints through the footer bar.
+// The second rule mirrors the theme's own pair so a `.no-leaf` slide keeps the
+// extra height it is entitled to.
+//
+// The reserve is 3.6em of body size, 93 px: room for three caption lines at
+// 16 px plus the gap above them. The siblings reserve 4.6em, which was sized for
+// their 13 px captions with slack to spare; here that slack went straight out
+// of the map on slide 3, which is height-limited and so shrinks with the cap.
+//
+// Matching on `src` would not work: `embed-resources` inlines every picture as
+// a base64 data URI, so no `src` in the built deck contains its path. A lone
+// image in its own paragraph survives that, and it is the shape every figure in
+// this deck has.
+// ═══════════════════════════════════════════════════════════════════════════
+.reveal .slides section p > img:only-child {
+  border: 1px solid $aopk-gray;
+  max-height: calc(var(--aopk-content-h) - 3.6em);
+}
+.reveal .slides section.no-leaf p > img:only-child {
+  max-height: calc(var(--aopk-content-h) + #{$aopk-dvojlist-h} - 3.6em);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// A PAIR OF FIGURES
+//
+// Two slides set two things against each other rather than a picture against
+// text: the land-cover change pair (2016 against 2025), and the raw CSV against
+// the viewer's legal-status report. The theme's `.aopk-cols` is deliberately
+// asymmetric – 42 % text, 54 % picture, matching the graphic manual's image
+// block – so it cannot be reused for a pair that has to read as equal halves.
+//
+// The margin resets mirror `.aopk-cols` for the reason it needs them: a grid
+// item establishes its own formatting context, so the "first child of the slide
+// body" rule never reaches column two, and Pandoc wraps every bare image in a
+// <p> of its own.
+// ═══════════════════════════════════════════════════════════════════════════
+.reveal .slides section .aopk-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 3%;
+  align-items: start;
+
+  // `min-width: 0` because a grid item defaults to its content's min-content
+  // width, and the raw-CSV block on the "raw data" slide is one unbreakable
+  // line of a hundred characters: without it the first column swallowed the
+  // slide and squeezed the second to a sliver.
+  > * { margin-top: 0; min-width: 0; }
+  > * > :first-child { margin-top: 0; }
+  p { margin-top: 0; }
+  img { display: block; margin-left: auto; margin-right: auto; }
+}
+
+.reveal .slides section.no-leaf .aopk-pair p > img:only-child {
+  max-height: calc(var(--aopk-content-h) + #{$aopk-dvojlist-h} - 7.4em);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// THREE EQUAL COLUMNS
+//
+// This deck's own. Three of its slides are three-part by their argument and not
+// by preference – the three reasons a missing baseline is no excuse, the three
+// losers of project-by-project newt licensing, and govern / build / fund on the
+// closing slide – and in each case every part is a peer of the other two.
+// Neither the theme's 42/54 `.aopk-cols` nor the equal-halves `.aopk-pair` can
+// carry that.
+//
+// The gap is tighter than `.aopk-pair`'s because three columns in the same
+// content width have a third less room for the text inside them, and the column
+// rule does the separating that white space does in a pair.
+// ═══════════════════════════════════════════════════════════════════════════
+.reveal .slides section .aopk-trio {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0 2.4%;
+  align-items: start;
+
+  > * { margin-top: 0; }
+  > * > :first-child { margin-top: 0; }
+  p { margin-top: 0; }
+
+  // A rule between the columns rather than around them: the outer edges of the
+  // grid are already the slide's own margins, and boxing each column would put
+  // three frames on a slide that carries a heading and a footer bar as well.
+  > * + * {
+    border-left: 1px solid $aopk-gray;
+    padding-left: 2.4%;
+  }
+}
+
+// At three columns the body size set by the theme wraps every second line, so
+// the text steps down. This is the size the theme's own `.smaller` uses; it is
+// written out here rather than asking the author to nest `.smaller` inside each
+// column, which is three more divs on the slide for the same result.
+.reveal .slides section .aopk-trio p,
+.reveal .slides section .aopk-trio li {
+  font-size: $aopk-size-body * 0.72;
+  line-height: 1.32;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// THE IMPACT RISK ZONE CHIPS
+//
+// The licensing case study turns on a traffic-light map, and the slide has to
+// name the three zones in the text beside it. A word set in a colour is
+// illegible at this size on a projector; a filled chip with the word inside it
+// is not. The pattern is the `.chip` from `presentation-n2k-condition/`.
+//
+// These are NOT the AOPK palette, and deliberately so: they stand for another
+// country's published cartography, and recolouring them into house green would
+// make the slide disagree with the map printed beside it. Red carries white
+// text because $aopk-black on it fails contrast.
+// ═══════════════════════════════════════════════════════════════════════════
+.reveal .slides section .chip {
+  display: inline-block;
+  padding: 0.05em 0.5em;
+  font-size: 0.92em;
+  font-weight: $aopk-weight-demi;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: $aopk-black;
+}
+
+.reveal .slides section .chip-red   { background: #C4272E; color: $aopk-white; }
+.reveal .slides section .chip-amber { background: $aopk-orange; }
+.reveal .slides section .chip-green { background: $aopk-green-light; }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INLINE CODE INSIDE A COLUMN
+//
+// Two repository paths are set as inline code. A code span does not break at a
+// slash or an underscore, so `gbif_shiny_onlineviewer` is one unbreakable word
+// of twenty-three characters: inside a 42 % column it ran straight out of the
+// column and printed on top of the text in the column beside it. Nothing about
+// that is visible in the .qmd, and reveal gives no warning.
+//
+// `overflow-wrap: anywhere` rather than `break-word`, because `break-word` only
+// breaks a word that would overflow its own line box and leaves an already
+// overflowing inline element where it is.
+// ═══════════════════════════════════════════════════════════════════════════
+.reveal .slides section code {
+  overflow-wrap: anywhere;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// THE VERIFY MARKER
+//
+// A few details in this deck are marked [VERIFY] – most in the bibliography
+// and the README, one on a slide itself (the NDOP generalisation unit). They are set apart so that a marker
+// left in by accident is impossible to miss on the rehearsal run – the point is
+// that this is loud, not that it is pretty. Nothing carrying one should be
+// spoken as established fact, and no slide should still carry one on the day.
+// ═══════════════════════════════════════════════════════════════════════════
+.reveal .slides section .verify {
+  font-weight: $aopk-weight-demi;
+  color: #C4272E;
+  border-bottom: 2px dotted #C4272E;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MERMAID DIAGRAMS
+//
+// One slide carries a Mermaid flowchart. The rule and its two traps are
+// documented at length in the sibling deck's
+// `spatial-data-collection.scss`; the short version is that the selector must
+// be `div.cell svg`, because mermaid.js REPLACES the `<pre class="mermaid">`
+// Quarto writes with the finished `<svg>` once the deck loads, and that the
+// diagram is sized through its WIDTH alone – the `<svg>` carries `width="100%"`
+// and a viewBox, so the browser resolves height from width, and a `height`
+// declaration only crops the box while the drawing keeps its size.
+//
+// The one diagram here is a left-to-right flow, but it fans in from three
+// sources and out to three outputs, so it is three rows deep and does need the
+// `.diagram-tall` width cap below. Re-check that if it gains a row.
+// ═══════════════════════════════════════════════════════════════════════════
+.reveal .slides section div.cell svg {
+  width: 100%;
+  max-width: 100%;
+  border: 0;
+}
+
+// The one diagram here needs that cap, and getting it right turned up a trap the
+// sibling deck does not document.
+//
+// THE DIAGRAM HAS TWO GEOMETRIES, NOT ONE. Mermaid measures and lays out in the
+// browser at load time, against whatever width its container then has – and
+// reveal.js's print layout is not its screen layout. The same flowchart in this
+// deck comes out as:
+//
+//   screen  (`<deck>.html`)            viewBox 855.66 × 330.10   → 2.5921:1
+//   print   (`<deck>.html?print-pdf`)  viewBox 1161.3 × 533.59   → 2.1765:1
+//
+// because the nodes wrap their labels differently at the two widths. The print
+// one is far the taller, and the print one is what goes through the footer bar.
+// A cap derived from the screen render alone looks correct and fixes nothing.
+//
+// Both are read the same way – note the query string on the second:
+//   chrome --headless=new --dump-dom <deck>.html            | grep -o 'viewBox="[^"]*"'
+//   chrome --headless=new --dump-dom '<deck>.html?print-pdf' | grep -o 'viewBox="[^"]*"'
+//
+// THE SECOND TRAP: mermaid also writes an inline `style="max-width: <natural>px"`
+// on the `<svg>`, and an inline style outranks this rule. Any percentage that
+// resolves ABOVE that natural width therefore does nothing whatever – which is
+// why a first attempt at 91 % changed the render not at all. The cap only bites
+// below 856 px on screen, i.e. below 76 % of the column.
+//
+// The arithmetic. The content column is 1280 − 98.6 − 52.2 = 1129.2 px, and a
+// `.no-leaf` slide has 455 px of height. Sizing off the PRINT ratio and leaving
+// a band above the bar rather than landing exactly on it:
+//
+//   72 % of 1129.2 = 813.0 px wide
+//   print:  813.0 ÷ 2.1765 = 373.5 px tall  → 81 px clear of the bar
+//   screen: 813.0 ÷ 2.5921 = 313.6 px tall  → comfortable, and under the
+//           856 px inline max-width, so the rule actually applies
+//
+// Re-derive BOTH ratios if the flowchart gains a node or a label is reworded.
+.reveal .slides section.diagram-tall div.cell svg {
+  width: 72%;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// THE FOOTNOTE BLOCK
+//
+// Used for the status designation footnote on the first slide, which the
+// TAIEX agenda requires verbatim. It gets its own block under the content
+// rather than a parenthesis inside it. (The sibling decks also use it for "as
+// checked on" dates; here those dates live in the figure captions instead.)
+//
+// The size is set on the paragraph, not on the wrapper: the theme sets
+// `font-size` on `.reveal p, .reveal li` directly, so a size declared on the
+// div never reaches the text inside it.
+// ═══════════════════════════════════════════════════════════════════════════
+.reveal .slides section .note,
+.reveal .slides section .note p {
+  font-size: $aopk-size-body * 0.58;
+  color: $aopk-black;
+  margin-top: 0.7em;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// THE SOURCES SLIDE
+//
+// Pandoc's citeproc emits the bibliography as a `div#refs` of hanging-indent
+// entries. Reveal styles neither, so without this the entries run together and
+// the URLs – the useful part of a dataset citation – wrap with no indication of
+// where one source ends and the next begins. Two columns because a bibliography
+// is scanned rather than read in sequence, and it halves the height.
+// ═══════════════════════════════════════════════════════════════════════════
+.reveal .slides section #refs {
+  column-count: 2;
+  column-gap: 1.8em;
+
+  .csl-entry {
+    margin-bottom: 0.45em;
+    padding-left: 1.2em;
+    text-indent: -1.2em;
+    overflow-wrap: break-word;
+    // An entry broken across the column boundary reads as two half-sources.
+    break-inside: avoid;
+  }
+}
+
+// The size has to be set on the paragraph as well as the wrapper: citeproc puts
+// each entry's text in the `.csl-entry` div directly, but the theme sets
+// `font-size` on `.reveal p` at a specificity this would otherwise lose to.
+//
+// 0.47 rather than the sibling deck's 0.5. This deck has twenty-one entries to
+// its twelve, and several of them are EU legal instruments whose titles run to
+// three lines. At 0.5 the second column reached far enough down the slide that
+// the one-line note beneath the bibliography wrapped to two and the second line
+// printed through the footer bar. The rebuilt deck, whose case-study entries
+// carry access dates, no longer has room for that note at all: it was removed
+// and the [VERIFY] register lives in the README only. Do not raise the size
+// without re-running the
+// overflow check described in the README.
+.reveal .slides section #refs,
+.reveal .slides section #refs p,
+.reveal .slides section #refs .csl-entry {
+  font-size: $aopk-size-body * 0.47;
+  line-height: 1.2;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// THE HANDOUT LINK ON THE TITLE SLIDE
+//
+// The AOPK title slide is rendered from a fixed template partial that prints
+// `title`, `author`, `institute` and the bar and nothing else, so `institute`
+// is the only field on that slide that takes markup – and a `.content-visible`
+// block cannot reach inside a partial. The link is therefore hidden in print
+// from here instead: a link offering the PDF is of no use to somebody already
+// reading the PDF.
+// ═══════════════════════════════════════════════════════════════════════════
+.reveal .aopk-title-slide .aopk-handout {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 0.5em);
+  font-size: $aopk-size-institute * 0.62;
+
+  a {
+    color: $aopk-green-dark;
+    text-decoration: underline;
+  }
+}
+
+html.reveal-print .reveal .aopk-handout {
+  display: none;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// A WIDE PICTURE BESIDE A NARROW TEXT COLUMN
+//
+// The theme's `.aopk-cols` gives the picture 54 % of the content width, about
+// 610 px. That is right for a map, which is height-limited anyway, and wrong
+// for a screenshot: a browser window cut down to 610 px carries its interface
+// text at 9-11 px, which nobody past the second row can read. This split gives
+// the picture 64 %, about 720 px, which is as wide as a 16:10 screenshot can
+// be before the height cap binds – so widening it further would buy nothing.
+//
+// The text column is correspondingly narrow, so it is meant for four short
+// bullets at `.smaller` size, not for an argument.
+// ═══════════════════════════════════════════════════════════════════════════
+.reveal .slides section .aopk-cols-wide {
+  display: grid;
+  grid-template-columns: 32% 64%;
+  gap: 0 4%;
+  align-items: start;
+
+  > * { margin-top: 0; }
+  > * > :first-child { margin-top: 0; }
+  p { margin-top: 0; }
+  img { display: block; }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// THE MISSING-PICTURE BOX
+//
+// Written by `image-slot.lua` in place of any image whose file does not exist
+// yet. It reserves the picture's aspect ratio and the same height cap as a real
+// figure, so the slide lays out as it will when the file arrives and the
+// overflow check means something before then. It is loud for the same reason
+// `.verify` is.
+// ═══════════════════════════════════════════════════════════════════════════
+.reveal .slides section .img-slot {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.4em;
+  width: 100%;
+  max-height: calc(var(--aopk-content-h) - 3.6em);
+  box-sizing: border-box;
+  padding: 0.8em 1em;
+  border: 3px dashed #C4272E;
+  background: #FFF6F6;
+  text-align: center;
+  line-height: 1.25;
+}
+.reveal .slides section.no-leaf .img-slot {
+  max-height: calc(var(--aopk-content-h) + #{$aopk-dvojlist-h} - 3.6em);
+}
+.reveal .slides section .aopk-pair .img-slot {
+  max-height: calc(var(--aopk-content-h) + #{$aopk-dvojlist-h} - 7.4em);
+}
+.reveal .slides section .img-slot-file {
+  font-family: Consolas, "Courier New", monospace;
+  font-weight: $aopk-weight-demi;
+  font-size: $aopk-size-body * 0.7;
+  color: #C4272E;
+}
+.reveal .slides section .img-slot-want {
+  font-size: $aopk-size-body * 0.58;
+  color: #333333;
+  max-width: 34em;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// THE DARWIN CORE RECORD
+//
+// A real Kosovo record, set as a two-column table of term and value. It is set
+// as text rather than as a screenshot so that it is sharp at any projector
+// resolution and cannot be too small: 0.68 of body is 17.6 px. The term names
+// are in monospace because they are identifiers, spelled exactly as the
+// standard spells them, and the audience's academics will type them.
+// ═══════════════════════════════════════════════════════════════════════════
+.reveal .slides section .dwc table {
+  width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+  border-top: 2px solid $aopk-green-dark;
+  border-bottom: 2px solid $aopk-green-dark;
+}
+.reveal .slides section .dwc th { display: none; }
+.reveal .slides section .dwc td {
+  font-size: $aopk-size-body * 0.68;
+  line-height: 1.25;
+  padding: 0.28em 0.5em;
+  border-bottom: 1px solid #E2E2E2;
+  vertical-align: top;
+}
+.reveal .slides section .dwc td:first-child {
+  font-family: Consolas, "Courier New", monospace;
+  color: $aopk-green-dark;
+  white-space: nowrap;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// THE RAW CSV
+//
+// The point of this block is that it is too much – forty columns that run off
+// the right-hand edge – so it is clipped and faded there rather than wrapped.
+// It is still set large enough to read (0.6 of body, 15.5 px): the audience
+// should be able to see that the content is real, only that it is not an
+// answer to anything.
+// ═══════════════════════════════════════════════════════════════════════════
+.reveal .slides section pre.raw-csv {
+  width: 100%;
+  margin: 0;
+  padding: 0.6em 0.7em;
+  box-sizing: border-box;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: $aopk-size-body * 0.6;
+  line-height: 1.45;
+  white-space: pre;
+  overflow: hidden;
+  background: #F6F6F6;
+  border: 1px solid $aopk-gray;
+  box-shadow: none;
+  -webkit-mask-image: linear-gradient(to right, #000 78%, transparent 100%);
+          mask-image: linear-gradient(to right, #000 78%, transparent 100%);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// THE SURVEY CALENDAR
+//
+// The great crested newt slide turns on one picture: a thirteen-month strip in
+// which the survey season is four months wide and a project that misses it
+// waits for the next one. It is drawn in HTML rather than as an image so that
+// its labels are real text at 16-18 px and cannot come out too small.
+//
+// Colours carry state, not series: light green is "surveys are possible",
+// hatched grey is "nothing can be done", dark green is "surveying", orange is
+// the licence application. Every bar also carries its label in words.
+// ═══════════════════════════════════════════════════════════════════════════
+.reveal .slides section .gcn-cal {
+  display: grid;
+  grid-template-columns: 8.2em repeat(13, 1fr);
+  gap: 4px 2px;
+  margin-bottom: 0.9em;
+  font-size: $aopk-size-body * 0.64;
+  line-height: 1.2;
+
+  > span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.3em;
+    padding: 0 0.3em;
+    text-align: center;
+  }
+  .lab  { justify-content: flex-start; text-align: left; font-weight: $aopk-weight-demi; }
+  .yr   { min-height: 1.4em; color: #4A4A4A; border-bottom: 2px solid $aopk-gray; }
+  .mon  { min-height: 1.6em; color: #4A4A4A; }
+  .off  { background: #F1F1F1; }
+  .on   { background: $aopk-green-light; font-weight: $aopk-weight-demi; }
+  .wait {
+    background: repeating-linear-gradient(135deg, #E4E4E4 0 6px, #F4F4F4 6px 12px);
+  }
+  .surv { background: $aopk-green-dark; color: $aopk-white; font-weight: $aopk-weight-demi; }
+  .lic  { background: $aopk-orange; font-weight: $aopk-weight-demi; }
+}

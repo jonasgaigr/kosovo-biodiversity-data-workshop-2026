@@ -1,0 +1,11 @@
+# The site report is its own Quarto project, deliberately separate from the
+# website project in the repository root. Sharing that project would render a
+# Typst document with the website's `format: html` block and write it into
+# `docs/`, where it is no part of the site. The root project's `render:` list
+# already excludes this directory from a full `quarto render`; this file is
+# what keeps a targeted render of the template alone out of it too.
+project:
+  type: default
+  output-dir: .
+
+lang: en-GB

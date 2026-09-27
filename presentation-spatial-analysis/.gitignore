@@ -1,0 +1,11 @@
+/.quarto/
+**/*.quarto_ipynb
+
+# Full-resolution photographs, kept next to the strips cut from them for when a
+# crop has to be redone. Together they are ~35 MB, which does not belong in the
+# repository – the deck only ever uses `images/photo-*.jpg`.
+/images/_originals/
+
+# Downloads cached by make-eo-figures.R – Sentinel-2 windows, CLC+ tiles, OSM
+# roads. All re-fetchable; delete the folder to refresh.
+/_cache/

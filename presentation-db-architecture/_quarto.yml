@@ -1,0 +1,12 @@
+# This deck is its own Quarto project, deliberately separate from the website
+# project in the repository root and from the other presentation-* folders.
+# Sharing any of them would apply that project's format block, navigation and
+# output-dir to a reveal.js deck that has nothing to do with it.
+#
+# The deck and its one-page handout are both rendered from here, each with its
+# own format block in its own header - see the README.
+project:
+  type: default
+  output-dir: .
+
+lang: en-GB

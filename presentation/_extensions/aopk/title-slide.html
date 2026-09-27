@@ -1,0 +1,39 @@
+<!--
+  AOPK ČR title slide  (Grafický manuál AOPK ČR 2026 — Hlavní část, p. 18)
+
+  The manual's mockup stacks three centred blocks on a white ground:
+      NÁZEV PREZENTACE        dark green, heavy, capitals   cap top 29.06 %
+      AUTOR                   světle zelená, demi, capitals cap top 57.02 %
+      Sekce, odbor AOPK ČR    dark green, book              cap top 69.37 %
+  plus a centred dvojlist and a bar reading
+      "Agentura ochrany přírody a krajiny ČR | aopk.gov.cz"
+
+  Mapping from document metadata:
+      title      -> the presentation name
+      author     -> AUTOR   (set `author-uppercase: false` to keep normal case)
+      institute  -> the section / department line; `subtitle` is used if
+                    `institute` is absent.
+      title-footer -> overrides the text in the bar.
+-->
+<section id="title-slide" class="aopk-title-slide center"$if(title-slide-attributes)$$for(title-slide-attributes/pairs)$ $it.key$="$it.value$"$endfor$$endif$>
+
+  <h1 class="aopk-title">$title$</h1>
+
+$if(by-author)$
+  <p class="aopk-author">$for(by-author)$$by-author.name.literal$$sep$, $endfor$</p>
+$else$
+$if(author)$
+  <p class="aopk-author">$for(author)$$author$$sep$, $endfor$</p>
+$endif$
+$endif$
+
+$if(institute)$
+  <p class="aopk-institute">$for(institute)$$institute$$sep$, $endfor$</p>
+$else$
+$if(subtitle)$
+  <p class="aopk-institute">$subtitle$</p>
+$endif$
+$endif$
+
+  <div class="aopk-bar">$if(title-footer)$$title-footer$$else$Agentura ochrany přírody a krajiny ČR&ensp;|&ensp;aopk.gov.cz$endif$</div>
+</section>

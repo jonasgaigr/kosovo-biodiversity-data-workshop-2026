@@ -9,6 +9,30 @@ The output is a Quarto website — summary statistics, interactive Leaflet maps,
 a browser-side record explorer and open data downloads — designed for ministry
 officials and conservation practitioners, and hosted on GitHub Pages.
 
+The site opens on [`index.qmd`](index.qmd), the landing page for the TAIEX
+Expert Mission on GIS and biodiversity data management, Pristina,
+28–30 September 2026. It says briefly what the mission was for and links every
+deck given there, as slides and as a PDF handout, alongside the report itself,
+which is [`report.qmd`](report.qmd). The decks are listed once, in
+[`data/workshop_decks.csv`](data/workshop_decks.csv): the page is built from
+that file, and [`publish_slides.R`](publish_slides.R) copies the built decks
+into `docs/slides/` from it after every render.
+
+[`presentation/`](presentation) holds the two decks that present it at the TAIEX
+Expert Mission on GIS and biodiversity data management, Pristina,
+28–30 September 2026: *Accessing and utilising GBIF data for biodiversity
+conservation* (Day 2) and *Replicable and automated map and report production
+for biodiversity conservation* (Day 3), which is about the site-level tool
+below.
+
+[`natura2000.qmd`](natura2000.qmd) is a second page of the site. It answers the
+Ministry's questions on moving towards Natura 2000, as far as they fall within
+these sessions: evidence tiers, grid to boundary, habitat mapping, sufficiency,
+the database, bird data and SPAs, and a two-site pilot. Its figures are computed
+from the same pipeline outputs. The Important Bird Areas it lists come from
+BirdLife's DataZone through [`R/fetch_iba.R`](R/fetch_iba.R), as attributes
+only; the boundaries are released on request.
+
 ---
 
 ## What the report contains
@@ -17,8 +41,9 @@ officials and conservation practitioners, and hosted on GitHub Pages.
 |---|---|
 | Summary statistics | How much data is there, and of what |
 | Data quality control | What was screened out, and how precisely records are placed |
-| Where the records are | Six maps, each with points, a classed density grid, a heat surface and municipal boundaries |
+| Where the records are | Six maps, each with points, a classed density grid, a heat surface, protected areas and municipal boundaries |
 | Survey coverage by municipality | Which parts of the country are under-recorded |
+| Protected areas | What the national register holds, how much of the country it covers, and which sites have occurrence evidence behind them |
 | EU Nature Directives | Which species of Community interest have been recorded |
 | Extinction risk | The IUCN Red List profile, and the threatened species in detail |
 | Explore the records | A filterable, linked map and table over the records of conservation interest |
@@ -98,6 +123,9 @@ that the GBIF tiles keep `tileSize = 512` with `zoomOffset = -1`.
 IUCN Red List categories keep IUCN's own severity scheme. They are a different
 organisation's standard, and GBIF renders them in IUCN's colours too.
 
+The per-site PDFs are dressed from the same palette, down to the swatch beside
+a Red List category — see *The report wears the website's colours*.
+
 ---
 
 ## Repository structure
@@ -109,31 +137,59 @@ kosovo-biodiversity-data-workshop-2026/
 ├── .gitignore
 ├── _quarto.yml                # Website configuration
 ├── custom.scss                # Report theme
-├── index.qmd                  # The report
+├── index.qmd                  # Landing page: the mission and every deck
+├── report.qmd                 # The report
+├── publish_slides.R           # Copies the built decks into docs/slides/
 ├── pipeline.R                 # Acquisition → cleaning → matching → export
+├── site_reports.R             # One GeoPackage and one PDF per protected area
 ├── run_test.R                 # Offline smoke test for R/functions.R
+├── run_test_site_report.R     # Offline smoke test for R/site_report.R
 ├── README.md
 ├── LICENSE
 │
 ├── R/
-│   ├── functions.R            # Shared helpers, sourced by pipeline.R AND index.qmd
+│   ├── functions.R            # Shared helpers, sourced by pipeline.R AND report.qmd
+│   ├── site_report.R          # Site-level helpers, sourced by site_reports.R AND
+│   │                          #   reports/site_report.qmd
 │   └── build_directive_list.R # Builds the annex lists from the EUR-Lex texts
 │
+├── reports/
+│   ├── site_report.qmd        # Parameterised Typst report for one site
+│   ├── gbif-report.typ        # The report's colours — the website's, in Typst
+│   └── _quarto.yml            # Keeps it out of the website project
+│
 ├── data/                      # Inputs, caches and run metadata
+│   ├── workshop_decks.csv          # The decks the landing page lists and publishes
 │   ├── eu_directives_species.csv   # Annex lists (generated; tracked)
 │   ├── eurlex/                     # Cached consolidated legal texts
 │   ├── gbif_download/              # Raw GBIF archives (not tracked)
 │   │   └── download_key.txt        # Tracked, so the DOI is reused
-│   ├── gadm41_XKO.gpkg             # GADM 4.1, all levels (downloaded)
-│   ├── kosovo_boundary.gpkg        # National outline, GADM level 0
-│   ├── kosovo_municipalities.gpkg  # GADM level 2, for coverage reporting
+│   ├── gadm41_XKO.gpkg             # GADM 4.1, all levels (GBIF's selection polygon)
+│   ├── osm_kosovo.gpkg             # OpenStreetMap: country, 7 districts, 38 municipalities
+│   ├── kosovo_boundary.gpkg        # National outline, from osm_kosovo.gpkg
+│   ├── kosovo_municipalities.gpkg  # 38 municipalities, for coverage reporting
+│   ├── kosovo_protected_areas.gpkg # EEA designated areas, Kosovo only (cached)
 │   ├── vernacular_cache.csv        # Cached common names
 │   ├── iucn_cache.csv              # Cached IUCN Red List categories
 │   ├── dataset_registry.csv        # Cached dataset and publisher titles
 │   └── run_metadata.rds            # DOI, citation, counts, cleaning report
 │
 ├── data_exports/              # Published outputs (.gpkg, .csv, .xlsx), six subsets
-└── docs/                      # Rendered website — GitHub Pages serves this
+├── docs/                      # Rendered website — GitHub Pages serves this
+│   └── slides/<deck>/         # Each deck's slides and handout, copied by publish_slides.R
+├── outputs/                   # Site reports (generated; not tracked)
+│   ├── protected_areas/<slug>/<slug>.gpkg  and  <slug>.pdf
+│   ├── run_manifest.csv               # One row per site per run
+│   └── national_site_statistics.csv   # The ranking each report quotes
+│
+└── presentation/              # TAIEX workshop decks — their own Quarto project
+    ├── gbif-data-access.qmd      # Day 2: accessing and utilising GBIF data
+    ├── automated-reporting.qmd   # Day 3: automated map and report production
+    ├── automated-reporting.scss  # Code-block styles for that deck alone
+    ├── custom.scss            # Adjustments to the AOPK template, shared
+    ├── images/                # Captures of the website and of a site report
+    ├── _extensions/aopk/      # AOPK ČR reveal.js template (vendored)
+    └── README.md              # How to build the HTML and the PDF
 ```
 
 `R/functions.R` is deliberately shared between the pipeline and the report so
@@ -252,11 +308,14 @@ This will:
 4. Screen coordinates with `CoordinateCleaner`.
 5. Resolve English common names from the GBIF species API (cached).
 6. Resolve IUCN Red List categories from the GBIF species API (cached).
-7. Stamp each record with the municipality it falls in (GADM level 2).
-8. Write six thematic subsets to `data_exports/` as `.gpkg`, `.csv` and —
+7. Stamp each record with the municipality it falls in (OpenStreetMap).
+8. Stamp each record with the protected area it falls in (EEA NatDA, cached).
+9. Write six thematic subsets to `data_exports/` as `.gpkg`, `.csv` and —
    for the smaller ones — `.xlsx`.
-9. Resolve every contributing dataset and publisher from the GBIF registry.
-10. Save run metadata to `data/run_metadata.rds`.
+10. Write the protected-area register to `data_exports/` in the same three
+    formats.
+11. Resolve every contributing dataset and publisher from the GBIF registry.
+12. Save run metadata to `data/run_metadata.rds`.
 
 The first run takes roughly 20 minutes, most of it resolving common names for
 several thousand taxa one at a time. The Red List and registry lookups are
@@ -276,7 +335,13 @@ quarto render
 ```
 
 The site is written to `docs/`, with the exported data files copied alongside
-it so that the download buttons resolve.
+it so that the download buttons resolve. Once the pages are written,
+`publish_slides.R` copies each workshop deck's slides and handout into
+`docs/slides/<deck>/`. The decks are not built here — each is its own Quarto
+project — so render a changed deck in its own folder first. The copy stops the
+render if a listed deck has not been built, or if its slides still show a
+placeholder for a missing figure. After rebuilding a deck alone,
+`Rscript publish_slides.R` republishes it without re-rendering the site.
 
 To preview locally while editing:
 
@@ -372,24 +437,48 @@ mismatches, and with `value = "clean"` returns an empty data frame with no
 warning. `kosovo_boundary()` in `R/functions.R` therefore supplies a bespoke
 reference polygon, passed via `country_ref`.
 
-**3. Screen against the same polygon that selected the records.**
+**3. Screen against an accurate polygon, not against the selecting one.**
 The bespoke reference was at first built from Natural Earth's 1:50m outline —
 72 vertices for the whole country, departing from the true border by as much as
-4.7 km. The GBIF download, however, is selected with `pred("gadm", "XKO")`, so
-every record is inside the *GADM* polygon by construction. Screening those
-records against a different, coarser outline flagged 1,296 of them (2.7 per
-cent, 192 species) as country-coordinate mismatches. Every one was a real
-record near the border, discarded because two datasets drew the same line
-differently.
+4.7 km — and flagged 1,296 records on the strength of its own error. Replacing
+it with GADM level 0, the polygon `pred("gadm", "XKO")` selects on, made the
+test flag nothing at all. That looked like a clean result and was really the
+test grading its own paper: every record is inside that polygon by
+construction, so asking whether it is can only return yes.
 
-The reference is now GADM level 0 itself — 1,210 vertices, and the same
-geometry GBIF filtered on — and the test flags nothing, which is the correct
-answer rather than a broken one. The test is kept in the battery because it
-becomes meaningful again the moment the download predicate changes: a
-`country = "XK"` extract, for instance, relies on publisher-supplied country
-codes and genuinely needs checking.
+GADM's outline is not accurate enough to be either. At 1,210 vertices it sits
+a median 587 m from Eurostat's independent GISCO digitisation of the same
+international border, and 2,980 m at the ninetieth percentile.
+OpenStreetMap's — 19,268 vertices — sits 60 m and 189 m, and the residual
+there is GISCO's generalisation rather than OSM's. The areas agree: published
+figures for Kosovo cluster between 10,887 km² (World Bank) and 10,910 km²,
+OpenStreetMap measures 10,898 km², and GADM measures 10,828 km².
 
-**4. Subspecies listings must not be matched at species level.**
+The reference is now that OpenStreetMap outline, and the test does what it is
+for: it flags **1,776 records**, 3.7 per cent of those with coordinates. They
+are not borderline calls. Ninety-four per cent carry a publisher-assigned
+country code of `ME`, `MK`, `RS` or `AL`, and they sit a median 552 m and up
+to 3.3 km beyond the border — records that GADM's outward bulges swept into
+the download. `country_buffer` in `pipeline.R` keeps records within a set
+distance of the border if that is wanted; it is `NULL`, meaning a strict test.
+
+The opposite error cannot be repaired downstream. 412 km² of Kosovo falls
+*outside* GADM's outline, so records there were never in the download.
+Selecting on a `geometry` predicate would close the gap, at the cost of a new
+download and a new DOI.
+
+**4. GADM's Kosovo municipalities are the pre-2010 set.**
+Kosovo's decentralisation created new municipalities in 2010 and split
+Mitrovica in two; the country has had 38 ever since. GADM 4.1 still draws 30.
+The units it is missing are not empty ground, and the difference is not
+academic: the single coordinate that carries more records than any other in
+the country — over thirteen thousand of them — sits on ground that moved from
+Fushë Kosovë to the new municipality of Graçanicë in 2010. Reported through
+GADM, all of them landed in Fushë Kosovë, and every coverage figure, map and
+table said so. The municipal layer is now read from the same OpenStreetMap
+source as the national outline, which carries all 38.
+
+**5. Subspecies listings must not be matched at species level.**
 The Birds Directive lists island endemics such as *Columba palumbus azorica*,
 *Fringilla coelebs ombriosa* and *Parus ater cypriotes*. Matching a subspecies
 listing on its accepted *species* key — which is the right thing to do for
@@ -399,7 +488,7 @@ I subset for subspecies confined to the Azores and the Canaries.
 `directive_lookup()` in `pipeline.R` therefore matches on the species key only
 where the listing itself is at species rank.
 
-**5. Basemap tiles: CARTO watermarks, and GBIF serves 512-pixel tiles.**
+**6. Basemap tiles: CARTO watermarks, and GBIF serves 512-pixel tiles.**
 `providers$CartoDB.Positron` — the usual light basemap for data cartography —
 still returns HTTP 200 and a valid PNG, but CARTO now stamps
 "API KEY REQUIRED" diagonally across every tile served to an unauthenticated
@@ -419,7 +508,7 @@ roads or labels at *any* zoom. That is what makes it a good ground for data,
 but it means zooming in adds no context, so `gbif-natural` is offered alongside
 it for readers who need to place a record against a road or a town.
 
-**6. Leaflet's heat layer discards intensity unless it is told the zoom.**
+**7. Leaflet's heat layer discards intensity unless it is told the zoom.**
 `L.heatLayer` multiplies every intensity by `1 / 2^(maxZoom − currentZoom)`,
 where `maxZoom` defaults to the *map's* maximum — 19 as soon as a street or
 satellite layer is present. At the country view that divides every value by
@@ -434,7 +523,7 @@ with a log transform and a fractional power. And the default gradient is a
 rainbow, which has no inherent order; it is now a single hue running light to
 dark.
 
-**7. `tibble()` evaluates its columns in sequence, with earlier ones in scope.**
+**8. `tibble()` evaluates its columns in sequence, with earlier ones in scope.**
 ```r
 dplyr::tibble(
   gpkg      = if (file.exists(gpkg)) basename(gpkg)  else NA_character_,
@@ -446,13 +535,13 @@ first line just produced. `file.exists()` is then false, `file.size()` returns
 `NA`, and every download button on the site loses its size with no warning
 anywhere. Resolve names and sizes *before* building the tibble.
 
-**8. Quarto's `freeze` does not watch the files your document sources.**
+**9. Quarto's `freeze` does not watch the files your document sources.**
 With `freeze: auto`, editing `R/functions.R` — where every map, pop-up and
 palette in this report actually lives — and re-rendering silently republishes
 the previous output, because Quarto only fingerprints the `.qmd` itself. This
 project therefore sets `freeze: false`.
 
-**9. GBIF returns no match for cross-kingdom homonyms.**
+**10. GBIF returns no match for cross-kingdom homonyms.**
 `name_backbone_checklist("Coronella austriaca")` returns `matchType: "NONE"`
 with the note "Multiple equal matches", because the name exists as both a snake
 and a plant homonym; *Liparis loeselii* fails the same way. Supplying the
@@ -460,6 +549,232 @@ kingdom the taxon was listed under resolves both. The build script reads the
 ANIMALS/PLANTS headings from the annex text to obtain that hint, and retries
 without it for the cases where the directive's botanical grouping disagrees
 with GBIF (lichens, listed under plants but placed in Fungi).
+
+---
+
+## The protected-area layer
+
+The report overlays the occurrence records on Kosovo's nationally designated
+protected areas, taken from the European Environment Agency's inventory of
+**Nationally designated areas** (NatDA, formerly the Common Database on
+Designated Areas, CDDA), version 24 of July 2026. It is the channel through
+which 38 Eionet countries report their protected areas to the World Database on
+Protected Areas, so Kosovo's entry is its own official register.
+
+```r
+protected_areas  <- kosovo_protected_areas(layer = "polygons")   # 67 features
+protected_points <- kosovo_protected_areas(layer = "points")     # 189 features
+```
+
+| | |
+|---|---|
+| Source | [EEA datahub, dataset `028003e7`](https://www.eea.europa.eu/en/datahub/datahubitem-view/f60cec02-6494-4d08-b12d-17a37012cb28) |
+| DOI | [10.2909/028003e7-7585-4d69-92fc-7f81e0cc2340](https://doi.org/10.2909/028003e7-7585-4d69-92fc-7f81e0cc2340) |
+| Licence | CC-BY 4.0, © European Environment Agency |
+| Kosovo coverage | 237 designated sites and 19 strict-protection zones; 1,261 km², 11.6 % of the country |
+
+### Nothing is downloaded
+
+The EEA publishes the vector data as a 1.7 GB GeoPackage covering 38 countries,
+and a 510 MB File Geodatabase of the same features. The pipeline takes neither.
+A GeoPackage is a SQLite database with an R-tree spatial index, the EEA's server
+honours HTTP range requests, and GDAL's `/vsicurl/` combines the two into a
+query that fetches only the pages covering the bounding box it is given.
+Kosovo's 256 features arrive in about a minute and a few megabytes.
+
+The result is cached in `data/kosovo_protected_areas.gpkg` (700 kB, tracked),
+so a fresh clone reads it from the repository and makes no request at all.
+Delete that file to rebuild.
+
+The File Geodatabase is deliberately not used despite being a third of the
+size: GDAL 3.12's `OpenFileGDB` driver returns empty geometries for its
+multipoint table, which would silently drop the 189 point-only sites — three
+quarters of Kosovo's register.
+
+### Two shapes, and why it matters
+
+Of the 237 designated sites, 48 carry a mapped boundary and 189 are recorded as
+a single point. That is a property of the sites, not a defect: every national
+park, strict nature reserve, protected landscape, nature park and wetland is a
+polygon, while the point-only sites are all natural monuments — individual
+veteran trees, springs and caves, most under a tenth of a hectare.
+
+Only the polygons can carry a point-in-polygon test, so the two are kept as
+separate layers of one GeoPackage rather than one mixed-geometry table. Three
+columns are added to every occurrence export:
+
+| Column | Meaning |
+|---|---|
+| `protectedArea` | Name of the designated site the record falls in, or blank |
+| `protectedAreaDesignation` | That site's designation, in English |
+| `strictlyProtected` | Whether the record also falls inside a strict-protection zone |
+
+Where a record falls inside more than one site — seven of Kosovo's sites
+overlap along their edges — the smallest is taken, being the most specific
+statement anyone has made about that ground. The strict-protection zones are
+excluded from the site test, because each lies inside a site already counted.
+
+> **`iucn_management_category` is not the Red List.** It is the IUCN
+> protected-area *management* category (Ia, Ib, II, III, V), which describes how
+> a site is run. The Red List categories used elsewhere in this project are CR,
+> EN, VU and so on. The two share an acronym and nothing else.
+
+---
+
+## Site reports for individual protected areas
+
+The website answers national questions. A conservation officer asked about one
+site needs the same evidence for that site alone, in a form they can open in
+QGIS and attach to a case file. `site_reports.R` produces it:
+
+```bash
+Rscript site_reports.R --site NP_001
+```
+
+writes `outputs/protected_areas/parku-kombetar-sharri/` containing
+
+* `parku-kombetar-sharri.gpkg` — every record inside the site and its buffer,
+  the boundary, the strict-protection zones, two 1 km grids, the overlapping
+  municipalities, a species list and the provenance, as nine GeoPackage layers;
+* `parku-kombetar-sharri.pdf` — a four- to six-page report on the same figures.
+
+The PDF reads its numbers **out of the GeoPackage**, so the two cannot state
+different figures. No GBIF credentials and no network access are needed: the
+tool reads what `pipeline.R` has already published, and never triggers a new
+download.
+
+### The command line
+
+| Option | Meaning |
+|---|---|
+| `--site VALUE` | A `natda_id`, a `national_id`, or part of a site name, case- and diacritic-insensitive. Repeatable. An ambiguous name is an error listing the candidates |
+| `--all` | Every designated site in the register |
+| `--designation NAME` | Keep only this designation, e.g. `"National Park"` |
+| `--iucn-category CODE` | Keep only this IUCN management category, e.g. `II` |
+| `--min-area-km2 N` | Keep only sites of at least N km², as reported by the register |
+| `--out DIR` | Output directory (default `outputs/protected_areas`) |
+| `--buffer M` | Comparison buffer in metres (default 1000) |
+| `--gpkg-only` / `--pdf-only` | Write only one of the two outputs |
+| `--force` | Regenerate even when the outputs are newer than every input |
+| `--quiet` | Print nothing but errors and the run summary |
+| `--help` | Usage |
+
+```bash
+Rscript site_reports.R --site "Bjeshket e Nemuna"          # diacritics optional
+Rscript site_reports.R --site 555547192 --site NP_001      # repeatable
+Rscript site_reports.R --all --designation "National Park" --out outputs/np
+Rscript site_reports.R --site NP_002 --gpkg-only --force
+```
+
+Re-running regenerates nothing and says so, unless an input — including the
+code — is newer than the outputs, or `--force` is given. One site failing is
+logged and the run continues; the exit status is non-zero if any site failed.
+Every run appends to `outputs/run_manifest.csv` and rewrites
+`outputs/national_site_statistics.csv`, the table each report quotes its
+national rank from.
+
+### The GeoPackage
+
+All layers are stored in **EPSG:4326**; every area, distance and density is
+computed in **EPSG:3035** (ETRS89-LAEA), the projection the EEA uses for area
+statistics. Both are recorded in `report_metadata`, so neither has to be
+inferred from the numbers.
+
+| Layer | Geometry | Columns beyond the register's own |
+|---|---|---|
+| `site_boundary` | polygon | `boundary_basis`, `computed_area_km2`, `buffer_m`, `records`, `species`, `families`, `datasets`, `records_per_km2`, `first_year`, `last_year`, `records_in_buffer_only`, `strict_zones`, `strict_records`, `grid_cells`, `grid_cells_with_records`, `unrecorded_share` |
+| `site_buffer` | polygon | `natda_id`, `site_name`, `buffer_m`, `buffer_area_km2`, `records`, `records_outside` |
+| `strict_protection` | polygon | register attributes, `computed_area_km2`, `records`, `species` |
+| `occurrences` | point | the full export attribute set, plus `inside_site`, `in_buffer_only`, `strictlyProtected`, `directive`, `annex` |
+| `species_richness_grid` | polygon | `cell_id`, `species`, `records`, `cell_area_km2` |
+| `record_density_grid` | polygon | `cell_id`, `records`, `density_class`, `cell_area_km2` |
+| `municipalities_overlapping` | polygon | `unit_area_km2`, `overlap_km2`, `share_of_unit`, `share_of_site` |
+| `species_summary` | none | `species`, `vernacularName`, `kingdom`, `family`, `records`, `iucnRedListCategory`, `directive`, `annex`, `first_year`, `last_year` |
+| `report_metadata` | none | `natda_id`, `item`, `value` — the GBIF DOI and citation, the register version, every input path and its modification time, the CRSs, the buffer, the tool version and commit, and the command that reproduces the file |
+
+Both grids drop their empty cells, because an empty cell is not a
+record; the count of empty cells survives in `site_boundary` as
+`grid_cells` against `grid_cells_with_records`, which is what the report's
+recording-gap figure is computed from.
+
+Two counting rules are worth knowing before the numbers are compared with the
+national report:
+
+* **Records are counted by intersection with the boundary**, not from the
+  `protectedArea` stamp. The stamp names only the smallest site containing a
+  record, so a record in the overlap of two sites would otherwise vanish from
+  one of the two reports. A site's total here can therefore be slightly higher
+  than its row in the national table.
+* **The register's own `area_km2` is dropped** in favour of
+  `computed_area_km2`, measured in EPSG:3035. Two area columns differing in the
+  third decimal place are worse than one.
+
+### The PDF needs Typst, not LaTeX
+
+The report is rendered through Quarto's `format: typst`. Typst ships **inside
+Quarto** from version 1.4, so there is nothing to install: no TeX distribution,
+no `tinytex`, no LaTeX packages. Check with `quarto typst --version`.
+
+The maps are drawn with `ggplot2` and use no tile service, so a report renders
+with the network unplugged and looks the same in a year's time. Above 20,000
+records the point layer is withheld and the density grid is drawn in its place,
+with the reason printed on the map — records are never silently thinned.
+
+> **One line worth adding to `_quarto.yml`.** The website project's render list
+> is `["*.qmd", "!presentation/"]`, and that glob reaches `reports/` as well, so
+> a plain `quarto render` of the website renders the template too and leaves a
+> stray `docs/reports/site_report.pdf` behind. Rendered without a site the
+> template describes itself and stops rather than failing, so nothing breaks
+> either way — but adding `- "!reports/"` beside `- "!presentation/"` keeps the
+> website out of this directory altogether. `reports/_quarto.yml` makes the
+> directory its own project, which is what keeps a targeted render of the
+> template from inheriting the website's format and output directory; it does
+> not exclude it from the parent's render list.
+
+### The report wears the website's colours
+
+A site report and the national report are one publication, so the PDF is drawn
+in the colours of the page, each doing the job it does there: GBIF black for
+reading text, the brand green for the rule under a section heading, the ink
+step `#358305` for text that has to be green — the key figures, the links, the
+file names — azure down the edge of the citation block, and the Red List's own
+colours in a swatch beside every category, which is the swatch `report.qmd`
+puts in its own species tables. The maps have always shared `map_palette` with
+the website's interactive ones; the printed locator map now draws land in GBIF
+mist as well, the land colour of the `gbif-light` basemap those maps sit on.
+
+Those values live in `reports/gbif-report.typ`, which the template includes as
+its Typst header. They are restated there rather than shared because nothing
+can share them — Typst cannot read SCSS, and Quarto's own answer to this, a
+`_brand.yml`, would restyle the website as well as the report. The duplication
+is guarded instead: `run_test_site_report.R` reads `custom.scss`,
+`R/site_report.R` and the theme together, and fails if a value drifts out of
+step, if a map goes back to a hard-coded colour, or if the report starts using
+a colour the page does not.
+
+### Sites with no records, and sites with no boundary
+
+Both are ordinary, and both produce complete outputs:
+
+* a site with **no records** is not an error. Its layers are written empty, and
+  every section says plainly that it is empty. Most of Kosovo's register is in
+  this state, and the report says in as many words that absence of records is
+  not absence of species;
+* a site recorded as a **point** has no inside, so it is buffered to a circle of
+  the area the register reports for it. The substitution is stated in the PDF
+  and recorded in `report_metadata` as `boundary_basis`.
+
+### Testing it
+
+```bash
+Rscript run_test_site_report.R
+```
+
+covers site resolution by all three keys, ambiguity, slug stability and
+ASCII-safety, the zero-record and point-only sites, the layers and CRS of the
+GeoPackage, the determinism of the summary tables, and that the PDF's colours
+still agree with the website's. Like `run_test.R` it
+needs no credentials and no network, and **writes only into `tempdir()`**.
 
 ---
 
@@ -473,6 +788,10 @@ reader retrieve the identical dataset.
 GBIF-mediated data are released under licences chosen by each publishing
 institution. The `license` column in every export records the terms applying to
 each record.
+
+The protected-area boundaries are © European Environment Agency and are
+redistributed under CC-BY 4.0. Cite them as
+<https://doi.org/10.2909/028003e7-7585-4d69-92fc-7f81e0cc2340>.
 
 ---
 

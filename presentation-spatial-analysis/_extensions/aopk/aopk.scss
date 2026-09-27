@@ -1,0 +1,711 @@
+/*-----------------------------------------------------------------------------
+  AOPK ČR — reveal.js theme (16:9)
+  Agentura ochrany přírody a krajiny České republiky
+
+  Every value in this file is traceable to "Grafický manuál AOPK ČR 2026 —
+  Hlavní část". Citations are given as (manual p. N). Values marked
+  [measured] were obtained by rendering the manual's own PowerPoint mockups
+  (p. 18) at 400 dpi and measuring them in pixels; they are expressed as a
+  percentage of the slide box so they stay correct at any canvas size.
+  See docs/DESIGN-SPEC.md for the full measurement table.
+
+  Logical canvas: 1280 × 720 px (16:9). reveal.js scales it to the viewport,
+  so 1 px here is always 1/1280 of the slide width.
+-----------------------------------------------------------------------------*/
+
+/*-- scss:defaults --*/
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 1. BARVY / COLOURS                                            (manual p. 10)
+//
+// The manual lists CMYK, RGB and Pantone for every colour. We use the *stated
+// RGB* column, because RGB is the manual's own specification for screen media.
+//
+//   ZÁKLADNÍ BARVY (base)
+//     tmavě zelená    CMYK 100/30/80/25   RGB 0/107/77     Pantone 342
+//   DOPLŇKOVÉ BARVY (supplementary)
+//     žlutá           CMYK 0/18/100/0     RGB 255/205/0    Pantone 116
+//     světle zelená   CMYK 50/0/100/0     RGB 140/200/60   Pantone 376
+//     oranžová        CMYK 0/55/100/0     RGB 246/139/31   Pantone Orange 021
+//     šedá            CMYK 35/27/25/0     RGB 177/177/177  Pantone Cool Gray 7
+//
+// NOTE — the manual's printed swatches are CMYK artwork and convert to
+// slightly different RGB (#006647, #FFD000, #95C11F, #F18700, #B3B3B7). Those
+// are colour-profile conversions of the CMYK build, not a second specification.
+// The stated RGB column above is authoritative for screen. See DESIGN-SPEC.md.
+// ═══════════════════════════════════════════════════════════════════════════
+
+$aopk-green-dark:  #006B4D !default; // tmavě zelená  — primary
+$aopk-yellow:      #FFCD00 !default; // žlutá
+$aopk-green-light: #8CC83C !default; // světle zelená
+$aopk-orange:      #F68B1F !default; // oranžová
+$aopk-gray:        #B1B1B1 !default; // šedá
+
+$aopk-black:       #000000 !default; // body copy on white [measured: pure black]
+$aopk-white:       #ffffff !default;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 2. PÍSMO / TYPEFACE                                     (manual p. 11 & 18)
+//
+// "Písmem jednotného vizuálního stylu AOPK ČR je Franklin Gothic."  (p. 11)
+// "DOPLŇKOVÉ PÍSMO — Doplňkovým písmem je Arial."                   (p. 11)
+// Presentations specifically: "PÍSMO — Franklin Gothic nebo Arial CE" (p. 18)
+//
+// Windows ships Franklin Gothic as four SEPARATE families (Book / Medium /
+// Demi / Heavy), so `font-weight` alone cannot reach them. The @font-face
+// rules in the rules section below alias them into one family with real
+// weights, falling through to Arial — the manual's approved alternative —
+// when Franklin Gothic is not installed.
+// ═══════════════════════════════════════════════════════════════════════════
+
+$aopk-font-stack: "AOPK Franklin Gothic", "Franklin Gothic Book",
+                  Arial, "Helvetica Neue", Helvetica, sans-serif !default;
+
+$aopk-weight-book:   400 !default; // Franklin Gothic Book
+$aopk-weight-medium: 500 !default; // Franklin Gothic Medium
+$aopk-weight-demi:   600 !default; // Franklin Gothic Demi
+$aopk-weight-heavy:  800 !default; // Franklin Gothic Heavy
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 3. LAYOUT [measured from manual p. 18]
+//
+// Slide box of the mockups: 1469 × 827 px at 400 dpi → aspect 1.776 (= 16:9).
+// All figures below are percentages of that box.
+//
+//   left content margin ....... 7.69 / 7.76 / 7.69 %  (TITULEK, bullets, footer)
+//   right edge of elements .... 4.08 %                (image, dvojlist)
+//   footer bar height ......... 9.07 % / 9.20 %       (content / title slide)
+// ═══════════════════════════════════════════════════════════════════════════
+
+// The logical canvas (must match `width:`/`height:` in _extension.yml).
+$aopk-canvas-w: 1280px !default;
+$aopk-canvas-h:  720px !default;
+
+// Measured ratios, kept unitless so every length below can be DERIVED from
+// them. They are not written as CSS percentages on purpose: a percentage
+// `padding-top` resolves against the containing block's WIDTH, not its height,
+// so "9.07 % of slide height" written as `9.07%` would silently become 9.07 %
+// of 1280 px. Deriving px from the ratio keeps the manual's proportions exact.
+$aopk-margin-left-r:       0.0770 !default; // of slide WIDTH  (7.70 %)
+$aopk-margin-right-r:      0.0408 !default; // of slide WIDTH  (4.08 %)
+$aopk-dvojlist-w-r:        0.1540 !default; // of slide WIDTH  (15.40 %)
+$aopk-footer-h-r:          0.0907 !default; // of slide HEIGHT (9.07 %)
+
+$aopk-margin-left:  $aopk-canvas-w * $aopk-margin-left-r;  //  98.6 px
+$aopk-margin-right: $aopk-canvas-w * $aopk-margin-right-r; //  52.2 px
+$aopk-dvojlist-w:   $aopk-canvas-w * $aopk-dvojlist-w-r;   // 197.1 px
+$aopk-footer-h:     $aopk-canvas-h * $aopk-footer-h-r;     //  65.3 px
+
+// Dvojlist height, from the artwork's own aspect ratio 167.895 : 71.133
+// (= 2.3603 : 1; the reciprocal is used so this stays a multiplication).
+$aopk-dvojlist-h: $aopk-dvojlist-w * 0.42367;              //  83.5 px
+
+// SAFE AREA. Slide copy and pictures must not run under the dvojlist, so the
+// content box stops where the leaf begins rather than where the bar begins.
+// The manual's own content mockup does exactly this: the picture's bottom edge
+// (80.65 % of slide height) lands on the dvojlist's top edge (80.29 %).
+$aopk-content-bottom: $aopk-footer-h + $aopk-dvojlist-h;   // 148.8 px
+
+// Type scale, as a percentage of slide height [measured, cap-height ÷ 0.716].
+//   title slide title . cap 7.38 % → 10.31 %  → 74.2 px
+//   TITULEK (h2) ...... cap 3.99 % →  5.57 %  → 40.1 px
+//   author ............ cap 2.66 % →  3.72 %  → 26.8 px
+//   institute ......... cap 2.54 % →  3.55 %  → 25.6 px
+//   body .............. cap 2.54 % →  3.60 %  → 25.9 px
+//   footer ............ cap 1.93 % →  2.70 %  → 19.4 px
+$aopk-size-title:     74.2px !default;
+$aopk-size-h2:        40.1px !default;
+$aopk-size-author:    26.8px !default;
+$aopk-size-institute: 25.6px !default;
+$aopk-size-body:      25.9px !default;
+$aopk-size-footer:    19.4px !default;
+
+// Body leading. The manual's paragraph mockup steps 33.2 px on a ~30 px font
+// (1.10); its bullet mockup steps 46.7 px, i.e. the same leading plus space
+// between list items. We model it exactly that way.
+$aopk-line-height:      1.15 !default;
+$aopk-list-item-gap:    0.42em !default; // → 46.5 px step, measured 46.7 px
+
+// Vertical anchors, percentage of slide height [measured].
+// Unitless, for the same reason as the layout ratios above.
+$aopk-h2-cap-top:        0.1125 !default; // top of TITULEK capitals (11.25 %)
+$aopk-body-cap-top:      0.2780 !default; // top of first bullet's caps (27.80 %)
+$aopk-title-cap-top:     0.2906 !default; // title slide            (29.06 %)
+$aopk-author-cap-top:    0.5702 !default; //                        (57.02 %)
+$aopk-institute-cap-top: 0.6937 !default; //                        (69.37 %)
+
+// Dvojlist width is set by $aopk-dvojlist-w-r above: measured 15.45 % (content)
+// / 15.04 % (title) of slide width. The artwork's natural aspect ratio is
+// 167.895 : 71.133 and is applied in the rules section.
+
+// Should the author line be set in capitals, as the mockup shows? Set to
+// false in your document's SCSS if you prefer a name in normal case.
+$aopk-author-uppercase: true !default;
+
+// ── Quarto / reveal.js theme variables ────────────────────────────────────
+$body-bg:                     $aopk-white !default;
+$body-color:                  $aopk-black !default;
+$link-color:                  $aopk-green-dark !default;
+$link-color-hover:            $aopk-green-light !default;
+$selection-bg:                $aopk-green-light !default;
+$selection-color:             $aopk-white !default;
+
+$font-family-sans-serif:      $aopk-font-stack !default;
+$presentation-font-size-root: $aopk-size-body !default;
+$presentation-line-height:    $aopk-line-height !default;
+$presentation-heading-font:   $aopk-font-stack !default;
+$presentation-heading-color:  $aopk-green-dark !default;
+$presentation-heading-weight: $aopk-weight-heavy !default;
+$presentation-h1-font-size:   $aopk-size-title !default;
+$presentation-h2-font-size:   $aopk-size-h2 !default;
+$presentation-h3-font-size:   30px !default;
+$presentation-h4-font-size:   26px !default;
+$code-block-font-size:        0.7em !default;
+
+
+/*-- scss:mixins --*/
+
+// Convert a measured "cap-height top" anchor (a ratio of slide height) into the
+// CSS `top` a text box needs, and return it as a plain px length.
+//
+// The manual's anchors are the top of the CAPITALS, but a browser positions the
+// LINE BOX. The distance from line-box top down to cap top is
+//     half-leading + (ascender − cap-height)
+// with, for Arial and Franklin Gothic alike, ascender+descender ≈ 1.117 em,
+// ascender ≈ 0.905 em and cap-height ≈ 0.716 em.
+//
+// px, not calc(%): a percentage would be resolved against the containing
+// block's width wherever it is used for padding — see the note in the layout
+// tokens above.
+@function aopk-cap-top($cap-top-ratio, $font-size, $line-height: 1.15) {
+  $half-leading: ($line-height * $font-size - 1.117 * $font-size) * 0.5;
+  $cap-offset: $half-leading + 0.189 * $font-size;
+  @return $aopk-canvas-h * $cap-top-ratio - $cap-offset;
+}
+
+
+/*-- scss:rules --*/
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FONT ALIASING
+// Map Windows' four separate Franklin Gothic families onto one family with
+// real weights. If Franklin Gothic is absent every rule simply fails to match
+// and the stack falls through to Arial (manual p. 11: "Doplňkovým písmem je
+// Arial"), which is what most non-Windows machines will use.
+// ═══════════════════════════════════════════════════════════════════════════
+@font-face {
+  font-family: "AOPK Franklin Gothic"; font-weight: 400; font-style: normal;
+  src: local("Franklin Gothic Book"), local("FranklinGothic-Book"),
+       local("ITC Franklin Gothic Std Book");
+}
+@font-face {
+  font-family: "AOPK Franklin Gothic"; font-weight: 500; font-style: normal;
+  src: local("Franklin Gothic Medium"), local("FranklinGothic-Medium"),
+       local("ITC Franklin Gothic Std Medium");
+}
+@font-face {
+  font-family: "AOPK Franklin Gothic"; font-weight: 600; font-style: normal;
+  src: local("Franklin Gothic Demi"), local("FranklinGothic-Demi"),
+       local("ITC Franklin Gothic Std Demi");
+}
+@font-face {
+  font-family: "AOPK Franklin Gothic"; font-weight: 800; font-style: normal;
+  src: local("Franklin Gothic Heavy"), local("FranklinGothic-Heavy"),
+       local("ITC Franklin Gothic Std Heavy");
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CUSTOM PROPERTIES — exposed so a deck can override them inline.
+// ═══════════════════════════════════════════════════════════════════════════
+.reveal {
+  --aopk-green-dark:  #{$aopk-green-dark};
+  --aopk-green-light: #{$aopk-green-light};
+  --aopk-yellow:      #{$aopk-yellow};
+  --aopk-orange:      #{$aopk-orange};
+  --aopk-gray:        #{$aopk-gray};
+
+  --aopk-margin-left:  #{$aopk-margin-left};
+  --aopk-margin-right: #{$aopk-margin-right};
+  --aopk-footer-h:     #{$aopk-footer-h};
+  --aopk-dvojlist-w:   #{$aopk-dvojlist-w};
+  --aopk-dvojlist-h:   #{$aopk-dvojlist-h};
+
+  // Bottom of the usable content box, and its height. Content stops above the
+  // dvojlist, not just above the bar, so nothing collides with the leaf.
+  --aopk-content-bottom: #{$aopk-content-bottom};
+  --aopk-content-h: #{$aopk-canvas-h
+                      - aopk-cap-top($aopk-body-cap-top, $aopk-size-body, $aopk-line-height)
+                      - $aopk-content-bottom};
+
+  font-family: $aopk-font-stack;
+  font-weight: $aopk-weight-book;
+  color: $aopk-black;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SLIDE BOX
+// Sections must fill the whole 720 px canvas so that the footer bar, the
+// dvojlist and the measured vertical anchors all resolve against the slide
+// and not against the height of the content that happens to be on it.
+// ═══════════════════════════════════════════════════════════════════════════
+// The content column is expressed as padding on the section rather than as a
+// margin on every child. Two reasons:
+//   * absolutely positioned children (the heading, the footer bar, the
+//     dvojlist) resolve their offsets against the section's PADDING BOX, so
+//     padding moves the flowing copy without dragging them along — a child
+//     margin would have been added on top of their own `left`, indenting the
+//     heading twice;
+//   * the flowing copy then starts exactly at the measured body anchor.
+.reveal .slides > section,
+.reveal .slides > section > section {
+  height: 720px;
+  box-sizing: border-box;
+  text-align: left;
+  padding:
+    #{aopk-cap-top($aopk-body-cap-top, $aopk-size-body, $aopk-line-height)}
+    var(--aopk-margin-right)
+    var(--aopk-content-bottom)
+    var(--aopk-margin-left);
+}
+
+// Nothing decorative to avoid on these, so the copy may run down to the bar.
+.reveal .slides section.no-leaf,
+.reveal .slides section.aopk-title-slide {
+  padding-bottom: var(--aopk-footer-h);
+}
+
+// Pictures obey the safe area too. `max-width` alone only constrains the
+// width, so a tall image in a narrow column would still grow down into the
+// leaf; capping the height as well makes the browser fit both and keep the
+// aspect ratio.
+.reveal .slides section img,
+.reveal .slides section svg,
+.reveal .slides section video {
+  max-height: var(--aopk-content-h);
+  // reveal.js gives images a 12 px vertical margin. On the first picture of a
+  // slide that margin collapses out through its <p> and drops the whole block
+  // 12 px below the body anchor — enough to push the bottom edge back under
+  // the leaf. Vertical rhythm here comes from the anchors, not from the image.
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.reveal .slides section.no-leaf img,
+.reveal .slides section.no-leaf svg,
+.reveal .slides section.no-leaf video {
+  max-height: calc(var(--aopk-content-h) + #{$aopk-dvojlist-h});
+}
+
+// The first flowing block sits exactly on the body anchor. This has to reach
+// the first LIST ITEM too, not just the list: reveal.js gives list items a top
+// margin, and on the first item that margin collapses out through the <ul> and
+// pushes the whole block off the anchor.
+.reveal .slides section > *:first-child,
+.reveal .slides section > h2 + * { margin-top: 0; }
+
+.reveal .slides section ul > li:first-child,
+.reveal .slides section ol > li:first-child,
+.reveal .slides section > h2 + * > *:first-child { margin-top: 0; }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DVOJLIST                                                     (manual p. 12)
+// "Používá se ke zvýraznění jednotného vizuálního stylu v prezentacích…
+//  Umísťuje se v dolní části stránky v pravo nebo uprostřed.
+//  Barvy: světle zelená a oranžová barva, obě s průhledností 80 %."
+// The 80 % opacity is baked into assets/dvojlist.svg, exactly as in the
+// source artwork. Its flat bottom edge sits flush on the footer bar.
+// ═══════════════════════════════════════════════════════════════════════════
+.reveal .slides section::after {
+  content: "";
+  position: absolute;
+  right: var(--aopk-margin-right);
+  bottom: var(--aopk-footer-h);
+  width: var(--aopk-dvojlist-w);
+  aspect-ratio: 167.895 / 71.133;
+  background: $aopk-img-dvojlist no-repeat right bottom / contain;
+  pointer-events: none;
+  z-index: 1;
+}
+
+// Centred variant — title and closing slides (manual p. 18 mockups; the
+// closing slide's dvojlist measures centre-x 49.97 %).
+.reveal .slides section.aopk-center-leaf::after,
+.reveal .slides section.aopk-closing::after,
+.reveal .slides section.aopk-title-slide::after {
+  right: auto;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+// Opt out on a per-slide basis with {.no-leaf}
+.reveal .slides section.no-leaf::after { content: none; }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FOOTER BAR
+// Content slides (manual p. 18): full-width dark green bar, light green text,
+// presentation name + date on the left, "AOPK ČR | aopk.gov.cz" on the right.
+// [measured] bar height 9.07 %; text vertically centred (50.00 % of the bar);
+// left inset 7.69 % — the same margin as TITULEK; right inset ≈4.1 %.
+// The text colour is světle zelená, NOT white.
+// ═══════════════════════════════════════════════════════════════════════════
+// reveal.js's own footer is viewport-fixed and cannot scale with the slide, so
+// aopk-slides.lua injects .aopk-bar into each section instead. Suppress
+// Quarto's, in case a deck sets `footer:` for some other reason.
+// (`.reveal div.footer` outranks quarto-support/footer.css, which loads after
+// this stylesheet and would otherwise win on source order.)
+.reveal div.footer { display: none !important; }
+
+.reveal .slides section > .aopk-bar {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: var(--aopk-footer-h);
+  margin: 0 !important; // beat the generic content-column margins
+  padding: 0 var(--aopk-margin-right) 0 var(--aopk-margin-left);
+  box-sizing: border-box;
+  background: var(--aopk-green-dark);
+  color: var(--aopk-green-light);
+  font-size: $aopk-size-footer;
+  font-weight: $aopk-weight-book;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  z-index: 5;
+
+  .aopk-bar-left  { margin-right: auto; }
+  .aopk-bar-right {
+    margin-left: auto;
+    padding-left: 1.5em;
+    font-weight: $aopk-weight-demi;
+    white-space: nowrap;
+  }
+}
+
+// Title slide bar: one centred line (manual p. 18).
+.reveal .slides section.aopk-title-slide > .aopk-bar {
+  justify-content: center;
+  font-weight: $aopk-weight-demi;
+}
+
+// Closing slide and section dividers carry an empty bar (manual p. 18).
+.reveal .slides section > .aopk-bar-empty { justify-content: center; }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// HEADINGS — "TITULEK"                                         (manual p. 18)
+// Dark green, capitals, heavy, on the left margin, cap top at 11.25 %.
+// ═══════════════════════════════════════════════════════════════════════════
+.reveal h1, .reveal h2, .reveal h3, .reveal h4, .reveal h5, .reveal h6 {
+  font-family: $aopk-font-stack;
+  color: $aopk-green-dark;
+  font-weight: $aopk-weight-heavy;
+  line-height: 1.1;
+  letter-spacing: 0;
+  text-transform: none;
+  margin: 0;
+  text-shadow: none;
+}
+
+// A slide written as `## {.aopk-closing}` has an empty heading; don't reserve
+// space for it.
+.reveal .slides section > h2:empty { display: none; }
+
+.reveal .slides section > h2 {
+  font-size: $aopk-size-h2;
+  text-transform: uppercase;
+  position: absolute;
+  top: aopk-cap-top($aopk-h2-cap-top, $aopk-size-h2, 1.1);
+  left: var(--aopk-margin-left);
+  right: var(--aopk-margin-right);
+  margin: 0;
+}
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BODY COPY AND LISTS                                          (manual p. 18)
+// Black body text; simple round bullets; item spacing reproduces the mockup's
+// 46.7 px step at a 25.9 px font.
+// ═══════════════════════════════════════════════════════════════════════════
+.reveal p, .reveal li {
+  font-size: $aopk-size-body;
+  line-height: $aopk-line-height;
+  color: $aopk-black;
+}
+
+// [measured] the bullet glyph sits on the same left edge as TITULEK (both at
+// 7.7 % of slide width) and the text starts ~0.8 em further right. A normal
+// `list-style: outside` marker would hang to the LEFT of that edge, so we draw
+// the marker ourselves and keep the list box flush with the content column.
+.reveal ul, .reveal ol {
+  display: block;
+  margin-left: 0;
+  padding-left: 0;
+  list-style: none;
+
+  li {
+    position: relative;
+    padding-left: 0.8em;
+    margin-block: 0;
+  }
+
+  // The gap belongs BETWEEN items only: a margin on the first item would push
+  // the whole block off the measured body anchor (27.80 % of slide height).
+  li + li { margin-top: $aopk-list-item-gap; }
+
+  // reveal.js's own `.reveal ul ul { list-style-type: square }` matches at the
+  // same specificity as the `list-style: none` above but on a longer selector, so
+  // a nested item would otherwise carry BOTH the native square and the bullet we
+  // draw in ::before. Restate it here to win.
+  ul, ol { margin-left: 0.8em; margin-top: $aopk-list-item-gap; list-style: none;
+           li + li { margin-top: 0.22em; } }
+}
+
+.reveal ul > li::before {
+  content: "•";
+  position: absolute;
+  // The bullet's own left side bearing would otherwise set the glyph ~0.18 em
+  // inside the content edge; the manual aligns the dot with TITULEK exactly.
+  left: -0.18em;
+  line-height: inherit;
+}
+
+.reveal ol {
+  counter-reset: aopk-ol;
+  > li {
+    counter-increment: aopk-ol;
+    padding-left: 1.35em;
+    &::before {
+      content: counter(aopk-ol) ".";
+      position: absolute;
+      left: 0;
+      line-height: inherit;
+    }
+  }
+}
+
+.reveal strong, .reveal b { font-weight: $aopk-weight-demi; }
+.reveal em { font-style: italic; }
+
+.reveal a { color: $aopk-green-dark; text-decoration: underline; }
+.reveal a:hover { color: $aopk-green-light; }
+
+.reveal blockquote {
+  border-left: 4px solid $aopk-green-light;
+  background: none;
+  box-shadow: none;
+  font-style: normal;
+  padding: 0.2em 0 0.2em 0.8em;
+}
+
+.reveal table {
+  margin-left: 0; // reveal centres tables; the content column starts at the left margin
+  th { background: $aopk-green-dark; color: $aopk-white; font-weight: $aopk-weight-demi; }
+  td, th { border-color: $aopk-gray; }
+  tr:nth-child(even) td { background: rgba($aopk-green-light, 0.12); }
+}
+
+.reveal code { color: $aopk-green-dark; }
+.reveal pre { box-shadow: none; border: 1px solid $aopk-gray; }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TITLE SLIDE                                                  (manual p. 18)
+// Everything centred: title (dark green, heavy, capitals) at 29.06 %,
+// author (světle zelená, demi, capitals) at 57.02 %, and the section/
+// department line (dark green, book) at 69.37 %. Dvojlist centred at the
+// bottom; the bar carries "Agentura ochrany přírody a krajiny ČR | aopk.gov.cz".
+// ═══════════════════════════════════════════════════════════════════════════
+.reveal .slides section.aopk-title-slide {
+  text-align: center;
+
+  > * { margin-left: 0; margin-right: 0; }
+
+  .aopk-title {
+    position: absolute;
+    left: 6%; right: 6%;
+    top: aopk-cap-top($aopk-title-cap-top, $aopk-size-title, 1.08);
+    margin: 0;
+    font-size: $aopk-size-title;
+    font-weight: $aopk-weight-heavy;
+    line-height: 1.08;
+    color: $aopk-green-dark;
+    text-transform: uppercase;
+    text-align: center;
+  }
+
+  .aopk-author {
+    position: absolute;
+    left: 6%; right: 6%;
+    top: aopk-cap-top($aopk-author-cap-top, $aopk-size-author, 1.2);
+    margin: 0;
+    font-size: $aopk-size-author;
+    font-weight: $aopk-weight-demi;
+    line-height: 1.2;
+    color: $aopk-green-light;
+    text-align: center;
+    @if $aopk-author-uppercase { text-transform: uppercase; }
+  }
+
+  .aopk-institute {
+    position: absolute;
+    left: 6%; right: 6%;
+    top: aopk-cap-top($aopk-institute-cap-top, $aopk-size-institute, 1.25);
+    margin: 0;
+    font-size: $aopk-size-institute;
+    font-weight: $aopk-weight-book;
+    line-height: 1.25;
+    color: $aopk-green-dark;
+    text-align: center;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CLOSING SLIDE  {.aopk-closing}                               (manual p. 18)
+// Mission statement with dark green copy and demi lead-in verbs, the
+// logo+slogan lockup, the web address, a centred dvojlist and an empty bar.
+// ═══════════════════════════════════════════════════════════════════════════
+// [measured, of the slide box] mission block left 41.87 % top 16.93 %;
+// logo+slogan lockup centred (25.19 %…75.15 %) top 47.52 %, height 12.09 % of
+// slide height; "aopk.gov.cz" left 41.73 % top 65.42 %; dvojlist centred.
+.reveal .slides section.aopk-closing {
+  text-align: left;
+
+  .aopk-mission {
+    position: absolute;
+    top: $aopk-canvas-h * 0.1693;
+    left: $aopk-canvas-w * 0.4187;
+    right: $aopk-canvas-w * 0.0600;
+    margin: 0;
+    // `.reveal p` sets the body colour on the paragraph itself, which would
+    // beat a colour merely inherited from this wrapper.
+    &, p { color: $aopk-green-dark; }
+    p { font-size: $aopk-size-body; line-height: 1.15; margin: 0; }
+    strong, b { font-weight: $aopk-weight-demi; }
+  }
+
+  .aopk-lockup {
+    position: absolute;
+    top: $aopk-canvas-h * 0.4752;
+    left: 50%;
+    transform: translateX(-50%);
+    margin: 0;
+    img {
+      height: $aopk-canvas-h * 0.1209; // 87 px
+      width: auto;
+      display: block;
+    }
+  }
+
+  .aopk-web {
+    position: absolute;
+    top: $aopk-canvas-h * 0.6542;
+    left: $aopk-canvas-w * 0.4173;
+    margin: 0;
+    &, p { color: $aopk-green-dark; }
+    p {
+      margin: 0;
+      font-weight: $aopk-weight-demi;
+      font-size: $aopk-size-body;
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION DIVIDER  {.aopk-section}
+// NOT part of the p. 18 PowerPoint mockups — it applies the manual's rule for
+// the logo on a solid brand background (p. 6-7: "…se doporučuje použít logo
+// nebo piktogram v bílé barvě na podkladu firemní tmavě zelené barvy").
+// ═══════════════════════════════════════════════════════════════════════════
+.reveal .slides section.aopk-section {
+  background: $aopk-green-dark;
+
+  h1, h2, h3 { color: $aopk-white; }
+
+  // The heading sits just above the middle and any standfirst flows under it,
+  // so the section padding-top has to clear the heading rather than start at
+  // the content-slide body anchor.
+  padding-top: $aopk-canvas-h * 0.56;
+
+  > h2 {
+    position: absolute;
+    top: $aopk-canvas-h * 0.42;
+    transform: none;
+    left: var(--aopk-margin-left);
+    right: var(--aopk-margin-right);
+    font-size: $aopk-size-h2 * 1.25;
+  }
+
+  p, li { color: $aopk-white; }
+
+  // On the dark ground the white pictogram replaces the dvojlist.
+  &::after {
+    background-image: $aopk-img-symbol-white;
+    background-position: right bottom;
+    aspect-ratio: 99.587 / 92.628;
+    width: 7%;
+    bottom: calc(var(--aopk-footer-h) + 22px);
+    opacity: 0.9;
+  }
+}
+.reveal .slides section.aopk-section > .aopk-bar { background: $aopk-green-dark; }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Two-column content slide, matching the mockup's image block.
+// [measured, of slide width] image left edge 48.26 %, right edge 95.92 %
+// (i.e. flush with the 4.08 % right margin), so the picture is 47.7 % wide.
+// Those figures are re-expressed here as fractions of the CONTENT BOX, which
+// is 1129.2 px — the slide less the 7.7 % left and 4.08 % right margins:
+//   image left  (617.7 − 98.6) / 1129.2 = 46 %
+//   image width  610.0 / 1129.2         = 54 %
+// leaving 42 % for the text column and 4 % for the gutter.
+.reveal .slides section .aopk-cols {
+  display: grid;
+  grid-template-columns: 42% 54%;
+  gap: 0 4%;
+  align-items: start;
+
+  // Both columns start on the body anchor. This has to zero the margin on
+  // EVERY grid item and on its first child: a grid item establishes its own
+  // formatting context, so a margin inside it cannot collapse away, and the
+  // generic "first child of the slide body" rule only ever reaches column one.
+  // Pandoc also wraps a bare image in a <p>, which is the usual culprit.
+  > * { margin-top: 0; }
+  > * > :first-child { margin-top: 0; }
+  p { margin-top: 0; }
+  img { display: block; }
+}
+
+// Colour helpers
+.reveal .text-green      { color: $aopk-green-dark !important; }
+.reveal .text-lightgreen { color: $aopk-green-light !important; }
+.reveal .text-orange     { color: $aopk-orange !important; }
+.reveal .text-yellow     { color: $aopk-yellow !important; }
+.reveal .text-gray       { color: $aopk-gray !important; }
+
+// Barevné přechody / gradients (manual p. 12)
+.reveal .aopk-gradient-green-sat  { background: linear-gradient(90deg, #{$aopk-green-dark} 0%, #{rgba($aopk-green-dark, 0.8)} 100%); }
+.reveal .aopk-gradient-green      { background: linear-gradient(90deg, #{$aopk-green-dark} 0%, #{$aopk-green-light} 100%); }
+.reveal .aopk-gradient-orange     { background: linear-gradient(90deg, #{$aopk-orange} 0%, #{$aopk-yellow} 100%); }
+
+// Full-bleed element: escapes the content column.
+.reveal .slides section .aopk-bleed {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  width: 100%;
+}
+
+// Smaller / denser body text, matching the manual's paragraph mockup.
+.reveal .smaller p, .reveal .smaller li { font-size: $aopk-size-body * 0.82; }
+
+// reveal.js chrome tinted to brand.
+.reveal .progress { color: $aopk-green-light; height: 4px; }
+.reveal .controls { color: $aopk-green-dark; }
+.reveal .slide-number {
+  background: transparent;
+  color: $aopk-green-light;
+  font-size: $aopk-size-footer * 0.9;
+  right: 1%; bottom: calc(var(--aopk-footer-h) * 0.28);
+}
+
+// Speaker/print tweaks
+.reveal .slides section img { max-width: 100%; height: auto; }
+.reveal figure figcaption { font-size: 0.62em; color: $aopk-green-dark; }

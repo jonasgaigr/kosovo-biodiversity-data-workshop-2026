@@ -1,0 +1,8 @@
+# The deck is its own Quarto project, deliberately separate from the website
+# project in the repository root. Sharing that project would apply the website's
+# `format: html` block, navbar and output-dir to a reveal.js deck.
+project:
+  type: default
+  output-dir: .
+
+lang: en-GB

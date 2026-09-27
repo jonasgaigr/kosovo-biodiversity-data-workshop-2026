@@ -1,0 +1,91 @@
+# Build check for the Day 3 data-collection deck.
+#
+# This workflow does NOT publish. GitHub Pages serves `docs/` from the branch
+# and `docs/` is built locally, so publishing stays a local step (the root
+# render copies the deck into docs/slides/) — see "Publishing" in
+# presentation-data-collection/README.md. Moving Pages to an
+# Actions deployment source would mean CI had to build the GBIF website too,
+# including its data pipeline, which is a far larger change than this deck.
+#
+# What it does do is fail loudly when the deck stops building, because two of
+# its failure modes are silent. The R chunk reads data/comparison.csv, so a
+# malformed edit to that file breaks the render; and a slide that overflows the
+# safe area prints straight through the footer bar with no warning from Quarto
+# at all. Both artefacts are uploaded so a reviewer can open the PDF from the
+# run rather than rebuilding it.
+
+name: Render data-collection deck
+
+on:
+  push:
+    paths:
+      - "presentation-data-collection/**"
+      - ".github/workflows/render-data-collection-deck.yml"
+  pull_request:
+    paths:
+      - "presentation-data-collection/**"
+      - ".github/workflows/render-data-collection-deck.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: presentation-data-collection
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: quarto-dev/quarto-actions/setup@v2
+
+      # The deck's two head-to-head slides are built by an R chunk. Nothing
+      # beyond base R and knitr is used, so there is no renv lockfile and no
+      # package cache to warm - installing knitr alone is faster than either.
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - name: Install knitr
+        run: Rscript -e 'install.packages("knitr")'
+
+      - name: Render the slides
+        run: quarto render spatial-data-collection.qmd --to aopk-revealjs
+
+      # The three Mermaid diagrams are laid out by JavaScript at load time, so
+      # a print that fires before they are drawn yields a page with the diagram
+      # missing. The virtual time budget is what makes that deterministic; it
+      # is the same 90 s the README documents for a local print.
+      - name: Print the handout
+        run: |
+          google-chrome --headless=new --disable-gpu --no-sandbox \
+            --no-pdf-header-footer --allow-file-access-from-files \
+            --run-all-compositor-stages-before-draw \
+            --virtual-time-budget=90000 \
+            --print-to-pdf="$PWD/spatial-data-collection.pdf" \
+            "file://$PWD/spatial-data-collection.html?print-pdf"
+
+      # A print that failed silently still writes a PDF - it is simply a single
+      # blank page, or a few. The deck is 32 slides and reveal prints one slide
+      # per page, so the page count is the cheapest honest check that the print
+      # actually completed.
+      - name: Check the handout has every slide
+        run: |
+          sudo apt-get update && sudo apt-get install -y poppler-utils
+          pages=$(pdfinfo spatial-data-collection.pdf | awk '/^Pages:/ {print $2}')
+          echo "handout pages: $pages"
+          if [ "$pages" -ne 32 ]; then
+            echo "::error::expected 32 pages, got $pages - the print did not complete, or a slide was added without updating this check"
+            exit 1
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: data-collection-deck
+          path: |
+            presentation-data-collection/spatial-data-collection.html
+            presentation-data-collection/spatial-data-collection.pdf
+          if-no-files-found: error

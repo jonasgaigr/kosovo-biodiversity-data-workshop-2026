@@ -1,0 +1,22 @@
+# This deck is its own Quarto project, deliberately separate from the website
+# project in the repository root and from `presentation/` and
+# `presentation-n2k-condition/`. Sharing any of them would apply that project's
+# format block, navigation and output-dir to a reveal.js deck that has nothing
+# to do with it.
+project:
+  type: default
+  output-dir: .
+
+lang: en-GB
+
+execute:
+  # The deck's only R chunks read `data/comparison.csv` and build the two
+  # head-to-head tables. Neither the code nor the reading of the file belongs
+  # on a slide.
+  echo: false
+  warning: false
+  message: false
+  # NOT `freeze: auto`. The tables are a function of the CSV, and freeze only
+  # watches the .qmd — so with it on, correcting a price in `comparison.csv`
+  # and re-rendering would silently republish the previous table.
+  freeze: false

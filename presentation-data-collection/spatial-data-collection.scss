@@ -1,0 +1,325 @@
+/*-- scss:rules --*/
+
+// Deck-specific additions, loaded after `custom.scss`. Everything here exists
+// because this deck carries three things the two sibling decks do not: Mermaid
+// diagrams, wide data-driven comparison tables, and a rendered bibliography.
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MERMAID DIAGRAMS
+//
+// A mermaid diagram is sized THROUGH ITS WIDTH. That is the whole rule, and
+// both halves of it were learned the hard way.
+//
+// FIRST, the selector is `div.cell svg`, not `pre.mermaid`. Quarto writes the
+// diagram source into a `<pre class="mermaid mermaid-js">`, but mermaid.js
+// REPLACES that element with the finished `<svg>` once the deck loads, leaving
+// `div.cell > div.cell-output-display > div.quarto-figure-center > figure`
+// around it. A rule hung off `pre.mermaid` therefore matches only for the
+// instant before the diagram exists — which is why one attempt at this rule
+// changed nothing whatever and the print came out byte for byte identical.
+// On this deck the only cells holding an `<svg>` are the three mermaid chunks;
+// the other two hold tables.
+//
+// SECOND, the height cannot be constrained. Mermaid's `<svg>` carries
+// `width="100%"` and a viewBox, and the browser honours the viewBox when it
+// resolves the height from the width — so the drawing scales with the width.
+// It does NOT scale the other way: give the element a smaller `height` and the
+// box shrinks while the drawing keeps its size and spills out of it. Probed
+// with `height: 250px !important` and a red outline, the outline drew at
+// 250 px and the flowchart rendered straight through it, unchanged. The
+// theme's own `max-height: var(--aopk-content-h)` on `svg` is inert here for
+// the same reason.
+//
+// So height is controlled by capping width, and a diagram whose aspect ratio
+// makes it too tall at full width gets `.diagram-tall` on its slide.
+// ═══════════════════════════════════════════════════════════════════════════
+.reveal .slides section div.cell svg {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto !important;
+}
+
+// The decision flowchart is the one diagram here tall enough to matter. Its
+// viewBox is 1493.5 × 691.0, so it is 2.161:1, and the content column of this
+// template is 1280 − 98.6 − 52.2 = 1129.2 px. At full width it therefore wants
+// 1129.2 ÷ 2.161 = 522 px of height against the 455 px a `.no-leaf` slide has,
+// and the bottom node printed straight through the footer bar.
+//
+// 78 % of the column is 880 px, which is 407 px tall and leaves a clear band
+// above the bar. The figure is arithmetic from that one diagram's aspect
+// ratio and means nothing on its own: read the viewBox out of the rendered
+// deck and redo the division if the flowchart ever gains a branch.
+.reveal .slides section.diagram-tall div.cell svg {
+  width: 78% !important;
+  max-width: 78% !important;
+}
+
+// Before mermaid has run, the source text is visible as a code block. It is
+// only ever on screen for a frame, but a frame of raw flowchart syntax on the
+// projector at the moment a slide opens is worth suppressing.
+.reveal .slides section pre.mermaid {
+  visibility: hidden;
+}
+
+// NOTE ON THE DIAGRAM FONT. It is deliberately left as mermaid's own, not
+// restyled to `$aopk-font-stack`. Mermaid measures every label in the font it
+// renders with and then draws each box around the measurement; a family
+// swapped in afterwards is laid out against boxes computed for a different
+// one, and the wider glyphs are clipped at the box edge. The first render of
+// this deck lost the "d" of "In the field" and the "I" of "Zenodo DOI" exactly
+// that way. Setting it through mermaid's own `themeVariables` would be
+// measured correctly, but only where the font is installed — and the AOPK
+// stack falls back on any machine that does not have Franklin Gothic, which is
+// most of them. A diagram in mermaid's default sans is a small break with the
+// slide type; a clipped label is an error.
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PRODUCT LOGOS
+//
+// Each tool's heading on the four tool slides carries the vendor's own brand
+// asset. Provenance and the trademark position for all eight are in
+// images/logos/SOURCES.md.
+//
+// They are sized BY HEIGHT ONLY, with `width: auto`. The eight assets range
+// from 5.4:1 wordmarks to square app icons, and height is the only dimension
+// that makes a wordmark and an icon look like members of one set; constraining
+// width instead would print the ODK lockup at a third the weight of the Mergin
+// wordmark beside it.
+//
+// `.logo` is a wide wordmark - Kobo, Epicollect5, Mergin Maps, Fulcrum - and
+// it STANDS IN PLACE of the product's name, so its alt text carries that name.
+// `.logo-icon` is a squarer mark that sits BESIDE the name in text: the three
+// app icons, and ODK's lockup, which at 1.83:1 is far closer to an icon than
+// to the 5:1 wordmarks and read as a stray thumbnail when it was sized as one.
+// Their alt is empty - they are decorative once the name is in the text, and a
+// screen reader announcing "ArcGIS Survey123" twice is worse than not at all.
+// ═══════════════════════════════════════════════════════════════════════════
+.reveal .slides section img.logo,
+.reveal .slides section img.logo-icon {
+  // The theme sets `.aopk-cols img { display: block }` - correct for the
+  // figures it was written for, and wrong for a mark that has to sit on the
+  // same line as the licence that follows it. Left blocky, every heading on
+  // these slides became two lines and the tightest of them printed through the
+  // footer bar again. The two selectors have equal specificity, so this wins
+  // on load order, which the `theme:` list in the front matter guarantees.
+  display: inline-block;
+  width: auto;
+  // The marks are lockups with their own internal padding, so they need no
+  // more than a word space between them and what follows.
+  margin: 0 0.3em 0 0;
+  // Sits the mark on the text baseline rather than hanging it from the top of
+  // the line box, which is where an inline image defaults to.
+  vertical-align: -0.28em;
+}
+
+.reveal .slides section img.logo {
+  height: 30px;
+}
+
+// A square icon reads larger than a wordmark of the same height because its
+// ink fills the box, so it is stepped down to sit level with the type it
+// precedes rather than looming over it.
+.reveal .slides section img.logo-icon {
+  height: 26px;
+  vertical-align: -0.34em;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// THE COMPARISON MATRICES
+//
+// `custom.scss` steps every table down to 0.72 of body size, which suits the
+// three- and four-column tables in the sibling decks. These two are eight rows
+// of eight tools against five or six criteria, and at 0.72 they run through
+// the footer bar. `.matrix` is the wrapper the two head-to-head slides put
+// round their R chunk.
+//
+// The first column is the tool name and is the one a reader scans, so it keeps
+// a little more weight and does not wrap; the criteria columns are allowed to
+// wrap to two lines, which is what sets the row height.
+// ═══════════════════════════════════════════════════════════════════════════
+.reveal .slides section .matrix table {
+  font-size: $aopk-size-body * 0.52;
+  width: 100%;
+  table-layout: fixed;
+
+  th,
+  td {
+    padding: 0.22em 0.5em;
+    vertical-align: top;
+    // Long unbroken strings in these cells are URLs-in-waiting and licence
+    // identifiers such as `AGPL-3.0 / GPL-2.0`. Without this a single one of
+    // them sets the column width and squeezes every other column.
+    overflow-wrap: break-word;
+  }
+
+  // The theme fills the header row with `$aopk-green-dark`, so the header text
+  // has to be white. It is not inherited: the theme sets the colour on its own
+  // `th` rule, and without this the criterion names are dark green on dark
+  // green and the header row prints as an empty bar.
+  th {
+    font-weight: $aopk-weight-demi;
+    color: $aopk-white;
+  }
+
+  // The tool name is the row's key. Keeping it off the wrap makes the column
+  // scannable, and the extra weight separates it from the cells beside it.
+  td:first-child,
+  th:first-child {
+    font-weight: $aopk-weight-demi;
+    width: 15%;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// THE "AS CHECKED ON" NOTE
+//
+// Every figure in the two matrices has a date attached, and the date is the
+// part most likely to be out by a year when the deck is reused. It therefore
+// gets its own block under the table rather than a parenthesis inside it.
+//
+// The size is set on the paragraph, not on the wrapper: the theme sets
+// `font-size` on `.reveal p, .reveal li` directly, so a size declared on the
+// div never reaches the text inside it — the same reason the theme's own
+// `.smaller` carries `p` in its selector.
+// ═══════════════════════════════════════════════════════════════════════════
+.reveal .slides section .note,
+.reveal .slides section .note p {
+  font-size: $aopk-size-body * 0.58;
+  color: $aopk-black;
+  margin-top: 0.7em;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// THE SOURCES SLIDE
+//
+// Pandoc's citeproc emits the bibliography as a `div#refs` of hanging-indent
+// entries. Reveal styles neither, so without this the entries run together and
+// the URLs — which are the useful part of a vendor citation — wrap without any
+// indication of where one source ends and the next begins.
+// ═══════════════════════════════════════════════════════════════════════════
+// The twelve entries are the eight vendor pages behind the comparison plus the
+// four works cited on slides. Set in one column at a legible size they run a
+// slide and a half, so they are set in two — a bibliography is scanned, not
+// read in sequence, and two columns is the one layout where that stays true
+// while halving the height.
+.reveal .slides section #refs {
+  column-count: 2;
+  column-gap: 1.8em;
+
+  .csl-entry {
+    margin-bottom: 0.45em;
+    padding-left: 1.2em;
+    text-indent: -1.2em;
+    overflow-wrap: break-word;
+    // An entry broken across the column boundary reads as two half-sources.
+    break-inside: avoid;
+  }
+}
+
+// The size has to be set on the paragraph as well as the wrapper: citeproc
+// puts each entry's text in the `.csl-entry` div directly, but the theme sets
+// `font-size` on `.reveal p` at a specificity this would otherwise lose to.
+.reveal .slides section #refs,
+.reveal .slides section #refs p,
+.reveal .slides section #refs .csl-entry {
+  font-size: $aopk-size-body * 0.5;
+  line-height: 1.2;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// THE CODE LISTING IN A COLUMN
+//
+// One slide carries an R listing inside an `.aopk-cols` column. Reveal sizes
+// code blocks relative to the slide rather than to their container, so at the
+// default the eight lines of `robotoolbox` setup overflow the column sideways
+// and the closing bracket is lost off the edge.
+// ═══════════════════════════════════════════════════════════════════════════
+.reveal .slides section .aopk-cols pre code {
+  font-size: $aopk-size-body * 0.56;
+  line-height: 1.25;
+  padding: 0.6em 0.8em;
+  max-height: none;
+  // Reveal gives code blocks `overflow: auto`, and its scrollbar is drawn even
+  // when every line fits — harmless on screen, but the print picks it up as a
+  // grey rule across the foot of the listing.
+  overflow: hidden;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SLIDE NUMBER
+//
+// The deck turns reveal's slide number on, because it is handed out as a PDF
+// and questions refer to slides by number. Reveal pins the counter to the
+// bottom-right corner, which in this template is inside the AOPK footer bar
+// and directly on top of the `footer-right` text. Lifting it clear of the bar
+// puts it in the content's own bottom-right corner instead.
+//
+// It is hidden in print: `?print-pdf` flattens each slide into a page, so the
+// page number the PDF reader already shows is the same number, and the two
+// would sit a centimetre apart disagreeing about nothing.
+// ═══════════════════════════════════════════════════════════════════════════
+// The offsets carry `!important` because reveal's own rule for this element is
+// `.reveal .slide-number` too - the same selector, same specificity - and
+// Quarto emits its reveal defaults after the theme block. Without it the
+// counter stays pinned 8 px off the corner, which is inside the footer bar and
+// on top of the `footer-right` text.
+.reveal .slide-number {
+  bottom: calc(#{$aopk-footer-h} + 10px) !important;
+  right: $aopk-margin-right !important;
+  background: none;
+  color: $aopk-gray;
+  font-size: $aopk-size-footer * 0.9;
+  font-family: $aopk-font-stack;
+}
+
+// `html.reveal-print` is the class this reveal version sets in `?print-pdf`
+// mode - the same hook `custom.scss` hangs its print layout block off. It is
+// NOT `.print-pdf`, which is what an earlier version of this rule guessed at,
+// and which left the counter printed over the footer bar on all 32 pages.
+html.reveal-print .reveal .slide-number {
+  display: none;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// THE HANDOUT LINK ON THE TITLE SLIDE
+//
+// Carried as a third line of `institute`, because the AOPK title slide comes
+// from a fixed template partial and that is the only field on it that takes
+// markup.
+//
+// It is then taken OUT of the flow. Left as a third line it pushes past the
+// institute anchor at 69.37 % of slide height and lands on the centred
+// dvojlist, whose leaves drew straight through the link text.
+//
+// The offsets are stated against `.aopk-institute`, NOT against the slide. The
+// theme positions the institute block absolutely at its 69.37 % anchor, which
+// makes it the containing block for anything positioned inside it - so a
+// percentage here resolves against that paragraph's own height, not against
+// the 720 px canvas. `top: 63%` read as 63 % of a two-line paragraph and put
+// the link level with the department line.
+//
+// `bottom: 100%` instead means "sit on top of the institute block", which is
+// exactly the empty band between the AUTOR line at 57.02 % and the institute
+// at 69.37 %. `left: 0` is that block's left edge, which is the content
+// column's left margin. Both anchors are centred text, so the left of that
+// band is empty on every AOPK title slide, and the dvojlist - centred at the
+// foot - never reaches it.
+//
+// It is dropped in print: a link offering the PDF is of no use to somebody
+// already holding the PDF.
+// ═══════════════════════════════════════════════════════════════════════════
+.reveal .aopk-title-slide .aopk-handout {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 0.5em);
+  font-size: $aopk-size-institute * 0.62;
+
+  a {
+    color: $aopk-green-dark;
+    text-decoration: underline;
+  }
+}
+
+html.reveal-print .reveal .aopk-handout {
+  display: none;
+}

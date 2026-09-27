@@ -1,12 +1,33 @@
 project:
   type: website
   output-dir: docs
+  # presentation/, presentation-n2k-condition/, presentation-data-collection/,
+  # presentation-spatial-analysis/ and presentation-db-architecture/ are
+  # separate Quarto projects, each holding reveal.js decks. Without this,
+  # `quarto render` would sweep their .qmd files into the website, apply the
+  # `format: html` block below to a reveal.js document and add them to the
+  # navigation and the search index.
+  render:
+    - "*.qmd"
+    - "!presentation/"
+    - "!presentation-n2k-condition/"
+    - "!presentation-data-collection/"
+    - "!presentation-spatial-analysis/"
+    - "!presentation-db-architecture/"
+    # The site-report template is its own Typst project (see
+    # reports/_quarto.yml). Without this, "*.qmd" reaches into it and writes
+    # docs/reports/site_report.pdf, which is no part of the site.
+    - "!reports/"
   # The exported data files are copied into the rendered site so that the
   # download buttons resolve on GitHub Pages.
   resources:
     # Ensures GitHub Pages serves Quarto's site_libs/ directory verbatim.
     - .nojekyll
     - data_exports/**
+  # The workshop decks are their own Quarto projects (excluded above), so the
+  # website never builds them. This copies each one's built slides and handout
+  # into docs/slides/, from the same list the landing page is built from.
+  post-render: publish_slides.R
 
 website:
   title: "Biodiversity of Kosovo"
@@ -27,7 +48,11 @@ website:
     search: true
     left:
       - href: index.qmd
+        text: Workshop
+      - href: report.qmd
         text: Report
+      - href: natura2000.qmd
+        text: Natura 2000 questions
     right:
       - href: https://www.gbif.org
         text: GBIF

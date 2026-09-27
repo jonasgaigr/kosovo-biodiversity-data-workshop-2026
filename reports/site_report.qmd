@@ -1,0 +1,633 @@
+---
+# No `title` here: the document is titled after the site it reports on, which
+# is not known until the GeoPackage has been read, so the heading is written
+# from R in the first block below.
+lang: en-GB
+format:
+  typst:
+    papersize: a4
+    fontsize: 10pt
+    margin:
+      x: 2cm
+      y: 2cm
+    section-numbering: ""
+    fig-format: png
+    fig-dpi: 200
+    # The report's colours, which are the website's. Held in their own file
+    # rather than inline here so that a colour can be changed in one place and
+    # so that `run_test_site_report.R` can read them back and check they still
+    # agree with `custom.scss`.
+    include-in-header: gbif-report.typ
+execute:
+  echo: false
+  warning: false
+  message: false
+params:
+  # Every path is absolute when `site_reports.R` renders this. The defaults are
+  # relative to this directory, so that a single report can also be rebuilt by
+  # hand from the repository root:
+  #
+  #   quarto render reports/site_report.qmd \
+  #     -P gpkg:../outputs/protected_areas/<slug>/<slug>.gpkg
+  #
+  # The GeoPackage is the source of every figure below. The report does not
+  # recompute what the file already states, which is what makes the two agree.
+  gpkg: ""
+  country: "../data/kosovo_boundary.gpkg"
+  municipalities: "../data/kosovo_municipalities.gpkg"
+  national: "../outputs/national_site_statistics.csv"
+  datasets: "../data/dataset_registry.csv"
+  functions: "../R/functions.R"
+  site_report: "../R/site_report.R"
+  command: ""
+  max_points: 20000
+---
+
+```{r}
+#| label: guard
+#| output: asis
+
+# Rendered with no site, this document describes itself and stops, rather than
+# failing. The reason is the repository root's `_quarto.yml`, whose render list
+# matches every `.qmd` in the project: a plain `quarto render` of the website
+# reaches this file too, and a template that raised an error here would take
+# the whole site build down with it. Add `"!reports/"` to that render list to
+# keep the website away from this directory altogether.
+
+if (!nzchar(params$gpkg)) {
+  cat(
+    "# Site report template\n\n",
+    "This document reports on **one protected area**, and is rendered once ",
+    "per site by `site_reports.R`. It is not a report in itself: it needs the ",
+    "site GeoPackage that carries the figures.\n\n",
+    "```bash\n",
+    "Rscript site_reports.R --site NP_001\n",
+    "```\n\n",
+    "To render a single site by hand from an existing GeoPackage — the path ",
+    "is relative to `reports/`, where the document is executed, or absolute:",
+    "\n\n",
+    "```bash\n",
+    "quarto render reports/site_report.qmd \\\n",
+    "  -P gpkg:../outputs/protected_areas/<slug>/<slug>.gpkg\n",
+    "```\n\n",
+    "See the README section *Site reports for individual protected areas*.\n",
+    sep = "")
+  knitr::knit_exit()
+}
+```
+
+```{r}
+#| label: setup
+
+suppressPackageStartupMessages({
+  library(dplyr)
+  library(sf)
+  library(ggplot2)
+})
+
+source(params$functions)
+source(params$site_report)
+
+dataset <- read_site_gpkg(params$gpkg)
+
+boundary <- dataset$site_boundary
+md       <- dataset$report_metadata
+occ      <- dataset$occurrences
+inside   <- occ[which(occ$inside_site), , drop = FALSE]
+species  <- dataset$species_summary
+strict   <- dataset$strict_protection
+units    <- dataset$municipalities_overlapping
+grid     <- dataset$record_density_grid
+
+# The map settings are read back out of the file rather than chosen here, so
+# that the figures are drawn to the same parameters the layers were built with.
+cfg <- list(
+  crs_storage    = as.integer(sub("EPSG:", "", meta_value(md, "crs_storage"))),
+  crs_metric     = as.integer(sub("EPSG:", "", meta_value(md, "crs_metric"))),
+  locator_ring_m = as.numeric(meta_value(md, "locator_ring_m")),
+  map_max_points = as.numeric(meta_value(md, "map_max_points"))
+)
+if (is.na(cfg$map_max_points)) cfg$map_max_points <- as.numeric(params$max_points)
+
+country <- sf::st_read(params$country, quiet = TRUE)
+munis   <- sf::st_read(params$municipalities, quiet = TRUE)
+
+# --- Formatting helpers -------------------------------------------------------
+#
+# An unknown value prints as an em dash rather than as "NA": the tables are
+# read by people, and "NA" in a printed report is a defect, not a value.
+
+or_dash <- function(x, format = identity) {
+  if (length(x) == 0 || is.na(x[1]) || identical(x[1], "")) "—"
+  else format(x[1])
+}
+n_fmt   <- function(x) or_dash(x, function(v) fmt_int(as.numeric(v)))
+num_fmt <- function(x, digits = 2) {
+  or_dash(x, function(v) formatC(as.numeric(v), format = "f", digits = digits,
+                                 big.mark = ","))
+}
+pct_fmt <- function(x, digits = 0) {
+  or_dash(x, function(v) paste0(formatC(100 * as.numeric(v), format = "f",
+                                        digits = digits), " per cent"))
+}
+
+# An area is printed in the unit it can be read in: hectares below a square
+# kilometre, square kilometres above it, with the unit always stated.
+area_ha <- function(v) {
+  v <- as.numeric(v)
+  if (v >= 100) paste0(fmt_int(round(v)), " ha")
+  else paste0(formatC(v, format = "f", digits = 2), " ha")
+}
+area_km2 <- function(v) {
+  v <- as.numeric(v)
+  if (v >= 0.01) paste0(formatC(v, format = "f", digits = 2), " km²")
+  else paste0(formatC(v * 100, format = "f", digits = 2), " ha")
+}
+
+# A share that is small but real must not print as "0.0%". A natural monument
+# of twelve hectares genuinely does cover four hundredths of a per cent of its
+# municipality, and a rounded zero would read as "none of it".
+share_pct <- function(x, digits = 1) {
+  out   <- paste0(formatC(100 * x, format = "f", digits = digits), "%")
+  floor <- 10^(-digits) / 2
+  out[!is.na(x) & x > 0 & 100 * x < floor] <-
+    paste0("<", formatC(10^(-digits), format = "f", digits = digits), "%")
+  out[is.na(x)] <- "—"
+  out
+}
+
+report_table <- function(x, caption = NULL, widths = NULL) {
+
+  out <- knitr::kable(x, format = "pipe", caption = caption, align = NULL)
+  if (is.null(widths)) return(out)
+
+  # A table with a swatch in it has to state its own column widths. Pandoc
+  # sizes a column from the source text, and `#swatch(rgb("#fab219"))` is
+  # thirty characters of markup that occupy no room on the page; left to
+  # itself the swatched column takes twice the width it needs, out of the
+  # species names beside it.
+  structure(
+    c(sprintf("::: {tbl-colwidths=\"[%s]\"}", paste(widths, collapse = ",")),
+      "", out, "", ":::"),
+    format = "pipe", class = "knitr_kable")
+}
+
+# --- Colour carried into the tables -------------------------------------------
+#
+# The print counterparts of two pieces the website builds in HTML: the category
+# swatch `swatch()` puts in every species table in `report.qmd`, and the brand
+# green `.keyfigure .value` wears in `custom.scss`. Both emit raw Typst, which
+# the cell carries through `kable()` untouched, and both defer to
+# `reports/gbif-report.typ` for the colour itself — nothing here chooses one.
+
+swatch <- function(colour, label) {
+  sprintf("`#swatch(rgb(\"%s\"))`{=typst} %s", colour, label)
+}
+
+key_value <- function(x) {
+  sprintf("`#keyfigure[%s]`{=typst}", x)
+}
+
+# A table long enough to run over a page is truncated, and the truncation is
+# stated. The full list is always in the GeoPackage.
+top_rows <- function(x, n) {
+  if (nrow(x) <= n) return(list(table = x, omitted = 0L))
+  list(table = utils::head(x, n), omitted = nrow(x) - n)
+}
+
+site_name   <- boundary$site_name[1]
+designation <- boundary$designation[1]
+```
+
+```{r}
+#| label: header
+#| output: asis
+
+cat("# ", site_name, "\n\n", sep = "")
+
+header <- dplyr::tibble(
+  Field = c(
+    "Designation (English)",
+    "Designation (Albanian)",
+    "National identifier",
+    "Register identifier",
+    "IUCN management category",
+    "Designated",
+    "Reported area",
+    "Computed area",
+    "Boundary",
+    "Responsible authority",
+    "Management plan recorded",
+    "Ecosystem type"
+  ),
+  Value = c(
+    or_dash(designation),
+    or_dash(boundary$designation_sq[1]),
+    or_dash(boundary$national_id[1]),
+    or_dash(boundary$natda_id[1]),
+    or_dash(boundary$iucn_management_category[1]),
+    or_dash(boundary$designation_year[1], as.character),
+    # Rounded to the unit the figure can actually carry. Most of this register
+    # is natural monuments of a few hundred square metres, and "0 ha" for a
+    # quarter-hectare spring reads as no area at all.
+    or_dash(boundary$reported_area_ha[1], area_ha),
+    or_dash(boundary$computed_area_km2[1], area_km2),
+    or_dash(boundary$boundary_basis[1]),
+    or_dash(boundary$authority[1]),
+    or_dash(boundary$management_plan[1]),
+    or_dash(boundary$ecosystem_type[1])
+  )
+)
+
+print(report_table(header))
+cat("\n")
+
+if (!identical(boundary$geometry_source[1], "boundary")) {
+  cat("\n*This site has no mapped boundary in the register. It is recorded as",
+      "a single point, and everything below is measured inside a circle of the",
+      "area the register reports for it. That circle is a stand-in for a",
+      "boundary, not a survey of one, and any figure given per square",
+      "kilometre is therefore a statement about the size of the circle as much",
+      "as about the site.*\n\n")
+}
+```
+
+## Where the site is
+
+```{r}
+#| label: locator
+#| fig-width: 5.0
+#| fig-height: 3.5
+
+site_locator_map(dataset, country, munis, cfg)
+```
+
+## The records inside it
+
+```{r}
+#| label: occurrences
+#| fig-width: 6.2
+#| fig-height: 4.6
+
+site_occurrence_map(dataset, cfg, max_points = cfg$map_max_points)
+```
+
+```{r}
+#| label: buffer-note
+#| output: asis
+
+cat(sprintf(
+  paste0("The dashed line is a %s m buffer around the site. It holds %s ",
+         "further records that are **not** inside the site, and they are in ",
+         "the GeoPackage flagged `in_buffer_only`: what has been recorded ",
+         "just outside a boundary is often the best available guide to what ",
+         "is inside one that nobody has surveyed.\n\n"),
+  n_fmt(meta_value(md, "buffer_m")),
+  n_fmt(boundary$records_in_buffer_only[1])))
+
+if (nrow(strict)) {
+  cat(sprintf(
+    paste0("%s strict-protection zone%s lie%s inside this site, covering ",
+           "%s km² and holding %s of its records. Those records are ",
+           "counted in the site's totals, not additional to them.\n\n"),
+    fmt_int(nrow(strict)),
+    if (nrow(strict) == 1) "" else "s",
+    if (nrow(strict) == 1) "s" else "",
+    num_fmt(sum(strict$computed_area_km2)),
+    n_fmt(sum(strict$records))))
+}
+```
+
+## Key figures
+
+```{r}
+#| label: key-figures
+#| output: asis
+
+national <- if (file.exists(params$national)) {
+  # The identifiers are read as text explicitly. Left to the type guesser they
+  # arrive as numbers, and an identifier with a leading zero — which some
+  # national registers use — would lose it silently on the way in.
+  readr::read_csv(
+    params$national,
+    col_types = readr::cols(natda_id = readr::col_character(),
+                            national_id = readr::col_character(),
+                            .default = readr::col_guess()),
+    progress = FALSE)
+} else {
+  NULL
+}
+
+figures <- dplyr::tibble(
+  Measure = c("Records", "Species", "Families", "Source datasets",
+              "Records per km²", "First observation",
+              "Most recent observation"),
+  Value = key_value(c(
+    n_fmt(boundary$records[1]),
+    n_fmt(boundary$species[1]),
+    n_fmt(boundary$families[1]),
+    n_fmt(boundary$datasets[1]),
+    num_fmt(boundary$records_per_km2[1], 1),
+    or_dash(boundary$first_year[1], as.character),
+    or_dash(boundary$last_year[1], as.character)
+  ))
+)
+
+if (!is.null(national)) {
+  ranks <- site_ranks(national, boundary$natda_id[1])
+  rank_for <- function(measure) {
+    hit <- ranks[ranks$measure == measure, ]
+    if (!nrow(hit) || is.na(hit$rank[1])) return("—")
+    paste0(fmt_int(hit$rank[1]), " of ", fmt_int(hit$of[1]))
+  }
+  figures$`National rank` <- c(
+    rank_for("Records"), rank_for("Species"), rank_for("Families"),
+    rank_for("Source datasets"), rank_for("Records per km²"),
+    "—", "—")
+}
+
+print(report_table(figures))
+cat("\n")
+
+if (is.null(national)) {
+  cat("\n*The national ranking table",
+      paste0("(`", params$national, "`)"),
+      "was not found, so no ranks are shown. It is written by",
+      "`site_reports.R` at the start of every run.*\n\n")
+} else {
+  cat("\nRanks are against the", fmt_int(nrow(national)),
+      "designated sites in the register, counted the same way for every",
+      "site. Records per square kilometre measures recording effort, not",
+      "richness: it rises with the number of people who have visited, and a",
+      "small site with one well-watched spot in it can lead the country on",
+      "that column while holding few species.\n\n")
+}
+```
+
+## Taxonomic composition
+
+```{r}
+#| label: taxonomy
+#| output: asis
+
+taxonomy <- site_taxonomic_summary(inside)
+
+if (!nrow(taxonomy)) {
+  cat("No records, so there is nothing to break down by kingdom.\n\n")
+} else {
+  print(report_table(
+    taxonomy |>
+      dplyr::transmute(
+        Kingdom = .data$kingdom,
+        Records = fmt_int(.data$records),
+        Species = fmt_int(.data$species),
+        `Share of records` = paste0(
+          formatC(100 * .data$records / sum(.data$records), format = "f",
+                  digits = 1), " per cent")
+      )))
+  cat("\n")
+}
+```
+
+## Species of conservation interest
+
+```{r}
+#| label: threatened
+#| output: asis
+
+cat("### Assessed as threatened on the IUCN Red List\n\n")
+
+threatened <- species |>
+  dplyr::filter(.data$iucnRedListCategory %in% iucn_threatened) |>
+  dplyr::arrange(match(.data$iucnRedListCategory, iucn_levels),
+                 dplyr::desc(.data$records), .data$species)
+
+if (!nrow(threatened)) {
+  cat("No species recorded in this site carries a global Red List assessment",
+      "of Critically Endangered, Endangered or Vulnerable. That is a",
+      "statement about the records, not about the site: a species that has",
+      "never been recorded here cannot appear in this table.\n\n")
+} else {
+  shown <- top_rows(threatened, 20)
+  print(report_table(
+    shown$table |>
+      dplyr::transmute(
+        Species    = .data$species,
+        `Common name` = dplyr::coalesce(.data$vernacularName, "—"),
+        Category   = swatch(
+          unname(map_palette$iucn[.data$iucnRedListCategory]),
+          paste0(.data$iucnRedListCategory, " — ",
+                 iucn_names[.data$iucnRedListCategory])),
+        Records    = fmt_int(.data$records),
+        `Last seen` = dplyr::coalesce(as.character(.data$last_year), "—")
+      ),
+    widths = c(24, 30, 26, 9, 11)))
+  cat("\n")
+  if (shown$omitted > 0) {
+    cat("\n*", fmt_int(shown$omitted), " further threatened species are in ",
+        "the `species_summary` layer of the GeoPackage.*\n\n", sep = "")
+  }
+}
+```
+
+```{r}
+#| label: annexes
+#| output: asis
+
+cat("### Listed on the EU Nature Directives\n\n")
+
+listed <- species |>
+  dplyr::filter(!is.na(.data$directive), nzchar(.data$directive)) |>
+  dplyr::arrange(.data$directive, .data$annex, dplyr::desc(.data$records),
+                 .data$species)
+
+if (!nrow(listed)) {
+  cat("No species recorded in this site is listed on the Birds or Habitats",
+      "Directive annexes. The annexes are EU-wide lists dominated by species",
+      "of other biogeographical regions, so this is common and is not by",
+      "itself a finding about the site.\n\n")
+} else {
+  shown <- top_rows(listed, 20)
+  print(report_table(
+    shown$table |>
+      dplyr::transmute(
+        Species       = .data$species,
+        `Common name` = dplyr::coalesce(.data$vernacularName, "—"),
+        Directive     = .data$directive,
+        Annex         = dplyr::coalesce(.data$annex, "—"),
+        Records       = fmt_int(.data$records)
+      )))
+  cat("\n")
+  if (shown$omitted > 0) {
+    cat("\n*", fmt_int(shown$omitted), " further listed species are in the ",
+        "`species_summary` layer of the GeoPackage.*\n\n", sep = "")
+  }
+}
+```
+
+## Recording effort, and where it is absent
+
+```{r}
+#| label: effort
+#| output: asis
+
+cells       <- boundary$grid_cells[1]
+with_record <- boundary$grid_cells_with_records[1]
+unrecorded  <- boundary$unrecorded_share[1]
+
+cat("**A site with no records is not a site with no species.** It is a site",
+    "nobody has surveyed, or one whose surveys were never published to GBIF.",
+    "Everything above describes what has been recorded and published; none of",
+    "it describes what is there.\n\n")
+
+cat(sprintf(
+  paste0("The site is covered by %s grid cells of one square kilometre. ",
+         "%s of them hold at least one record, and **%s of the site's area ",
+         "falls in cells with no record at all**.\n\n"),
+  n_fmt(cells), n_fmt(with_record), pct_fmt(unrecorded)))
+
+years <- suppressWarnings(as.integer(inside$year))
+years <- years[!is.na(years) & years > 1500]
+
+if (length(years)) {
+  gaps <- setdiff(seq(min(years), max(years)), sort(unique(years)))
+  cat(sprintf(
+    paste0("Records run from %d to %d. Of those %s years, %s produced no ",
+           "record from this site at all.\n\n"),
+    min(years), max(years),
+    fmt_int(max(years) - min(years) + 1), fmt_int(length(gaps))))
+} else {
+  cat("No record from this site carries a usable year, so the recording",
+      "history cannot be described.\n\n")
+}
+
+if (nrow(grid)) {
+  by_class <- grid |>
+    sf::st_drop_geometry() |>
+    dplyr::group_by(`Records per cell` = .data$density_class) |>
+    dplyr::summarise(Cells = dplyr::n(), Records = sum(.data$records),
+                     .groups = "drop") |>
+    dplyr::arrange(match(.data$`Records per cell`, plain_text(density_labels)))
+
+  print(report_table(
+    by_class |>
+      dplyr::mutate(Cells = fmt_int(.data$Cells),
+                    Records = fmt_int(.data$Records)),
+    caption = "Recorded cells by density class, on the classes the national report uses."))
+  cat("\n")
+}
+```
+
+```{r}
+#| label: datasets
+#| output: asis
+
+if (nrow(inside)) {
+
+  registry <- if (file.exists(params$datasets)) {
+    readr::read_csv(params$datasets, show_col_types = FALSE, progress = FALSE)
+  } else {
+    dplyr::tibble(datasetKey = character())
+  }
+
+  top <- inside |>
+    sf::st_drop_geometry() |>
+    dplyr::count(datasetKey = .data$datasetKey, name = "records") |>
+    dplyr::arrange(dplyr::desc(.data$records), .data$datasetKey) |>
+    utils::head(5) |>
+    dplyr::left_join(registry, by = "datasetKey")
+
+  cat("The records come from", fmt_int(boundary$datasets[1]),
+      "datasets. The largest contributors are:\n\n")
+
+  print(report_table(
+    top |>
+      dplyr::transmute(
+        Dataset   = dplyr::coalesce(.data$datasetTitle, .data$datasetKey),
+        Publisher = dplyr::coalesce(.data$publisher, "—"),
+        Records   = fmt_int(.data$records),
+        # Per cent as a symbol, not as words: this table has five columns of
+        # long publisher names and a spelled-out unit wraps onto three lines.
+        Share     = paste0(
+          formatC(100 * .data$records / boundary$records[1], format = "f",
+                  digits = 1), "%")
+      )))
+  cat("\n")
+}
+```
+
+```{r}
+#| label: units
+#| output: asis
+
+if (nrow(units)) {
+  cat("### Administrative units\n\n")
+  print(report_table(
+    units |>
+      sf::st_drop_geometry() |>
+      dplyr::transmute(
+        Municipality = .data$municipality,
+        District     = .data$district,
+        `Area inside the site (km²)` = formatC(.data$overlap_km2,
+                                                    format = "f", digits = 2),
+        `Share of the site` = share_pct(.data$share_of_site),
+        `Share of the unit` = share_pct(.data$share_of_unit)
+      )))
+  cat("\n")
+}
+```
+
+## Provenance and citation
+
+```{r}
+#| label: provenance
+#| output: asis
+
+provenance <- dplyr::tibble(
+  Item = c("Occurrence data", "GBIF download DOI", "Protected-area register",
+           "Register licence", "Licences in this extract", "Generated",
+           "Tool", "Source revision", "Storage CRS", "Measurement CRS"),
+  Value = c(
+    "Global Biodiversity Information Facility (GBIF)",
+    or_dash(meta_value(md, "gbif_download_doi")),
+    paste(or_dash(meta_value(md, "register_source")),
+          or_dash(meta_value(md, "register_version"))),
+    or_dash(meta_value(md, "register_licence")),
+    or_dash(meta_value(md, "licences_in_extract")),
+    or_dash(meta_value(md, "run_timestamp_utc")),
+    paste0(or_dash(meta_value(md, "tool")), " ",
+           or_dash(meta_value(md, "tool_version"))),
+    or_dash(meta_value(md, "code_revision")),
+    or_dash(meta_value(md, "crs_storage")),
+    or_dash(meta_value(md, "crs_metric"))
+  )
+)
+
+print(report_table(provenance))
+cat("\n\n")
+
+cat("**Cite the occurrence data as:**\n\n")
+cat("> ", or_dash(meta_value(md, "gbif_citation")), "\n\n", sep = "")
+
+cat("**Cite the protected-area boundary as:** ",
+    or_dash(meta_value(md, "register_source")), ", ",
+    or_dash(meta_value(md, "register_version")), ", ",
+    or_dash(meta_value(md, "register_licence")),
+    ", DOI ", or_dash(meta_value(md, "register_doi")), ".\n\n", sep = "")
+
+command <- if (nzchar(params$command)) params$command else
+  meta_value(md, "command")
+
+cat("**This document is reproduced by:**\n\n")
+cat("```\n", or_dash(command), "\n```\n\n", sep = "")
+
+cat("Every figure above is read from `", basename(params$gpkg), "`, which is ",
+    "published alongside this document and holds the records, the species ",
+    "list, the grids and this provenance as GeoPackage layers.\n\n", sep = "")
+
+cat("Records are counted by intersection with the site boundary. A record ",
+    "falling inside two overlapping sites is therefore reported in both, ",
+    "which is what a reader of either site's report needs; the national ",
+    "report counts each record once, against the smallest site containing ",
+    "it, so its total for this site can be slightly lower.\n", sep = "")
+```
