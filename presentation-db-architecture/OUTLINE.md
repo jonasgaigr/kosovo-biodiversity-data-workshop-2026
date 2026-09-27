@@ -10,7 +10,7 @@ Slide-by-slide outline, visual plan and speaker notes.
 
 TAIEX Expert Mission on GIS and biodiversity data management, Pristina, case ID ETT IND/EXP 82606. Day 1, Monday 28 September 2026, 11:50-12:30, shared with Part 1 (Karel Chobot). Speaker: Jonáš Gaigr, AOPK ČR.
 
-**1978 spoken words** over 14.5 min of planned slide time – 15.8 min at a calm 125 words per minute, 14.7 min at 135.
+**2104 spoken words** over 15.5 min of planned slide time – 16.8 min at a calm 125 words per minute, 15.6 min at 135.
 
 Kosovo\* - this designation is without prejudice to positions on status, and is in line with UNSCR 1244/1999 and the ICJ Opinion on the Kosovo declaration of independence.
 
@@ -21,15 +21,16 @@ Kosovo\* - this designation is without prejudice to positions on status, and is 
 | # | Slide | Time | Words |
 |---|---|---|---|
 | 1 | Data flow, quality and standards | 0.5 min | 68 |
-| 2 | A national database in five layers | 1.5 min | 225 |
-| 3 | Three sources, one path | 1.5 min | 212 |
-| 4 | Flow A – structured monitoring | 1.5 min | 204 |
-| 5 | Flow B – records from trusted experts | 1.5 min | 210 |
-| 6 | Flow C – citizen science, on demand | 1.5 min | 193 |
-| 7 | Data that nobody uses do not get corrected | 2 min | 264 |
-| 8 | Speak Darwin Core from day one | 2 min | 285 |
-| 9 | Six habits of a database that lasts | 1.5 min | 194 |
-| 10 | Four things to take away | 1 min | 123 |
+| 2 | About me | 1 min | 126 |
+| 3 | A national database in five layers | 1.5 min | 225 |
+| 4 | Three sources, one path | 1.5 min | 212 |
+| 5 | Flow A – structured monitoring | 1.5 min | 204 |
+| 6 | Flow B – records from trusted experts | 1.5 min | 210 |
+| 7 | Flow C – citizen science, on demand | 1.5 min | 193 |
+| 8 | Data that nobody uses do not get corrected | 2 min | 264 |
+| 9 | Speak Darwin Core from day one | 2 min | 285 |
+| 10 | Six habits of a database that lasts | 1.5 min | 194 |
+| 11 | Four things to take away | 1 min | 123 |
 
 ---
 
@@ -51,7 +52,45 @@ Thank you, Karel. Karel has shown you what the Czech system holds: the registers
 
 ---
 
-## Slide 2 – A national database in five layers
+## Slide 2 – About me
+
+**Time:** 1 min &nbsp;·&nbsp; **Spoken words:** 126
+
+**Key message:** Who is speaking: AOPK ČR since 2020, the BiodivPond pilot in Biodiversa+, the TAIEX mission to Kosovo in December 2023, and the path to Natura 2000 with Ukrainian partners in ConNatur LIFE – one question throughout: how data get from the field to a decision.
+
+**On the slide:**
+
+![](images/gaigr-ento.jpg){fig-alt="Jonáš Gaigr in the field, looking at an insect in a sweep net."}
+
+- **Nature Conservation Agency of the Czech Republic** (AOPK ČR) – since 2020
+- **Biodiversa+** – lead development and coordination of the **BiodivPond**
+  pond-monitoring pilot
+- **TAIEX** – expert mission to Kosovo, December 2023
+- **ConNatur LIFE** – with Ukrainian partners, the path to Natura 2000 and to
+  implementing the Birds and Habitats Directives in Ukraine
+
+**Visual:** The speaker in the field with a sweep net (images/gaigr-ento.jpg), cropped to fill the left column; four one-line roles on the right.
+
+**Speaker notes:**
+
+First, briefly, who I am. Since 2020 I have worked at the Nature Conservation
+Agency of the Czech Republic, the government body for nature conservation.
+
+In Biodiversa+, the European biodiversity partnership, I led the development of
+BiodivPond, a pilot on monitoring the biodiversity of ponds, and I now coordinate
+it. You will hear more about it on Wednesday.
+
+This is not my first time in Kosovo. I was here in December 2023 on a TAIEX
+expert mission. And in the ConNatur LIFE project I work with Ukrainian partners
+on the path for Ukraine to Natura 2000 and to the two directives, Birds and
+Habitats.
+
+In all of this, the question is the same: how data get from the field to a
+decision. That is today's topic.
+
+---
+
+## Slide 3 – A national database in five layers
 
 **Time:** 1.5 min &nbsp;·&nbsp; **Spoken words:** 225
 
@@ -102,7 +141,7 @@ well-kept tables. The layers are a way of working before they are software.
 
 ---
 
-## Slide 3 – Three sources, one path
+## Slide 4 – Three sources, one path
 
 **Time:** 1.5 min &nbsp;·&nbsp; **Spoken words:** 212
 
@@ -141,7 +180,7 @@ back to it in a few minutes.
 
 ---
 
-## Slide 4 – Flow A – structured monitoring
+## Slide 5 – Flow A – structured monitoring
 
 **Time:** 1.5 min &nbsp;·&nbsp; **Spoken words:** 204
 
@@ -199,7 +238,7 @@ from not looked for. Absences and effort are what make a trend.
 
 ---
 
-## Slide 5 – Flow B – records from trusted experts
+## Slide 6 – Flow B – records from trusted experts
 
 **Time:** 1.5 min &nbsp;·&nbsp; **Spoken words:** 210
 
@@ -258,7 +297,7 @@ proposed by a regional expert and confirmed by a central guarantor.
 
 ---
 
-## Slide 6 – Flow C – citizen science, on demand
+## Slide 7 – Flow C – citizen science, on demand
 
 **Time:** 1.5 min &nbsp;·&nbsp; **Spoken words:** 193
 
@@ -318,7 +357,7 @@ already done the collecting.
 
 ---
 
-## Slide 7 – Data that nobody uses do not get corrected
+## Slide 8 – Data that nobody uses do not get corrected
 
 **Time:** 2 min &nbsp;·&nbsp; **Spoken words:** 264
 
@@ -380,7 +419,7 @@ Every use is also a quality check. Plan for it.
 
 ---
 
-## Slide 8 – Speak Darwin Core from day one
+## Slide 9 – Speak Darwin Core from day one
 
 **Time:** 2 min &nbsp;·&nbsp; **Spoken words:** 285
 
@@ -444,7 +483,7 @@ neighbours, who use the same terms.
 
 ---
 
-## Slide 9 – Six habits of a database that lasts
+## Slide 10 – Six habits of a database that lasts
 
 **Time:** 1.5 min &nbsp;·&nbsp; **Spoken words:** 194
 
@@ -504,7 +543,7 @@ one runs.
 
 ---
 
-## Slide 10 – Four things to take away
+## Slide 11 – Four things to take away
 
 **Time:** 1 min &nbsp;·&nbsp; **Spoken words:** 123
 
@@ -547,7 +586,7 @@ access that still protects sensitive species, and faster permits.
 
 ---
 
-## The data-flow diagram (slide 3) as Mermaid
+## The data-flow diagram (slide 4) as Mermaid
 
 The source is `data-flow.mmd`; the deck includes it with `%%| file:`, so this is exactly the diagram the slide shows. GitHub renders the block below as a diagram; open the raw file, or `data-flow.mmd`, for the code. The `%%{init}%%` first line only sizes it for the slide – see "The data-flow diagram" in the README.
 

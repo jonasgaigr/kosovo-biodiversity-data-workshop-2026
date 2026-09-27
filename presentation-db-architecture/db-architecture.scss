@@ -10,10 +10,10 @@
 // project and resolves its theme relative to itself, so they are copied rather
 // than shared. Keep them in step if the sibling is revised.
 //
-// The second half is this deck's own: the layer stack (slide 2), the event tree
-// (slide 4), the validation-code and crosswalk tables (slides 5, 6, 8), the six
-// habit cards (slide 9), the takeaway list (slide 10), and the loud marker for
-// a Kosovo fact still to be supplied.
+// The second half is this deck's own: the speaker photo (slide 2), the layer
+// stack (slide 3), the event tree (slide 5), the validation-code and crosswalk
+// tables (slides 6, 7, 9), the six habit cards (slide 10), the takeaway list
+// (slide 11), and the loud marker for a Kosovo fact still to be supplied.
 //
 // Dashes are en dashes (–), spaced, never em dashes. Keep it so.
 
@@ -116,7 +116,26 @@ html.reveal-print .reveal .aopk-handout { display: none; }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// SLIDE 2 – THE LAYER STACK
+// SLIDE 2 – ABOUT ME
+//
+// The photo is 4:3 and the column is nearly square, so it is cropped here
+// rather than in the file: it fills the column to the bar, and object-position
+// keeps the face and the net in frame. It stops short of the strip above the
+// bar that check-overflow.R reads.
+// ═══════════════════════════════════════════════════════════════════════════
+.reveal .slides section .speaker-photo img {
+  width: 100%;
+  height: calc(var(--aopk-content-h) + #{$aopk-dvojlist-h} - 1.4em);
+  object-fit: cover;
+  object-position: 62% 40%;
+}
+
+.reveal .slides section .speaker li {
+  margin-bottom: 0.45em;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SLIDE 3 – THE LAYER STACK
 //
 // Drawn in HTML rather than as a picture so its text is real, sharp and large
 // enough. The reference layer is a column on the left spanning all four rows,
@@ -200,7 +219,7 @@ html.reveal-print .reveal .aopk-handout { display: none; }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// SLIDE 4 – ONE VISIT STORED AS AN EVENT
+// SLIDE 5 – ONE VISIT STORED AS AN EVENT
 //
 // The event is the parent box; its occurrences and measurements are indented
 // under it with a rule down the left, which is the shape of the Event core with
@@ -238,7 +257,7 @@ html.reveal-print .reveal .aopk-handout { display: none; }
 .reveal .slides section .evt-kids .absent { font-weight: $aopk-weight-demi; color: #C4272E; }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// SLIDES 5, 6 AND 8 – SMALL REFERENCE TABLES
+// SLIDES 6, 7 AND 9 – SMALL REFERENCE TABLES
 //
 // Three tables in the same dress: rules top and bottom, hairlines between rows,
 // no header shading. `.codes` has a short code in its first column (the NDOP
@@ -299,7 +318,7 @@ html.reveal-print .reveal .aopk-handout { display: none; }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// SLIDE 7 – THE LOOP STRIP
+// SLIDE 8 – THE LOOP STRIP
 //
 // The slide's argument is a cycle – use, flag, review, tell, correct, and back
 // to use – and two lists of text do not show a cycle. A row of steps closed by
@@ -335,7 +354,7 @@ html.reveal-print .reveal .aopk-handout { display: none; }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// SLIDE 9 – SIX HABITS
+// SLIDE 10 – SIX HABITS
 //
 // Six peers, so a grid of six equal cards rather than one long list: three by
 // two fits the content width at a readable size, and the big number on each
@@ -368,7 +387,7 @@ html.reveal-print .reveal .aopk-handout { display: none; }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// SLIDE 10 – TAKEAWAYS AND THE DISCUSSION BOX
+// SLIDE 11 – TAKEAWAYS AND THE DISCUSSION BOX
 // ═══════════════════════════════════════════════════════════════════════════
 .reveal .slides section .takeaways p {
   font-size: $aopk-size-body;
