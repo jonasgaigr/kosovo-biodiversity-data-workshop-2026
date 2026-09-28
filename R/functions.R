@@ -1075,7 +1075,8 @@ fetch_vernacular_names <- function(species_keys,
 #
 # Several attributes the conservation sector needs are not carried in a GBIF
 # SIMPLE_CSV download and have to be fetched from the registry and species
-# APIs: IUCN Red List categories, dataset titles and publishing organisations.
+# APIs: IUCN Red List categories, dataset titles and publishing organisations,
+# and — for the invasive-species watch list — record counts across the border.
 # Each is a per-key lookup over hundreds or thousands of keys, so requests are
 # issued concurrently and every answer -- misses included -- is cached on disk.
 # A second run of the pipeline therefore makes no network calls at all.
@@ -1306,6 +1307,120 @@ fetch_dataset_registry <- function(dataset_keys,
   }
 
   dplyr::filter(cache, .data$datasetKey %in% dataset_keys)
+}
+
+#' Kosovo's neighbours, as the GADM identifiers GBIF filters on
+#'
+#' GADM draws Serbia without Kosovo, so `SRB` counts nothing inside Kosovo's
+#' border, which a `country=RS` filter would: some of Kosovo's own records are
+#' published under that code. Names are given in English, the report's
+#' language.
+ias_neighbours <- c(ALB = "Albania", MKD = "North Macedonia",
+                    MNE = "Montenegro", SRB = "Serbia")
+
+#' Count records of each species in each of Kosovo's neighbours
+#'
+#' The Union list exists to catch invasive species early, and the species most
+#' likely to reach Kosovo next are the ones already recorded across its
+#' borders. These counts are what the report's watch list is built from.
+#'
+#' They come from the occurrence search API with the same quality filters as
+#' the download, and they are NOT covered by the download's DOI: they are a
+#' dated screening aid, and the cache records the day they were taken. Delete
+#' the cache to refresh them.
+#'
+#' One request per species covers all four countries, faceted by GADM country.
+#' The requests are made one at a time rather than through `gbif_fetch_json()`:
+#' occurrence search is rate-limited far more tightly than the species and
+#' registry endpoints, and at six concurrent connections GBIF answers most of
+#' them with 429 Too Many Requests. A 429 is waited out and retried.
+#'
+#' @param species_keys Integer vector of GBIF species keys.
+#' @param cache_path CSV used to persist the counts between runs.
+#' @param verbose Print progress messages.
+#' @return A tibble with `speciesKey`, one record count per neighbour (named by
+#'   its GADM code), `last_year` (the most recent year recorded in any of them)
+#'   and `queried`.
+fetch_neighbour_counts <- function(species_keys,
+                                   cache_path = "data/ias_neighbour_counts.csv",
+                                   verbose    = TRUE) {
+
+  species_keys <- unique(stats::na.omit(as.integer(species_keys)))
+  gadm <- names(ias_neighbours)
+
+  cache <- if (file.exists(cache_path)) {
+    readr::read_csv(cache_path, show_col_types = FALSE,
+                    col_types = readr::cols(queried = readr::col_date(),
+                                            .default = readr::col_integer()))
+  } else {
+    dplyr::tibble(speciesKey = integer())
+  }
+
+  missing <- setdiff(species_keys, cache$speciesKey)
+
+  if (length(missing) > 0) {
+
+    if (verbose) {
+      say("Counting records in neighbouring countries for ",
+          fmt_int(length(missing)), " species ...")
+    }
+
+    one <- function(key) {
+      url <- sprintf(paste0(
+        "https://api.gbif.org/v1/occurrence/search?taxonKey=%d&%s",
+        "&hasCoordinate=true&hasGeospatialIssue=false&occurrenceStatus=PRESENT",
+        "&limit=0&facet=gadmLevel0Gid&facet=year&facetLimit=500"),
+        key, paste0("gadmGid=", gadm, collapse = "&"))
+
+      for (attempt in 1:5) {
+        res <- tryCatch(
+          curl::curl_fetch_memory(url, curl::new_handle(
+            useragent = .gbif_user_agent, timeout = 60)),
+          error = function(e) NULL)
+        if (!is.null(res) && res$status_code == 200) break
+        if (!is.null(res) && res$status_code != 429) return(NULL)
+        Sys.sleep(2^attempt)
+      }
+      if (is.null(res) || res$status_code != 200) return(NULL)
+
+      j <- jsonlite::fromJSON(rawToChar(res$content), simplifyVector = FALSE)
+      facet <- function(field) {
+        f <- Filter(function(x) identical(x$field, field), j$facets)
+        if (!length(f)) return(stats::setNames(integer(), character()))
+        stats::setNames(vapply(f[[1]]$counts, function(x) as.integer(x$count), 1L),
+                        vapply(f[[1]]$counts, function(x) x$name, ""))
+      }
+      by_country <- facet("GADM_LEVEL_0_GID")
+      years      <- suppressWarnings(as.integer(names(facet("YEAR"))))
+
+      Sys.sleep(0.25)   # considerate pacing, even when nothing is refused
+      dplyr::as_tibble(c(
+        list(speciesKey = key),
+        stats::setNames(as.list(dplyr::coalesce(unname(by_country[gadm]), 0L)),
+                        gadm),
+        list(last_year = if (any(!is.na(years))) max(years, na.rm = TRUE)
+                         else NA_integer_,
+             queried   = Sys.Date())
+      ))
+    }
+
+    got <- lapply(missing, one)
+    ok  <- !vapply(got, is.null, logical(1))
+
+    # A failed request is left out of the cache rather than stored as zero, so
+    # that it is asked again next time instead of becoming a false absence.
+    if (verbose && any(!ok)) {
+      say("  ", sum(!ok), " requests failed and will be retried next run.")
+    }
+
+    cache <- dplyr::bind_rows(cache, dplyr::bind_rows(got[ok])) |>
+      dplyr::distinct(.data$speciesKey, .keep_all = TRUE)
+
+    dir.create(dirname(cache_path), recursive = TRUE, showWarnings = FALSE)
+    readr::write_csv(cache, cache_path, na = "")
+  }
+
+  dplyr::filter(cache, .data$speciesKey %in% species_keys)
 }
 
 # ------------------------------------------------------------------------------

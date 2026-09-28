@@ -135,7 +135,8 @@ programmes and citizen-science platforms worldwide. This report brings the
 GBIF holdings for the territory of Kosovo into a single, quality-controlled,
 openly downloadable evidence base, and highlights the records that relate to
 species protected under the EU Birds and Habitats Directives or assessed as
-threatened on the IUCN Red List.
+threatened on the IUCN Red List — and to the invasive alien species the EU
+regulates as a threat to all of them.
 
 ```{r}
 #| label: key-figures
@@ -157,6 +158,8 @@ n_threatened_species <- sum(
 
 n_municipalities_with_records <- sum(meta$municipal_summary$records > 0)
 
+n_ias_species <- m$species[m$name == "kosovo_invasive_alien_species"]
+
 cat("<div class='keyfigures'>",
     kf(fmt_int(meta$n_clean), "Quality-checked records"),
     kf(fmt_int(meta$n_species), "Species recorded"),
@@ -164,6 +167,7 @@ cat("<div class='keyfigures'>",
                                            "kosovo_habitats_directive")])),
        "Directive-listed records"),
     kf(fmt_int(n_threatened_species), "IUCN-threatened species"),
+    kf(fmt_int(n_ias_species), "EU invasive species recorded"),
     kf(sprintf("%d / %d", n_municipalities_with_records,
                nrow(meta$municipal_summary)), "Municipalities with records"),
     kf(if (length(years)) sprintf("%d&ndash;%d", min(years), max(years)) else "&mdash;",
@@ -290,8 +294,8 @@ can be repaired here:
 
 ## Summary statistics
 
-Each row below is a distinct thematic extract of the cleaned dataset. All six
-are available for download at the end of this report.
+Each row below is a distinct thematic extract of the cleaned dataset. All
+seven are available for download at the end of this report.
 
 ```{r}
 #| label: summary-table
@@ -309,7 +313,7 @@ report_table(
     "Table 1. Cleaned GBIF occurrence records for Kosovo, by thematic subset. ",
     "‘Source datasets’ counts the distinct GBIF datasets contributing records."
   ),
-  page_length = 6
+  page_length = 7
 ) |>
   DT::formatCurrency(c("Records", "Species", "Families", "Source datasets"),
                      currency = "", interval = 3, mark = ",", digits = 0)
@@ -555,6 +559,17 @@ build_occurrence_map(subsets[["kosovo_threatened_iucn"]],
                      protected_areas = protected_areas,
                      protected_points = protected_points,
                      colour_by = "iucn")
+```
+
+### Invasive alien species
+
+```{r}
+#| label: map-invasive
+build_occurrence_map(subsets[["kosovo_invasive_alien_species"]],
+                     boundary = boundary, municipalities = municipalities,
+                     protected_areas = protected_areas,
+                     protected_points = protected_points,
+                     colour_by = "kingdom")
 ```
 
 :::
@@ -1105,13 +1120,317 @@ likely to be a taxonomic mismatch than a rediscovery. Treat a surprising
 category as a question to check rather than as a finding.
 :::
 
+## Invasive alien species of Union concern
+
+The directives and the Red List say what is at stake. Regulation (EU)
+No 1143/2014 deals with one of the things that puts it at risk: invasive alien
+species, introduced by people outside their natural range, that damage the
+ecosystems they spread into. Its core is the **Union list** — species that may
+not be imported, kept, bred, sold or released anywhere in the EU, for which
+Member States must run surveillance, report every new finding and act on it
+early, and manage populations that are already widespread.
+
+The Regulation binds EU Member States. As with the Nature Directives elsewhere
+in this report, it is used here as the reference list against which the
+evidence is screened, not as a statement of what applies in Kosovo today.
+
+```{r}
+#| label: ias-setup
+
+ias_list <- meta$ias_list |>
+  mutate(applies_from = as.Date(applies_from))
+
+ias_occ <- sf::st_drop_geometry(subsets[["kosovo_invasive_alien_species"]]) |>
+  mutate(year = suppressWarnings(as.integer(year)),
+         speciesKey = suppressWarnings(as.integer(speciesKey)))
+
+# The names people use differ from country to country, so the English name
+# comes from the Union-list checklist on GBIF, which follows the EU's own
+# usage, rather than from the most-published name the other tables carry.
+sentence_case <- function(x) {
+  ifelse(is.na(x), NA_character_,
+         paste0(toupper(substr(x, 1, 1)), substring(x, 2)))
+}
+
+# Records across the border, one row per listed species. Live API counts, not
+# part of the download: see the note under the watch list.
+neighbours <- meta$ias_neighbours |>
+  mutate(across(all_of(names(ias_neighbours)), ~ coalesce(.x, 0L)),
+         abroad    = rowSums(across(all_of(names(ias_neighbours)))),
+         abroad_year = last_year,
+         countries = rowSums(across(all_of(names(ias_neighbours)), ~ .x > 0)))
+
+in_kosovo <- ias_occ |>
+  group_by(speciesKey) |>
+  summarise(
+    records        = n(),
+    municipalities = n_distinct(municipality[!is.na(municipality)]),
+    in_site        = sum(!is.na(protectedArea)),
+    kosovo_year    = {
+      y <- year[!is.na(year) & year > 1500]
+      if (length(y)) max(y) else NA_integer_
+    },
+    .groups = "drop"
+  )
+
+ias_status <- ias_list |>
+  left_join(in_kosovo, by = c("gbif_species_key" = "speciesKey")) |>
+  left_join(neighbours, by = c("gbif_species_key" = "speciesKey")) |>
+  mutate(records = coalesce(records, 0L),
+         english_name = sentence_case(english_name))
+
+n_listed   <- nrow(ias_list)
+n_applying <- sum(ias_list$applies_from <= Sys.Date())
+n_recorded <- sum(ias_status$records > 0)
+watch      <- ias_status |> filter(records == 0, abroad > 0)
+
+gbif_species_link <- function(key, name) {
+  sprintf("<a href='https://www.gbif.org/species/%s' target='_blank' rel='noopener'><i>%s</i></a>",
+          key, name)
+}
+
+# Small counts read better as words in running text, and a sentence should not
+# open with a numeral.
+number_word <- function(n, capital = FALSE) {
+  words <- c("one", "two", "three", "four", "five", "six", "seven", "eight",
+             "nine", "ten", "eleven", "twelve", "thirteen", "fourteen",
+             "fifteen", "sixteen", "seventeen", "eighteen", "nineteen",
+             "twenty")
+  out <- if (n >= 1 && n <= 20) words[n] else fmt_int(n)
+  if (capital) sentence_case(out) else out
+}
+```
+
+```{r}
+#| label: ias-key-figures
+#| output: asis
+
+cat("<div class='keyfigures'>",
+    kf(fmt_int(n_listed), "Species on the Union list"),
+    kf(fmt_int(n_recorded), "Recorded in Kosovo"),
+    kf(fmt_int(nrow(ias_occ)), "Records"),
+    kf(fmt_int(sum(!is.na(ias_occ$protectedArea))), "Inside a designated site"),
+    kf(fmt_int(nrow(watch)), "Across the border, not recorded here"),
+    "</div>", sep = "\n")
+```
+
+```{r}
+#| label: ias-findings
+#| output: asis
+
+recent <- ias_occ |> filter(!is.na(year), year >= 2015)
+old    <- ias_occ |> filter(is.na(year) | year < 2000)
+
+# "a, b and c", for a sentence rather than a table.
+and_list <- function(x) {
+  if (length(x) <= 1) return(paste(x))
+  paste(paste(head(x, -1), collapse = ", "), "and", tail(x, 1))
+}
+
+publishers_of <- function(d) {
+  unique(stats::na.omit(meta$datasets$publisher[
+    meta$datasets$datasetKey %in% d$datasetKey]))
+}
+titles_of <- function(d) {
+  unique(stats::na.omit(meta$datasets$datasetTitle[
+    meta$datasets$datasetKey %in% d$datasetKey]))
+}
+
+# A recent record from anyone but a citizen-science platform would make the
+# first reading wrong, so the sentence is only written when it holds.
+recent_pubs <- publishers_of(recent)
+citizen     <- c("iNaturalist.org", "Pl@ntNet", "Observation.org",
+                 "naturgucker.de", "eBird")
+recent_note <- if (nrow(recent) && all(recent_pubs %in% citizen)) {
+  sprintf("every one of them through %s — citizen science, in other words, rather than survey",
+          and_list(recent_pubs))
+} else {
+  sprintf("from %s", and_list(recent_pubs))
+}
+
+top <- ias_status |> filter(records > 0) |> arrange(desc(records)) |> slice(1)
+
+cat(sprintf(
+  paste0("Of the %s species on the list, %s have any quality-checked record in ",
+         "Kosovo, and they have %s records between them. %s of the records ",
+         "date from 2015 or later, %s. The other %s either predate 2000 or ",
+         "carry no date; they come from %s.\n\n",
+         "Read that as a statement about recording, not about the country. ",
+         "%s, the most-recorded of the %s, has %s records here and %s across ",
+         "the four neighbouring countries, %s of them in Serbia. Invasive ",
+         "species are what recorders walk past: the widespread ones are too ",
+         "familiar to note, and few surveys set out to find them. An absence ",
+         "from the table below is therefore no evidence that a species is ",
+         "absent from Kosovo — and for this list that is the expensive mistake ",
+         "to make, because a species caught early is the only kind that can ",
+         "still be eradicated.\n\n"),
+  fmt_int(n_listed), number_word(n_recorded), fmt_int(nrow(ias_occ)),
+  number_word(nrow(recent), capital = TRUE), recent_note,
+  number_word(nrow(old)),
+  and_list(sprintf("*%s*", titles_of(old))),
+  top$english_name, number_word(n_recorded), number_word(top$records),
+  fmt_int(top$abroad), fmt_int(top$SRB)))
+```
+
+```{r}
+#| label: ias-table
+
+ias_tbl <- ias_status |>
+  filter(records > 0) |>
+  arrange(desc(records)) |>
+  transmute(
+    `Scientific name`   = gbif_species_link(gbif_species_key, scientific_name),
+    `English name`      = coalesce(english_name, "&mdash;"),
+    Class               = coalesce(class, kingdom),
+    `Listed from`       = fmt_date_en(applies_from),
+    Records             = records,
+    Municipalities      = municipalities,
+    `In a site`         = in_site,
+    `Most recent year`  = kosovo_year,
+    `Records next door` = abroad
+  )
+
+report_table(
+  ias_tbl,
+  caption = htmltools::tags$caption(
+    style = "caption-side: bottom; text-align: left; padding-top: 8px;
+             font-size: 0.85rem; color: #666666;",
+    sprintf(paste0("Table 8. The %d species of the Union list recorded in ",
+                   "Kosovo. ‘Listed from’ is the date the listing applies ",
+                   "from in the EU. ‘In a site’ counts records inside a ",
+                   "designated protected area. ‘Records next door’ counts ",
+                   "records in Albania, North Macedonia, Montenegro and Serbia ",
+                   "together. Mapped on the ‘Invasive alien species’ tab ",
+                   "above."),
+            nrow(ias_tbl))
+  ),
+  page_length = 10, buttons = FALSE, escape = FALSE
+)
+```
+
+```{r}
+#| label: ias-sites
+#| output: asis
+
+in_sites <- ias_occ |>
+  filter(!is.na(protectedArea)) |>
+  left_join(ias_status |> select(gbif_species_key, english_name),
+            by = c("speciesKey" = "gbif_species_key")) |>
+  arrange(desc(year))
+
+if (nrow(in_sites)) {
+  cat(sprintf(
+    paste0("%s of the records %s inside a designated site: %s. A record ",
+           "inside a protected area is the one a site manager needs to hear ",
+           "about first. Every record is in the explorer below, under the ",
+           "*EU invasive species* filter.\n\n"),
+    number_word(nrow(in_sites), capital = TRUE), if (nrow(in_sites) == 1) "falls" else "fall",
+    and_list(sprintf("%s in %s (%s)",
+                     tolower(coalesce(in_sites$english_name, in_sites$species)),
+                     in_sites$protectedArea,
+                     ifelse(is.na(in_sites$year), "undated", in_sites$year)))))
+}
+```
+
+### The watch list: across the border, not yet recorded here
+
+The Regulation is built around early detection, and the species most likely
+to be found in Kosovo next are the ones already established next door. The
+table below lists every Union-list species with records in at least one
+neighbouring country and none in this extract, most widespread first.
+
+```{r}
+#| label: ias-watch-list
+
+watch_tbl <- watch |>
+  arrange(desc(countries), desc(abroad)) |>
+  transmute(
+    `Scientific name` = gbif_species_link(gbif_species_key, scientific_name),
+    `English name`    = coalesce(english_name, "&mdash;"),
+    Class             = coalesce(class, kingdom),
+    Albania           = ALB,
+    `North Macedonia` = MKD,
+    Montenegro        = MNE,
+    Serbia            = SRB,
+    `Most recent`     = abroad_year
+  )
+
+report_table(
+  watch_tbl,
+  caption = htmltools::tags$caption(
+    style = "caption-side: bottom; text-align: left; padding-top: 8px;
+             font-size: 0.85rem; color: #666666;",
+    sprintf(paste0("Table 9. The %d Union-list species recorded in a ",
+                   "neighbouring country and not in Kosovo: GBIF records per ",
+                   "country, and the most recent year recorded in any of ",
+                   "them. Counted on %s; not part of the download cited above."),
+            nrow(watch_tbl),
+            fmt_date_en(max(meta$ias_neighbours$queried)))
+  ),
+  page_length = 10, buttons = TRUE, escape = FALSE
+)
+```
+
+::: {.callout-note collapse="true"}
+## How the Union list was built, and how the watch list was counted
+
+**The list is taken from the legal texts.** `R/build_ias_list.R` reads the
+consolidated Implementing Regulation (EU) 2016/1141 and the four acts that
+amended it, and resolves every name against the GBIF backbone. The list holds
+`r fmt_int(n_listed)` species. `r fmt_int(n_applying)` apply today; the other
+`r fmt_int(n_listed - n_applying)` were listed with a deferred date —
+`r paste(sprintf("*%s* from %s", ias_list$scientific_name[ias_list$applies_from > Sys.Date()], fmt_date_en(ias_list$applies_from[ias_list$applies_from > Sys.Date()])), collapse = ", ")` —
+and are kept here, since a screen should catch them before the date rather
+than after it. The consolidated text on its own would have missed all three:
+a consolidated version carries only what already applies.
+
+**It agrees with the checklist published on GBIF**, species for species. The
+Research Institute for Nature and Forest (INBO) publishes the Union list as a
+checklist dataset ([doi:10.15468/97aucj](https://doi.org/10.15468/97aucj)),
+and unlike the per-annex Nature Directive checklists on GBIF, which leave out
+species beyond the region they were compiled for, it is complete. It supplies
+the English names in the tables. It is not the source, because its
+names are linked to the GBIF backbone less well than they are chosen: two of
+its species have no backbone link at all, one because a single accent
+("*Triadica sebífera*") defeats GBIF's name parser, and one for the reason in
+the next paragraph.
+
+**One listed name does not exist in the GBIF backbone.** The 2025 amendment
+lists the American mink as *Neogale vison*, the genus it was moved to in 2021.
+Asked for that name, GBIF's matching service returns the genus *Neogale*,
+which it holds as a synonym of *Mustela* — a "higher rank" match, at 94 per
+cent confidence, and no error. Taken at face value, that would put every
+native weasel, stoat and polecat on the list of invasive species. The build
+refuses such matches rather than quietly promoting a species listing to a
+whole genus, and resolves the mink through its former name to *Mustela vison*,
+where the backbone holds it.
+
+**Three listings are below species rank** — *Vespa velutina nigrithorax*,
+*Procambarus fallax* f. *virginalis* and *Pueraria montana* var. *lobata* —
+and each is matched on its whole species. That is the opposite of the rule for
+the Birds Directive's island subspecies, and deliberately so: each of these is
+the form of its species that is established in Europe, and most records are
+identified to species only.
+
+**The watch list is a dated screening aid, not evidence of the same standard
+as the rest of this report.** The counts come from the GBIF occurrence API with
+the download's own quality filters, counted on
+`r fmt_date_en(max(meta$ias_neighbours$queried))`, and they are not covered by
+the DOI above. The neighbours are selected by their GADM boundaries, which
+draw Serbia without Kosovo, so no record inside Kosovo is counted as Serbian. A
+record across the border may be a planted tree, a pond turtle or a museum
+specimen; check the records on GBIF before treating any one of them as an
+established population.
+:::
+
 ## Explore the records
 
 The GBIF Viewer's most useful idea is its filter panel: pick the conservation
 criteria that matter to you, and see what is left. That is reproduced here for
-the records of conservation interest — everything listed on an EU annex or
-assessed as threatened — with the filtering done in your own browser, so it
-costs nothing to host and keeps working for as long as this page does.
+the records of conservation interest — everything listed on an EU annex,
+assessed as threatened, or on the Union list of invasive alien species — with
+the filtering done in your own browser, so it costs nothing to host and keeps
+working for as long as this page does.
 
 Filters combine: choosing a class *and* a Red List category shows records that
 satisfy both. Selections are shared between the map and the table.
@@ -1122,7 +1441,8 @@ satisfy both. Selections are shared between the map and the table.
 explorer_src <- bind_rows(
   sf::st_drop_geometry(subsets[["kosovo_birds_annex_I"]]),
   sf::st_drop_geometry(subsets[["kosovo_habitats_directive"]]),
-  sf::st_drop_geometry(subsets[["kosovo_threatened_iucn"]])
+  sf::st_drop_geometry(subsets[["kosovo_threatened_iucn"]]),
+  sf::st_drop_geometry(subsets[["kosovo_invasive_alien_species"]])
 ) |>
   distinct(gbifID, .keep_all = TRUE) |>
   mutate(year = suppressWarnings(as.integer(year))) |>
@@ -1154,6 +1474,8 @@ explorer <- tibble::tibble(
   Class         = coalesce(explorer_src$class, "—"),
   IUCN          = iucn_code,
   Listing       = coalesce(explorer_src$annex, "not listed"),
+  Invasive      = ifelse(explorer_src$iasUnionConcern %in% TRUE,
+                         "Union list", "not listed"),
   Year          = explorer_src$year,
   Municipality  = coalesce(explorer_src$municipality, "—"),
   Precision     = as.character(
@@ -1176,6 +1498,7 @@ filters <- htmltools::div(
   crosstalk::filter_select("f_class", "Taxonomic class", sd_tab, ~Class),
   crosstalk::filter_select("f_iucn",  "IUCN Red List",   sd_tab, ~IUCN),
   crosstalk::filter_select("f_annex", "EU annex",        sd_tab, ~Listing),
+  crosstalk::filter_select("f_ias",   "EU invasive species", sd_tab, ~Invasive),
   crosstalk::filter_select("f_basis", "Basis of record", sd_tab, ~Basis),
   crosstalk::filter_select("f_mun",   "Municipality",    sd_tab, ~Municipality),
   crosstalk::filter_select("f_prec",  "Coordinate precision", sd_tab, ~Precision),
@@ -1205,7 +1528,7 @@ htmltools::tagList(
                         list(extend = "excel", text = "Download Excel")),
       pageLength = 10,
       scrollX    = TRUE,
-      order      = list(list(5, "desc")),
+      order      = list(list(6, "desc")),
       language   = list(search = "Filter:",
                         emptyTable = "No records match the current filters")
     ),
@@ -1275,7 +1598,7 @@ report_table(
   caption = htmltools::tags$caption(
     style = "caption-side: bottom; text-align: left; padding-top: 8px;
              font-size: 0.85rem; color: #666666;",
-    sprintf(paste0("Table 8. The %s species recorded in Kosovo, most-recorded ",
+    sprintf(paste0("Table 10. The %s species recorded in Kosovo, most-recorded ",
                    "first. ‘Municipalities’ counts the administrative units a ",
                    "species has been found in, which is a rough but useful ",
                    "guide to how widely it has been looked for."),
@@ -1313,7 +1636,7 @@ report_table(
   caption = htmltools::tags$caption(
     style = "caption-side: bottom; text-align: left; padding-top: 8px;
              font-size: 0.85rem; color: #666666;",
-    sprintf(paste0("Table 9. The %d datasets contributing records, from %d ",
+    sprintf(paste0("Table 11. The %d datasets contributing records, from %d ",
                    "publishing institutions, largest contribution first. The ",
                    "licence column gives the terms each publisher chose; the ",
                    "same information is in the `license` column of every ",
@@ -1328,10 +1651,12 @@ report_table(
 
 ## Download the data
 
-All six extracts are published as **GeoPackage** (`.gpkg`, ready for QGIS or
+All seven extracts are published as **GeoPackage** (`.gpkg`, ready for QGIS or
 ArcGIS, geometry included) and **CSV** (flat table with coordinate columns).
 The smaller extracts are also published as **Excel** workbooks. All are open
-formats requiring no proprietary software.
+formats requiring no proprietary software. Every extract carries the
+`iasUnionConcern` and `iasAppliesFrom` columns, so any of them can be screened
+for invasive species without the matching being run again.
 
 ```{r}
 #| label: downloads
@@ -1415,7 +1740,15 @@ The entire analysis is scripted and version-controlled. To reproduce it:
 existing DOI rather than minting a new one. Delete
 `data/gbif_download/download_key.txt` to force a fresh extract. The vernacular
 name, Red List and dataset-registry lookups are cached under `data/`, so only
-the first run makes those requests.
+the first run makes those requests; so are the neighbouring-country counts
+behind the invasive-species watch list, which is why that table states the day
+they were taken.
+
+The two species lists are built from the legal texts, by
+`Rscript R/build_directive_list.R` for the Nature Directive annexes and
+`Rscript R/build_ias_list.R` for the Union list of invasive alien species.
+Both write a CSV that is kept in the repository, so neither needs running
+again until the legislation changes.
 
 ```{r}
 #| label: session

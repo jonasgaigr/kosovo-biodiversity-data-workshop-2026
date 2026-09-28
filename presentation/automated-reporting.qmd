@@ -129,16 +129,16 @@ and does not re-fetch what is cached.
 
 ::: {.smaller}
 The first run takes about twenty minutes, most of it resolving common names one
-taxon at a time. Every later run reuses the download and three caches.
+taxon at a time. Every later run reuses the download and four caches.
 :::
 :::
 
 ::: {}
 What it leaves on disk, and what everything downstream reads:
 
-- **six thematic subsets** — overall, birds, Birds Annex I, Habitats
-  Directive, Habitats Annex II, IUCN threatened — each as `.gpkg`, `.csv` and,
-  where small enough, `.xlsx`;
+- **seven thematic subsets** — overall, birds, Birds Annex I, Habitats
+  Directive, Habitats Annex II, IUCN threatened, EU invasive species — each as
+  `.gpkg`, `.csv` and, where small enough, `.xlsx`;
 - the **protected-area register**, in the same three formats;
 - `run_metadata.rds` — the **DOI**, the citation and the cleaning report.
 :::

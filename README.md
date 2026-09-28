@@ -3,7 +3,8 @@
 A reproducible R workflow that acquires, quality-controls, analyses and
 publishes Global Biodiversity Information Facility (GBIF) occurrence data for
 the territory of Kosovo, with particular attention to species protected under
-the EU Birds and Habitats Directives.
+the EU Birds and Habitats Directives and to the invasive alien species the EU
+regulates as of Union concern.
 
 The output is a Quarto website — summary statistics, interactive Leaflet maps,
 a browser-side record explorer and open data downloads — designed for ministry
@@ -41,11 +42,12 @@ only; the boundaries are released on request.
 |---|---|
 | Summary statistics | How much data is there, and of what |
 | Data quality control | What was screened out, and how precisely records are placed |
-| Where the records are | Six maps, each with points, a classed density grid, a heat surface, protected areas and municipal boundaries |
+| Where the records are | Seven maps, each with points, a classed density grid, a heat surface, protected areas and municipal boundaries |
 | Survey coverage by municipality | Which parts of the country are under-recorded |
 | Protected areas | What the national register holds, how much of the country it covers, and which sites have occurrence evidence behind them |
 | EU Nature Directives | Which species of Community interest have been recorded |
 | Extinction risk | The IUCN Red List profile, and the threatened species in detail |
+| Invasive alien species | Which species on the EU's Union list have been recorded, and a watch list of those recorded across the border but not yet here |
 | Explore the records | A filterable, linked map and table over the records of conservation interest |
 | Species checklist | Every species, with counts and links to GBIF |
 | Who published these records | Attribution for all contributing datasets and publishers |
@@ -151,7 +153,8 @@ kosovo-biodiversity-data-workshop-2026/
 │   ├── functions.R            # Shared helpers, sourced by pipeline.R AND report.qmd
 │   ├── site_report.R          # Site-level helpers, sourced by site_reports.R AND
 │   │                          #   reports/site_report.qmd
-│   └── build_directive_list.R # Builds the annex lists from the EUR-Lex texts
+│   ├── build_directive_list.R # Builds the annex lists from the EUR-Lex texts
+│   └── build_ias_list.R       # Builds the Union list of invasive alien species
 │
 ├── reports/
 │   ├── site_report.qmd        # Parameterised Typst report for one site
@@ -161,7 +164,8 @@ kosovo-biodiversity-data-workshop-2026/
 ├── data/                      # Inputs, caches and run metadata
 │   ├── workshop_decks.csv          # The decks the landing page lists and publishes
 │   ├── eu_directives_species.csv   # Annex lists (generated; tracked)
-│   ├── eurlex/                     # Cached consolidated legal texts
+│   ├── eu_ias_union_list.csv       # Union list of invasive species (generated; tracked)
+│   ├── eurlex/                     # Cached legal texts, both lists
 │   ├── gbif_download/              # Raw GBIF archives (not tracked)
 │   │   └── download_key.txt        # Tracked, so the DOI is reused
 │   ├── gadm41_XKO.gpkg             # GADM 4.1, all levels (GBIF's selection polygon)
@@ -172,9 +176,10 @@ kosovo-biodiversity-data-workshop-2026/
 │   ├── vernacular_cache.csv        # Cached common names
 │   ├── iucn_cache.csv              # Cached IUCN Red List categories
 │   ├── dataset_registry.csv        # Cached dataset and publisher titles
+│   ├── ias_neighbour_counts.csv    # Cached Union-list counts next door, dated
 │   └── run_metadata.rds            # DOI, citation, counts, cleaning report
 │
-├── data_exports/              # Published outputs (.gpkg, .csv, .xlsx), six subsets
+├── data_exports/              # Published outputs (.gpkg, .csv, .xlsx), seven subsets
 ├── docs/                      # Rendered website — GitHub Pages serves this
 │   └── slides/<deck>/         # Each deck's slides and handout, copied by publish_slides.R
 ├── outputs/                   # Site reports (generated; not tracked)
@@ -285,14 +290,17 @@ fresh clone before the pipeline has ever been executed.
 
 ---
 
-## 3. Build the annex lists
+## 3. Build the species lists
 
 ```bash
 Rscript R/build_directive_list.R
+Rscript R/build_ias_list.R
 ```
 
-This is only needed once — the resulting CSV is tracked in the repository. See
-[The annex lists](#the-annex-lists) below.
+This is only needed once — the resulting CSVs are tracked in the repository.
+See [The annex lists](#the-annex-lists) and
+[The Union list of invasive alien species](#the-union-list-of-invasive-alien-species)
+below.
 
 ## 4. Run the pipeline
 
@@ -304,23 +312,28 @@ This will:
 
 1. Submit an asynchronous GBIF download for Kosovo and wait for it to build.
 2. Record the resulting **DOI** for citation.
-3. Match the EU annex list against the GBIF backbone taxonomy.
-4. Screen coordinates with `CoordinateCleaner`.
-5. Resolve English common names from the GBIF species API (cached).
-6. Resolve IUCN Red List categories from the GBIF species API (cached).
-7. Stamp each record with the municipality it falls in (OpenStreetMap).
-8. Stamp each record with the protected area it falls in (EEA NatDA, cached).
-9. Write six thematic subsets to `data_exports/` as `.gpkg`, `.csv` and —
-   for the smaller ones — `.xlsx`.
-10. Write the protected-area register to `data_exports/` in the same three
+3. Match the EU annex list against the GBIF backbone taxonomy, and read the
+   Union list of invasive alien species.
+4. Count each Union-list species in the four neighbouring countries (cached).
+5. Screen coordinates with `CoordinateCleaner`.
+6. Resolve English common names from the GBIF species API (cached).
+7. Resolve IUCN Red List categories from the GBIF species API (cached).
+8. Stamp each record with the municipality it falls in (OpenStreetMap).
+9. Stamp each record with the protected area it falls in (EEA NatDA, cached).
+10. Stamp each record with its Union-list status.
+11. Write seven thematic subsets to `data_exports/` as `.gpkg`, `.csv` and —
+    for the smaller ones — `.xlsx`.
+12. Write the protected-area register to `data_exports/` in the same three
     formats.
-11. Resolve every contributing dataset and publisher from the GBIF registry.
-12. Save run metadata to `data/run_metadata.rds`.
+13. Resolve every contributing dataset and publisher from the GBIF registry.
+14. Save run metadata to `data/run_metadata.rds`.
 
 The first run takes roughly 20 minutes, most of it resolving common names for
 several thousand taxa one at a time. The Red List and registry lookups are
-issued concurrently and take seconds. Subsequent runs are far quicker because
-the download and all three caches are reused.
+issued concurrently and take seconds; the neighbouring-country counts are
+issued one at a time, because occurrence search is rate-limited, and take about
+a minute. Subsequent runs are far quicker because the download and all four
+caches are reused.
 
 **The pipeline is idempotent.** The GBIF download key is stored in
 `data/gbif_download/download_key.txt` and re-used, so re-running does not mint
@@ -415,6 +428,84 @@ in the country.
 * About 1.3 per cent of entries do not resolve to a current GBIF taxon. These
   are names superseded since 1992 — mostly Iberian and Macaronesian plants.
   The build script lists every one of them.
+
+---
+
+## The Union list of invasive alien species
+
+`data/eu_ias_union_list.csv` drives the seventh subset and the report's
+invasive-species section. It is generated the same way as the annex lists:
+
+```bash
+Rscript R/build_ias_list.R
+```
+
+The Union list is the Annex to Commission Implementing Regulation (EU)
+2016/1141, adopted under Regulation (EU) No 1143/2014 and amended four times
+since. The script reads the consolidated text and the five acts, and resolves
+every name against the GBIF backbone:
+
+| Act | Species | Applies from |
+|---|---|---|
+| 2016/1141 | 37 | 3 August 2016 |
+| 2017/1263 | 12 | 2 August 2017; *Nyctereutes procyonoides* from 2 February 2019 |
+| 2019/1262 | 17 | 15 August 2019 |
+| 2022/1203 | 22 | 2 August 2022; three from 2 August 2024; *Celastrus orbiculatus* from 2 August 2027 |
+| 2025/1422 | 26 | 7 August 2025; *Castor canadensis* and *Neogale vison* from 7 August 2027 |
+
+That is **114 species, 111 of which apply today**. The three deferred ones are
+not in the consolidated text at all — a consolidated version carries only what
+already applies — so they are read from Article 2 and the Annex of the act
+that listed them. The date each listing applies from is computed from the act
+(publication plus twenty days, or the date the act gives for a deferred
+point) and written to `applies_from`.
+
+### Why the legal text, when a complete checklist exists
+
+The Research Institute for Nature and Forest (INBO) publishes the Union list as
+a checklist dataset on GBIF, [doi:10.15468/97aucj](https://doi.org/10.15468/97aucj),
+and unlike the per-annex directive checklists it is complete. The build uses it
+for the English names and as an independent cross-check, which passes species
+for species. It is not the source, because two of its taxa have no backbone
+link: *Neogale vison* (see correction 11 below) and "*Triadica sebífera*",
+where one accent is enough for GBIF's name parser to give up and record the
+canonical name as `Triadica spec.`. Its date for *Lampropeltis getula*
+(12 July 2022) is the day the 2022 act was adopted rather than the day it
+applied; the build reports the difference and keeps the act's own date.
+
+### How records are matched
+
+Every listing is matched on its own key and on the key of its species —
+including the three listed below species rank, *Vespa velutina nigrithorax*,
+*Procambarus fallax* f. *virginalis* and *Pueraria montana* var. *lobata*.
+That is the opposite of the directive rule (correction 5), deliberately: each
+of the three is the form of its species that is established in Europe, and
+records are mostly identified to species only. Two columns are added to every
+export:
+
+| Column | Meaning |
+|---|---|
+| `iasUnionConcern` | Whether the record's species is on the Union list |
+| `iasAppliesFrom` | The date its listing applies from in the EU; blank if not listed |
+
+### The watch list
+
+The Regulation is built around early detection, so the report also lists the
+Union-list species recorded in Albania, North Macedonia, Montenegro or Serbia
+and not in Kosovo. The counts come from the occurrence search API, one faceted
+request per species, with the download's quality filters and the neighbours'
+GADM boundaries — which draw Serbia without Kosovo. They are **not covered by
+the download's DOI**; they are cached in `data/ias_neighbour_counts.csv` with
+the date they were taken, and the report prints that date. Delete the file to
+refresh them.
+
+### Known limitations
+
+* *Lampropeltis getula* is listed *sensu lato*, and a note to the table names
+  the kingsnakes it covers (*L. californiae*, *L. nigra* and others). Only the
+  listed name is matched.
+* The Regulation binds EU Member States. The report uses the list as a
+  screening reference for Kosovo, as it does the Nature Directives.
 
 ---
 
@@ -549,6 +640,27 @@ kingdom the taxon was listed under resolves both. The build script reads the
 ANIMALS/PLANTS headings from the annex text to obtain that hint, and retries
 without it for the cases where the directive's botanical grouping disagrees
 with GBIF (lichens, listed under plants but placed in Fungi).
+
+**11. GBIF answers an unknown species with its genus, and no error.**
+The 2025 amendment to the Union list names the American mink *Neogale vison*,
+the genus it was moved to in 2021. The backbone does not carry that
+combination. `name_backbone("Neogale vison")` returns `matchType: HIGHERRANK`,
+the genus *Neogale* — itself a synonym of *Mustela* — at 94 per cent
+confidence. Keep that key and every native weasel, stoat and polecat becomes
+an invasive species. Both build scripts treat `HIGHERRANK` as a failure;
+`R/build_ias_list.R` then resolves the mink through its former name,
+*Neovison vison*, to *Mustela vison*.
+
+**12. EUR-Lex answers scripts with an empty page.**
+EUR-Lex now puts a bot challenge in front of its documents. A script is
+answered with HTTP **202** and a body of zero bytes — not an error status, so
+`download.file()` writes an empty file and reports success. The same documents
+are served without a challenge by Cellar, the Publications Office repository
+behind EUR-Lex, by content negotiation:
+`https://publications.europa.eu/resource/celex/<CELEX>` with
+`Accept: application/xhtml+xml` and `Accept-Language: eng`.
+`R/build_ias_list.R` fetches from there, and checks each document for text it
+must contain before caching it.
 
 ---
 
