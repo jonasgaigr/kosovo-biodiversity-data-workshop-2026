@@ -12,8 +12,9 @@
 //
 // The second half is this deck's own: the speaker photo (slide 2), the layer
 // stack (slide 3), the event tree (slide 5), the validation-code and crosswalk
-// tables (slides 6, 7, 9), the six habit cards (slide 10), the takeaway list
-// (slide 11), and the loud marker for a Kosovo fact still to be supplied.
+// tables (slides 6, 7, 9), the geometry boxes (slide 10), the six habit cards
+// (slide 11), the takeaway list (slide 12), and the loud marker for a Kosovo
+// fact still to be supplied.
 //
 // Dashes are en dashes (–), spaced, never em dashes. Keep it so.
 
@@ -256,6 +257,10 @@ html.reveal-print .reveal .aopk-handout { display: none; }
 .reveal .slides section .evt-tag.mof { background: $aopk-gray; color: $aopk-black; }
 .reveal .slides section .evt-kids .absent { font-weight: $aopk-weight-demi; color: #C4272E; }
 
+// Slide 10 reuses the event tree for 1 geometry : N records – a geometry box
+// with its records under it – and stacks two of them.
+.reveal .slides section .evt + .evt { margin-top: 0.5em; }
+
 // ═══════════════════════════════════════════════════════════════════════════
 // SLIDES 6, 7 AND 9 – SMALL REFERENCE TABLES
 //
@@ -354,7 +359,7 @@ html.reveal-print .reveal .aopk-handout { display: none; }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// SLIDE 10 – SIX HABITS
+// SLIDE 11 – SIX HABITS
 //
 // Six peers, so a grid of six equal cards rather than one long list: three by
 // two fits the content width at a readable size, and the big number on each
@@ -387,7 +392,7 @@ html.reveal-print .reveal .aopk-handout { display: none; }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// SLIDE 11 – TAKEAWAYS AND THE DISCUSSION BOX
+// SLIDE 12 – TAKEAWAYS AND THE DISCUSSION BOX
 // ═══════════════════════════════════════════════════════════════════════════
 .reveal .slides section .takeaways p {
   font-size: $aopk-size-body;

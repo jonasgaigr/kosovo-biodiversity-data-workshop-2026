@@ -10,7 +10,7 @@ Slide-by-slide outline, visual plan and speaker notes.
 
 TAIEX Expert Mission on GIS and biodiversity data management, Pristina, case ID ETT IND/EXP 82606. Day 1, Monday 28 September 2026, 11:50-12:30, shared with Part 1 (Karel Chobot). Speaker: Jonáš Gaigr, AOPK ČR.
 
-**2104 spoken words** over 15.5 min of planned slide time – 16.8 min at a calm 125 words per minute, 15.6 min at 135.
+**2367 spoken words** over 17.5 min of planned slide time – 18.9 min at a calm 125 words per minute, 17.5 min at 135.
 
 Kosovo\* - this designation is without prejudice to positions on status, and is in line with UNSCR 1244/1999 and the ICJ Opinion on the Kosovo declaration of independence.
 
@@ -22,15 +22,16 @@ Kosovo\* - this designation is without prejudice to positions on status, and is 
 |---|---|---|---|
 | 1 | Data flow, quality and standards | 0.5 min | 68 |
 | 2 | About me | 1 min | 126 |
-| 3 | A national database in five layers | 1.5 min | 225 |
+| 3 | A national database in five layers | 1.5 min | 248 |
 | 4 | Three sources, one path | 1.5 min | 212 |
 | 5 | Flow A – structured monitoring | 1.5 min | 204 |
 | 6 | Flow B – records from trusted experts | 1.5 min | 210 |
 | 7 | Flow C – citizen science, on demand | 1.5 min | 193 |
 | 8 | Data that nobody uses do not get corrected | 2 min | 264 |
 | 9 | Speak Darwin Core from day one | 2 min | 285 |
-| 10 | Six habits of a database that lasts | 1.5 min | 194 |
-| 11 | Four things to take away | 1 min | 123 |
+| 10 | GIS structure – one geometry, many records | 2 min | 240 |
+| 11 | Six habits of a database that lasts | 1.5 min | 194 |
+| 12 | Four things to take away | 1 min | 123 |
 
 ---
 
@@ -92,15 +93,15 @@ decision. That is today's topic.
 
 ## Slide 3 – A national database in five layers
 
-**Time:** 1.5 min &nbsp;·&nbsp; **Spoken words:** 225
+**Time:** 1.5 min &nbsp;·&nbsp; **Spoken words:** 248
 
-**Key message:** Five layers, one direction of travel: a reference layer every record points to, then staging, validation, core and publication. Layers mean you can always go back to the raw data.
+**Key message:** Five layers, one direction of travel: a reference layer every record points to – its checklist crosswalked to the EU (PESI) and GBIF backbones so the records stay usable as names change – then staging, validation, core and publication. Layers mean you can always go back to the raw data.
 
 **On the slide:**
 
 **Reference layer** – every other layer points here
 
-- national **checklist**, linked to the Catalogue of Life
+- national **checklist**, with **crosswalks** to the EU and GBIF taxonomic backbones
 - **protection and Red List status**, by taxon ID
 - **grids** and **protected sites**
 - **habitat crosswalk** and **vocabularies**
@@ -122,8 +123,10 @@ is how I recommend organising them: in layers.
 
 On the left is the reference layer, and everything else points to it. The most
 important table in the whole database is the national taxonomic checklist. Every
-record points to a taxon ID, never to a name typed by hand. Link the checklist to
-the Catalogue of Life, which GBIF now uses as its taxonomy. Hang protection status
+record points to a taxon ID, never to a name typed by hand. Each taxon also
+carries its ID in the EU taxonomic backbone, PESI, and in GBIF's, now the
+Catalogue of Life. Names change on all sides; these crosswalks keep your records
+usable for EU reporting and GBIF for decades. Hang protection status
 and Red List category on the same taxon ID. When a name changes, or a species
 goes on the Red List, you change one row, not a million records. The same layer
 holds the grids, the protected-site boundaries, the crosswalk from national
@@ -483,7 +486,74 @@ neighbours, who use the same terms.
 
 ---
 
-## Slide 10 – Six habits of a database that lasts
+## Slide 10 – GIS structure – one geometry, many records
+
+**Time:** 2 min &nbsp;·&nbsp; **Spoken words:** 240
+
+**Key message:** Store each shape once and let records point to it: geometry to species or habitat records is always 1 : N. With Oracle underneath and ArcGIS on top, store geometry as SDO_GEOMETRY and register it with the geodatabase, so both sides work on one table.
+
+**On the slide:**
+
+Oracle Spatial (SDO) × ArcGIS geodatabase (SDE)
+
+- **Geometry stored as `SDO_GEOMETRY`** – ArcGIS, QGIS, GDAL and plain SQL
+  all read it. Esri's default, `ST_Geometry`, needs Esri's libraries for SQL
+- **Tables registered with the geodatabase** – ArcGIS edits the table SQL
+  reads; no copies to keep in sync
+- **One geometry type per table** – points, lines, polygons apart; ArcGIS
+  takes no mix
+- **Same coordinate system, tolerance and spatial index** on both sides
+- **Versioned edits are invisible to SQL** until posted – version only what
+  must be
+
+1 geometry : N records
+
+Geometry **G-1042** · polygon · pond 07 with its shore
+
+Occurrence *Bombina variegata* – 14 May 2026
+
+Occurrence *Bombina variegata* – 3 June 2027
+
+Geometry **H-0215** · polygon · meadow segment
+
+Habitat 6510 lowland hay meadows – 70 %
+
+Habitat 6430 tall-herb fringes – 30 %
+
+Illustrative. A record holds its geometry's ID, never a shape of its own:
+drawn once, corrected once, and every record on it follows.
+
+**Visual:** Left: five SDO × SDE compatibility rules. Right: two geometry boxes drawn in HTML in the event-tree style of slide 5 – a pond polygon with two occurrences from different years, a meadow segment with two habitat types and their shares. Values are illustrative.
+
+**Possible upgrade:** Optional: a small entity diagram (GEOMETRY_POINT / _LINE / _POLYGON → OCCURRENCE, HABITAT_RECORD) if the room is database-minded.
+
+**Speaker notes:**
+
+Species records and habitat maps are spatial, so the database needs a GIS
+structure, and the first rule is on the right: one geometry, many records. The
+shape is stored once, in a geometry table. A record holds only the ID of its
+geometry, never a shape of its own. The pond is drawn once, and every visit to
+it, year after year, points to it. A habitat-mapping polygon works the same way:
+one segment, often a mosaic of several habitat types, each with its share. When a
+boundary is corrected, it is corrected once, and every record on it follows.
+
+On the left is a common set-up for a national database: Oracle underneath,
+ArcGIS on top. Oracle's own geometry type is SDO_GEOMETRY. Esri's enterprise
+geodatabase, still often called SDE, uses its own type by default, ST_Geometry,
+and SQL can read that only through Esri's libraries. So store the geometry as
+SDO_GEOMETRY and register the tables with the geodatabase. Then ArcGIS edits the
+same table that SQL, QGIS and the web portal read, and nobody keeps copies in
+sync.
+
+Three rules keep the two sides compatible. One geometry type per table, because
+ArcGIS does not take a mix. The same coordinate system, tolerance and spatial
+index on both sides. And versioned edits in ArcGIS stay invisible to SQL until
+they are posted. If you build on PostgreSQL instead, the choice is PostGIS
+against ST_Geometry, and the answer is the same.
+
+---
+
+## Slide 11 – Six habits of a database that lasts
 
 **Time:** 1.5 min &nbsp;·&nbsp; **Spoken words:** 194
 
@@ -543,7 +613,7 @@ one runs.
 
 ---
 
-## Slide 11 – Four things to take away
+## Slide 12 – Four things to take away
 
 **Time:** 1 min &nbsp;·&nbsp; **Spoken words:** 123
 

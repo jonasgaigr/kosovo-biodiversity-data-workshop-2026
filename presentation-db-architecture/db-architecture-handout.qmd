@@ -118,6 +118,7 @@ lang: en-GB
 - GBIF IPT – <https://www.gbif.org/ipt> · manual <https://ipt.gbif.org/manual/>
 - GBIF metadata profile (EML) – <https://ipt.gbif.org/manual/en/ipt/latest/gbif-metadata-profile>
 - Catalogue of Life – <https://www.catalogueoflife.org/>
+- PESI, the European taxonomic backbone – <https://www.eu-nomen.eu/portal/>
 - Art. 17 reporting (Eionet) – <https://cdr.eionet.europa.eu/help/habitats_art17>
 - *ndopred*, Red List metrics from occurrence records – <https://github.com/jonasgaigr/ndopred>
 - This workshop – <https://github.com/jonasgaigr/kosovo-biodiversity-data-workshop-2026>
@@ -160,7 +161,7 @@ which Darwin Core uses for licence and rights.
   [Surveyor(s)], t[recordedBy \ eco:samplingPerformedBy], [person; team or body],
   grp[Occurrence – what was found],
   [Record no.], t[occurrenceID], [persistent, never reused],
-  [Species], t[scientificName \ taxonID], [taxonID from the national checklist],
+  [Species], t[scientificName \ taxonID], [national checklist ID; crosswalked to PESI and GBIF],
   [Found? yes / no], t[occurrenceStatus], [present / absent],
   [Count], [#t[individualCount] or \ #t[organismQuantity] \ #t[organismQuantityType]], [e.g. 12 · individuals],
   [Life stage, sex], t[lifeStage \ sex], [controlled values],
