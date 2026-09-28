@@ -7,7 +7,7 @@
 
 **Slide-by-slide outline, visual plan and speaker notes.**
 
-TAIEX Expert Mission on GIS and biodiversity data management, Pristina, case ID ETT IND/EXP 82606. Day 1, Monday 28 September 2026, 14:00-14:45. **35 min of delivery**, leaving the balance of the 45-minute slot for questions.
+TAIEX Expert Mission on GIS and biodiversity data management, Pristina, case ID ETT IND/EXP 82606. Day 1, Monday 28 September 2026, 14:00-14:45. **37.5 min of delivery**, leaving the balance of the 45-minute slot for questions.
 
 Speaker: Jonáš Gaigr, Biodiversity Monitoring Specialist, Nature Conservation Agency of the Czech Republic (AOPK ČR).
 
@@ -25,18 +25,19 @@ Kosovo\* - this designation is without prejudice to positions on status, and is 
 | 4 | A missing baseline is not a reason for inaction | 2 min | n/a |
 | 5 | Land-cover change from Copernicus | 2 min | exists |
 | 6 | Fragmentation: connection, not just cover | 2 min | exists |
-| 7 | Why project data dies on hard drives | 2 min | n/a |
-| 8 | One central Biodiversity Information System | 2 min | exists |
-| 9 | Interoperability: one record, across borders | 2.5 min | exists |
-| 10 | Three systems that work | 0.5 min | n/a |
-| 11 | The open-data dilemma | 1.5 min | n/a |
-| 12 | NDOP: open by default, precise by permission | 2 min | exists |
-| 13 | What the planner sees: the full-precision record | 1.5 min | exists |
-| 14 | Raw data is not an answer | 2 min | exists |
-| 15 | The UNCG Biodiversity Viewer: GBIF, filtered by law | 2.5 min | exists |
-| 16 | Newt surveys on the critical path | 2.5 min | exists |
-| 17 | District level licensing: map once, pay once | 3 min | exists |
-| 18 | Next steps: governance that attracts funding | 3 min | n/a |
+| 7 | Species distribution model: the Eros blue | 2.5 min | exists |
+| 8 | Why project data dies on hard drives | 2 min | n/a |
+| 9 | One central Biodiversity Information System | 2 min | exists |
+| 10 | Interoperability: one record, across borders | 2.5 min | exists |
+| 11 | Three systems that work | 0.5 min | n/a |
+| 12 | The open-data dilemma | 1.5 min | n/a |
+| 13 | NDOP: open by default, precise by permission | 2 min | exists |
+| 14 | What the planner sees: the full-precision record | 1.5 min | exists |
+| 15 | Raw data is not an answer | 2 min | exists |
+| 16 | The UNCG Biodiversity Viewer: GBIF, filtered by law | 2.5 min | exists |
+| 17 | Newt surveys on the critical path | 2.5 min | exists |
+| 18 | District level licensing: map once, pay once | 3 min | exists |
+| 19 | Next steps: governance that attracts funding | 3 min | n/a |
 
 `exists` = ready to drop in. `partly exists` = a figure in this repository 
 needs annotating or extending. `to produce` = must be made. `optional` = the 
@@ -264,11 +265,58 @@ And when a Natura 2000 boundary comes to be drawn, these are the edges it should
 follow – a habitat patch, a watershed, a road – never the edge of a screening
 grid cell. The grid says where to look; the boundary comes from the ground.
 
-Which raises the next question: where does the field data go once collected?
+A satellite cannot see a species. But put its layers together with the few
+records you already have, and they can predict where one should be.
 
 ---
 
-## Slide 7 - Why project data dies on hard drives
+## Slide 7 - Species distribution model: the Eros blue
+
+**Time:** 2.5 min
+
+**Key message:** A species distribution model turns a thin record into a field plan: existing occurrence plus climate and land cover predicts where a species should be, and only ground-truthing – absences recorded – validates it. And GBIF's taxonomy can hand you the wrong species without an error.
+
+**Visual:** Kosovo map of relative habitat suitability for Polyommatus eros (three classes), the nine 10 km atlas squares with a record, the two national parks, and the 30 ground-truth plots by stratum.
+
+**Source:** make-sdm-figure.R, from GBIF download 10.15468/dl.265jgv (calibration), the pipeline's Kosovo extract (atlas squares), WorldClim 2.1 and CORINE Land Cover 2018. &nbsp;&middot;&nbsp; **Status:** `exists`
+
+**Speaker notes:**
+
+One worked example, built for this talk from open data alone. The Eros blue is
+a small butterfly of high mountain grassland.
+
+Step one, what exists. Kosovo's published record is twenty-five records, every
+one a ten-kilometre square from the Serbian butterfly atlases, and only one
+square confirmed since 2007. A ten-kilometre square cannot tell a model where
+on the mountain the butterfly flies. So the model learns from thirty-one
+precise records from Albania, North Macedonia, Montenegro and further afield –
+the same Šar, Korab and Prokletije ranges, across the border.
+
+Step two, predict. Four layers: summer temperature and rainfall from
+WorldClim, the share of alpine grassland from CORINE, and slope. For the
+academics: twenty-five presence cells cannot carry one large model, so this is
+six small ones averaged, tested on regions they never saw. The result: about a
+fifth of Kosovo is suitable, and over half of that lies inside Sharri and
+Bjeshkët e Nemuna.
+
+Step three matters most. The model never saw a Kosovo record, yet eight of the
+nine atlas squares hold predicted habitat. That is a check, not a validation.
+Validation is fieldwork: thirty plots drawn from this map for one flight
+season – fifteen where the butterfly was never recorded, the nine old squares,
+and six where the model says no. Every visit is recorded, absences included.
+
+One warning. Of the nine hundred and eighty GBIF records under this name, five
+hundred and forty-five are a different butterfly: GBIF's taxonomy files the
+Blue Argus under it. Nearly nine in ten records in my first calibration set
+were the wrong species, and nothing in the data said so. More on that
+tomorrow.
+
+And those thirty visits produce records. Where does the field data go once
+collected?
+
+---
+
+## Slide 8 - Why project data dies on hard drives
 
 **Time:** 2 min
 
@@ -308,7 +356,7 @@ So what does the destination look like?
 
 ---
 
-## Slide 8 - One central Biodiversity Information System
+## Slide 9 - One central Biodiversity Information System
 
 **Time:** 2 min
 
@@ -352,7 +400,7 @@ What makes one system possible is a shared language.
 
 ---
 
-## Slide 9 - Interoperability: one record, across borders
+## Slide 10 - Interoperability: one record, across borders
 
 **Time:** 2.5 min
 
@@ -401,7 +449,7 @@ That is the architecture. Now three systems that make it work.
 
 ---
 
-## Slide 10 - Three systems that work
+## Slide 11 - Three systems that work
 
 **Time:** 0.5 min
 
@@ -419,7 +467,7 @@ ten minutes: is it safe to publish any of this?
 
 ---
 
-## Slide 11 - The open-data dilemma
+## Slide 12 - The open-data dilemma
 
 **Time:** 1.5 min
 
@@ -455,7 +503,7 @@ at what precision, under what agreement. The Czech answer is a working example.
 
 ---
 
-## Slide 12 - NDOP: open by default, precise by permission
+## Slide 13 - NDOP: open by default, precise by permission
 
 **Time:** 2 min
 
@@ -499,7 +547,7 @@ needs to wait for software.
 
 ---
 
-## Slide 13 - What the planner sees: the full-precision record
+## Slide 14 - What the planner sees: the full-precision record
 
 **Time:** 1.5 min
 
@@ -531,7 +579,7 @@ planner always can.
 
 ---
 
-## Slide 14 - Raw data is not an answer
+## Slide 15 - Raw data is not an answer
 
 **Time:** 2 min
 
@@ -570,7 +618,7 @@ On the right is somebody who built exactly that.
 
 ---
 
-## Slide 15 - The UNCG Biodiversity Viewer: GBIF, filtered by law
+## Slide 16 - The UNCG Biodiversity Viewer: GBIF, filtered by law
 
 **Time:** 2.5 min
 
@@ -622,7 +670,7 @@ So far: achievable, and cheap. My last example argues something stronger.
 
 ---
 
-## Slide 16 - Newt surveys on the critical path
+## Slide 17 - Newt surveys on the critical path
 
 **Time:** 2.5 min
 
@@ -671,7 +719,7 @@ failure. Here is what they did about it.
 
 ---
 
-## Slide 17 - District level licensing: map once, pay once
+## Slide 18 - District level licensing: map once, pay once
 
 **Time:** 3 min
 
@@ -726,7 +774,7 @@ Let me bring this back to Kosovo.
 
 ---
 
-## Slide 18 - Next steps: governance that attracts funding
+## Slide 19 - Next steps: governance that attracts funding
 
 **Time:** 3 min
 
@@ -836,6 +884,36 @@ decision needs to know. The Ukrainian viewer's own documentation says the same:
 absence of a record is not evidence of absence, and it drops low-precision
 records altogether. Never present a coverage map as a distribution map.
 
+**"Is that map where the Eros blue lives?"**
+*(Ministry, policymakers)* – No, and the caption says so: it is relative
+habitat suitability, where conditions resemble the places the butterfly has
+been recorded. It chooses where to look. It cannot show that a species is
+absent from a site, and it must never be used to wave a permit through. After
+one season of ground-truthing, with the visits that find nothing recorded as
+absences, it becomes evidence. The same script builds the map for any species
+with a few dozen precise records.
+
+**"Why train the model on other countries' records? And why not MaxEnt?"**
+*(Academics)* – Every Kosovo record is a 10 km atlas square, and a 1 km model
+cannot learn where on a mountain a butterfly flies from a 10 km square. The
+neighbours' precise records sample the same ranges, and keeping Kosovo out of
+the calibration is what makes its atlas an independent check – 8 of 9 squares,
+AUC 0.82 against the other butterfly squares. With 25 presence cells, one model
+with four predictors and their squares over-fits; an ensemble of small models
+(Breiner et al. 2015) – six two-predictor GLMs weighted by their performance –
+is the established answer for rare species. MaxEnt would draw a similar map.
+The method matters less than the records and the validation, and the script is
+in the repository.
+
+**"Isn't the Balkan butterfly *Polyommatus eroides*?"**
+*(Academics – a lepidopterist will ask)* – Both occur in the region, and GBIF's
+taxonomy merges them, and files the Blue Argus under the same name as well. The
+model keeps only records whose recorder wrote *P. eros*, drops the 123 written
+as *eroides*, and the calibration set still deserves an expert look before the
+map is used for more than choosing plots. It matters beyond taxonomy: *P.
+eroides* is on Annexes II and IV of the Habitats Directive and *P. eros* is not,
+so a merged record can carry legal weight it should not.
+
 **"Your slide says 42 million NDOP records. I have seen 24 million quoted."**
 *(Anyone who has read about NDOP)* – Both were true at the time. The database
 passed 35 million records in June 2024, and the public search page gave
@@ -865,8 +943,10 @@ claiming it has been.
 
 **"Do the Copernicus land products actually cover Kosovo?"**
 *(Ministry, GIS staff)* – Yes for the extent: CORINE Land Cover is produced for
-the EEA39, which includes Kosovo. [VERIFY] which reference years carry Kosovo
-data before quoting a change period – do not bluff a year. And the Sentinel
+the EEA39, which includes Kosovo, and the 2018 layer does carry Kosovo data –
+the Eros blue model reads its grassland polygons inside the boundary. [VERIFY]
+which earlier reference years do before quoting a change period – do not bluff
+a year. And the Sentinel
 imagery itself is global and free, so the capability does not depend on the
 answer: if a thematic layer is missing for a year, it can be derived from
 Sentinel-2.
@@ -928,6 +1008,8 @@ Generated from `references.bib`, which is what the deck cites. An entry marked *
 - **Darwin Core** – Biodiversity Information Standards (TDWG)
   <https://dwc.tdwg.org/>
   *The term vocabulary and the Darwin Core Archive packaging*
+- **Overcoming limitations of modelling rare species by using ensembles of small models** – Breiner, Frank T. and Guisan, Antoine and Bergamini, Ariel and Nobis, Michael P., 2015
+  DOI: <https://doi.org/10.1111/2041-210X.12403>
 - **Convention on the Conservation of European Wildlife and Natural Habitats** – Council of Europe, 1979
   <https://www.coe.int/en/web/bern-convention/emerald-network>
   *ETS No. 104, Bern. The Emerald Network is established under it. The deck names Kosovo's neighbours as Parties building the network and asserts nothing about Kosovo's own position*
@@ -959,12 +1041,18 @@ Generated from `references.bib`, which is what the deck cites. An entry marked *
 - **Copernicus Data Space Ecosystem** – European Union and European Space Agency
   <https://dataspace.copernicus.eu/>
   *The current free access route to Sentinel data, and the successor to the Copernicus Open Access Hub*
+- **WorldClim 2: new 1-km spatial resolution climate surfaces for global land areas** – Fick, Stephen E. and Hijmans, Robert J., 2017
+  DOI: <https://doi.org/10.1002/joc.5086>
 - **Biodiversity of Kosovo – GBIF data analysis** – Gaigr, Jonáš, 2026
   Quarto website and reproducible R workflow.
   <https://jonasgaigr.github.io/kosovo-biodiversity-data-workshop-2026/>
 - **GBIF Occurrence Download: Kosovo** – Global Biodiversity Information Facility, 2026
   <https://www.gbif.org/occurrence/download/0003504-260903145123482>
   *Download key 0003504-260903145123482: the extract behind every Kosovo figure in this deck, taken by the pipeline in this repository. [VERIFY] the minted DOI is recorded in data/run_metadata.rds and printed in the published report; quote the DOI, not the download key*
+- **GBIF Occurrence Download: Polyommatus eros, 18.5–24.5° E, 39.5–44.5° N** – Global Biodiversity Information Facility, 2026
+  DOI: <https://doi.org/10.15468/dl.265jgv>
+  **Checked** 2026-09-28.
+  *980 records under the name, 545 of them Aricia anteros*
 - **Integrated Publishing Toolkit (IPT)** – Global Biodiversity Information Facility
   <https://www.gbif.org/ipt>
 - **Sofia Declaration on the Green Agenda for the Western Balkans** – Leaders of the Western Balkans, 2020

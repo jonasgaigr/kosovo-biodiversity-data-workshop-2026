@@ -53,6 +53,36 @@ decision needs to know. The Ukrainian viewer's own documentation says the same:
 absence of a record is not evidence of absence, and it drops low-precision
 records altogether. Never present a coverage map as a distribution map.
 
+**"Is that map where the Eros blue lives?"**
+*(Ministry, policymakers)* – No, and the caption says so: it is relative
+habitat suitability, where conditions resemble the places the butterfly has
+been recorded. It chooses where to look. It cannot show that a species is
+absent from a site, and it must never be used to wave a permit through. After
+one season of ground-truthing, with the visits that find nothing recorded as
+absences, it becomes evidence. The same script builds the map for any species
+with a few dozen precise records.
+
+**"Why train the model on other countries' records? And why not MaxEnt?"**
+*(Academics)* – Every Kosovo record is a 10 km atlas square, and a 1 km model
+cannot learn where on a mountain a butterfly flies from a 10 km square. The
+neighbours' precise records sample the same ranges, and keeping Kosovo out of
+the calibration is what makes its atlas an independent check – 8 of 9 squares,
+AUC 0.82 against the other butterfly squares. With 25 presence cells, one model
+with four predictors and their squares over-fits; an ensemble of small models
+(Breiner et al. 2015) – six two-predictor GLMs weighted by their performance –
+is the established answer for rare species. MaxEnt would draw a similar map.
+The method matters less than the records and the validation, and the script is
+in the repository.
+
+**"Isn't the Balkan butterfly *Polyommatus eroides*?"**
+*(Academics – a lepidopterist will ask)* – Both occur in the region, and GBIF's
+taxonomy merges them, and files the Blue Argus under the same name as well. The
+model keeps only records whose recorder wrote *P. eros*, drops the 123 written
+as *eroides*, and the calibration set still deserves an expert look before the
+map is used for more than choosing plots. It matters beyond taxonomy: *P.
+eroides* is on Annexes II and IV of the Habitats Directive and *P. eros* is not,
+so a merged record can carry legal weight it should not.
+
 **"Your slide says 42 million NDOP records. I have seen 24 million quoted."**
 *(Anyone who has read about NDOP)* – Both were true at the time. The database
 passed 35 million records in June 2024, and the public search page gave
@@ -82,8 +112,10 @@ claiming it has been.
 
 **"Do the Copernicus land products actually cover Kosovo?"**
 *(Ministry, GIS staff)* – Yes for the extent: CORINE Land Cover is produced for
-the EEA39, which includes Kosovo. [VERIFY] which reference years carry Kosovo
-data before quoting a change period – do not bluff a year. And the Sentinel
+the EEA39, which includes Kosovo, and the 2018 layer does carry Kosovo data –
+the Eros blue model reads its grassland polygons inside the boundary. [VERIFY]
+which earlier reference years do before quoting a change period – do not bluff
+a year. And the Sentinel
 imagery itself is global and free, so the capability does not depend on the
 answer: if a thematic layer is missing for a year, it can be derived from
 Sentinel-2.
