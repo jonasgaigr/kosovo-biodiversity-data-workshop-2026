@@ -707,12 +707,18 @@ directive_lookup <- function(x, ...) {
   # matching those at species level pulls every Wood Pigeon, Chaffinch and Coal
   # Tit in Kosovo into the Annex I subset — several thousand records for
   # subspecies that do not occur anywhere near the Balkans.
+  #
+  # The same holds for a listed species that the backbone has since lumped
+  # into a widespread one: *Dactylorhiza kalopissii* is filed under
+  # *D. majalis*, *Capra aegagrus* under the domestic goat. Those listings
+  # carry `match_species_key = FALSE` and are matched on their own key only.
   taxa <- sel |> dplyr::filter(.data$listing_type != "genus_or_family")
 
   if (!"matched_rank" %in% names(taxa)) taxa$matched_rank <- NA_character_
 
-  infraspecific <- !is.na(taxa$matched_rank) &
-    taxa$matched_rank %in% c("SUBSPECIES", "VARIETY", "FORM")
+  name_only <- (!is.na(taxa$matched_rank) &
+    taxa$matched_rank %in% c("SUBSPECIES", "VARIETY", "FORM")) |
+    ("match_species_key" %in% names(taxa) & taxa$match_species_key %in% FALSE)
 
   key_frame <- function(d, cols) {
     cols <- intersect(cols, names(d))
@@ -728,11 +734,11 @@ directive_lookup <- function(x, ...) {
 
   keys <- dplyr::bind_rows(
     # Listed at species rank (or rank unknown): match the species too.
-    key_frame(taxa[!infraspecific, , drop = FALSE],
+    key_frame(taxa[!name_only, , drop = FALSE],
               c("usageKey", "speciesKey", "acceptedUsageKey")),
-    # Listed at subspecies rank: match that subspecies only.
-    key_frame(taxa[infraspecific, , drop = FALSE],
-              c("usageKey", "acceptedUsageKey"))
+    # Listed at subspecies rank, or lumped since: match the listed name only.
+    # Not the accepted usage either, which for a lumped name is the species.
+    key_frame(taxa[name_only, , drop = FALSE], "usageKey")
   )
 
   keys <- if (nrow(keys) > 0) collapse_by(keys, "key") else empty_keys

@@ -51,6 +51,14 @@
 #   GBIF backbone, so synonyms are followed automatically, but taxa that have
 #   since been split (*Triturus karelinii*, for example) are matched as the
 #   original listed concept.
+# * The reverse case, a listed taxon since LUMPED into a widespread species, is
+#   not followed. The backbone files *Dactylorhiza kalopissii* under
+#   *D. majalis*, *Capra aegagrus* under the domestic goat and *Polyommatus
+#   eroides* under *P. eros*; following those synonyms would put every Broad-
+#   leaved Marsh Orchid, goat and Eros Blue on Annex II. Such listings are
+#   written with `match_species_key = FALSE` and matched only on records that
+#   carry the listed name itself. A synonym that only moves the species to
+#   another genus (*Egretta alba* to *Ardea alba*) is still followed.
 # ==============================================================================
 
 suppressPackageStartupMessages({
@@ -369,7 +377,8 @@ resolve_names <- function(df) {
     dplyr::select(dplyr::any_of(c("verbatim_name", "usageKey", "speciesKey",
                                   "acceptedUsageKey", "scientificName", "rank",
                                   "status", "matchType", "confidence",
-                                  "kingdom", "class", "family", "genus")))
+                                  "kingdom", "class", "family", "genus",
+                                  "species")))
 }
 
 matched <- resolve_names(name_hints)
@@ -429,13 +438,33 @@ if (length(trinomials) > 0) {
 
 good <- function(mt) !is.na(mt) & !mt %in% c("NONE", "HIGHERRANK")
 
+#' Does the accepted species carry the listed epithet?
+#'
+#' A synonym that only moves a species to another genus keeps its epithet, give
+#' or take a gender ending (*Hieraaetus fasciatus* to *Aquila fasciata*). One
+#' that lumps it into another species does not (*Dactylorhiza kalopissii* to
+#' *D. majalis*). Up to two edits are allowed on the stems, for spellings the
+#' backbone has corrected.
+same_epithet <- function(listed, accepted) {
+  stem <- function(x) sub("(us|a|um|is|e|os|i)$", "", stringr::word(x, 2))
+  a <- stem(listed)
+  b <- stem(accepted)
+  ok <- !is.na(a) & !is.na(b)
+  out <- rep(FALSE, length(a))
+  out[ok] <- as.logical(mapply(function(p, q) utils::adist(p, q)[1, 1] <= 2,
+                               a[ok], b[ok], USE.NAMES = FALSE))
+  out
+}
+
 species_list <- species_list |>
   dplyr::left_join(matched, by = c("scientific_name" = "verbatim_name")) |>
   dplyr::left_join(
     matched |>
-      dplyr::select(alt_name = "verbatim_name", alt_usageKey = "usageKey",
-                    alt_speciesKey = "speciesKey", alt_matchType = "matchType",
-                    alt_rank = "rank"),
+      dplyr::select(dplyr::any_of(c(
+        alt_name = "verbatim_name", alt_usageKey = "usageKey",
+        alt_speciesKey = "speciesKey", alt_matchType = "matchType",
+        alt_rank = "rank", alt_species = "species"
+      ))),
     by = c("alternative_name" = "alt_name")
   ) |>
   # Where the listed name no longer resolves but its bracketed alternative
@@ -449,7 +478,23 @@ species_list <- species_list |>
     match_type       = dplyr::if_else(.data$used_alternative,
                                       .data$alt_matchType, .data$matchType),
     matched_rank     = dplyr::if_else(.data$used_alternative,
-                                      .data$alt_rank, .data$rank)
+                                      .data$alt_rank, .data$rank),
+    accepted_species = dplyr::if_else(.data$used_alternative,
+                                      .data$alt_species, .data$species),
+    listed_name      = dplyr::if_else(.data$used_alternative,
+                                      .data$alternative_name,
+                                      .data$scientific_name)
+  ) |>
+  # Records under the accepted species key belong to this listing only when
+  # the listed name IS that species, or a synonym that merely moved it to
+  # another genus. Subspecies listings and lumped species are matched on the
+  # listed name alone; see KNOWN LIMITATIONS at the top.
+  dplyr::mutate(
+    match_species_key =
+      !.data$matched_rank %in% c("SUBSPECIES", "VARIETY", "FORM") &
+      ((!is.na(.data$gbif_usage_key) &
+          .data$gbif_usage_key == .data$gbif_species_key) |
+         same_epithet(.data$listed_name, .data$accepted_species))
   ) |>
   # A HIGHERRANK match means GBIF could not find the listed species and fell
   # back to its genus. Keeping that genus key would quietly promote one listed
@@ -485,6 +530,22 @@ if (nrow(unresolved) > 0) {
                         dplyr::select("scientific_name", "directive", "annex",
                                       "listing_type", "match_type") |>
                         head(30)), row.names = FALSE)
+}
+
+lumped <- species_list |>
+  dplyr::filter(good(.data$match_type),
+                .data$listing_type == "taxon",
+                !.data$matched_rank %in% c("SUBSPECIES", "VARIETY", "FORM"),
+                !.data$match_species_key)
+
+if (nrow(lumped) > 0) {
+  say("")
+  say(nrow(lumped), " listed species are filed by GBIF under a different ",
+      "species; matched on the listed name only:")
+  print(as.data.frame(lumped |>
+                        dplyr::select("scientific_name", "directive", "annex",
+                                      "accepted_species")),
+        row.names = FALSE)
 }
 
 say("")
@@ -526,6 +587,8 @@ output <- species_list |>
     gbif_species_key = .data$gbif_species_key,
     match_type       = .data$match_type,
     matched_rank     = .data$matched_rank,
+    accepted_species = .data$accepted_species,
+    match_species_key = .data$match_species_key,
     kingdom          = .data$kingdom,
     class            = .data$class,
     genus            = .data$genus,
