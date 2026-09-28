@@ -406,6 +406,51 @@ shows what a draft boundary leaves out.
 :::
 :::
 
+## The same machinery, pointed at the SDF
+
+A draft Standard Data Form can be a third output, built from the same layers.
+
+::: {.smaller}
+| SDF section | Source in this system | Filled by |
+|---|---|---|
+| 1 · Identification | the register, via `register_fields` | tool, once a site-code rule is agreed |
+| 2 · Location: centre, area, regions | `site_boundary` in EPSG:3035; region overlays | tool |
+| 3.1 · Annex I habitats | a habitat map — none exists yet | expert; left blank |
+| 3.2 · Directive species | the directive subsets: a **candidate list** | tool lists; population and A–D assessment: expert |
+| 3.3 · Other important species | `species_summary`: Red List, Annexes IV, V | tool proposes, expert confirms |
+| 4, 6 · Quality, threats, management | field survey and the site's managers | expert; left blank |
+| 4.5, 7 · Documentation, map | `report_metadata`; `site_boundary` | tool |
+| 5 · Protection status, other sites | overlays with the register and the IBAs | tool |
+
+- **A field it cannot compute is written empty and flagged**, like an empty
+  layer. An SDF value is never guessed.
+- **No GBIF record reaches the SDF tier on its own:** it can list a species,
+  but the population stays `DD` until a survey fills it.
+:::
+
+## The SDF speaks its own codes: crosswalks
+
+Between the tool's vocabulary and the SDF's sits a **crosswalk** — a table, not
+code, and the part that costs expert time.
+
+::: {.smaller}
+| Crosswalk | From → to | Why it is not a lookup |
+|---|---|---|
+| Taxa | GBIF backbone → Natura 2000 species codes | Splits, lumps, synonyms; endemics folded away |
+| Habitats | national or EUNIS types → Annex I codes | Many-to-many: same, narrower, broader, overlapping |
+| Designations | national categories → CDDA codes; IDs → site codes | One category can match several codes |
+| Data quality | survey method and coverage → `G` `M` `P` `VP` `DD` | A proposal for national agreement |
+| Bird status | season, behaviour, breeding → `p` `r` `c` `w`, unit | A rule over several fields, per species |
+| Pressures | field notes → Article 17 pressures and threats | Observed in the field, not in the records |
+
+- **Each crosswalk is a versioned table** — source, author and date on every
+  row; one more path in the config block, reviewed like data.
+- **An unmatched value stops the draft.** A species dropped because its name had
+  no code is the quiet failure again.
+- Built once, they serve every site, every update, and the Article 12 and 17
+  reports, which use the same codes.
+:::
+
 ## Takeaways
 
 - **Separate the fast layer from the slow one**, and join them in code. Hand

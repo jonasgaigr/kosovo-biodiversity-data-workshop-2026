@@ -25,7 +25,7 @@ error message.
 |---|---|
 | Source | [`automated-reporting.qmd`](automated-reporting.qmd) |
 | Slides | `automated-reporting.html` — reveal.js, 16:9, one self-contained file |
-| Handout | `automated-reporting.pdf` — 22 pages, one slide per page |
+| Handout | `automated-reporting.pdf` — 24 pages, one slide per page |
 | Extra styles | [`automated-reporting.scss`](automated-reporting.scss), loaded after `custom.scss` |
 
 The deck follows the repository's own automation: the two kinds of input

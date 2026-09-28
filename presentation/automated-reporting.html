@@ -1583,6 +1583,131 @@ margin-right: 0; }
 <div class="aopk-bar"><span class="aopk-bar-left">Replicable and automated map and report production · TAIEX, Pristina · 30 September 2026</span><span class="aopk-bar-right">AOPK ČR | aopk.gov.cz</span></div>
 </section>
 <section class="slide level2">
+<h2>The same machinery, pointed at the SDF</h2>
+<p>A draft Standard Data Form can be a third output, built from the same layers.</p>
+<div class="smaller">
+<table class="caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>SDF section</th>
+<th>Source in this system</th>
+<th>Filled by</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1 · Identification</td>
+<td>the register, via <code>register_fields</code></td>
+<td>tool, once a site-code rule is agreed</td>
+</tr>
+<tr class="even">
+<td>2 · Location: centre, area, regions</td>
+<td><code>site_boundary</code> in EPSG:3035; region overlays</td>
+<td>tool</td>
+</tr>
+<tr class="odd">
+<td>3.1 · Annex I habitats</td>
+<td>a habitat map — none exists yet</td>
+<td>expert; left blank</td>
+</tr>
+<tr class="even">
+<td>3.2 · Directive species</td>
+<td>the directive subsets: a <strong>candidate list</strong></td>
+<td>tool lists; population and A–D assessment: expert</td>
+</tr>
+<tr class="odd">
+<td>3.3 · Other important species</td>
+<td><code>species_summary</code>: Red List, Annexes IV, V</td>
+<td>tool proposes, expert confirms</td>
+</tr>
+<tr class="even">
+<td>4, 6 · Quality, threats, management</td>
+<td>field survey and the site’s managers</td>
+<td>expert; left blank</td>
+</tr>
+<tr class="odd">
+<td>4.5, 7 · Documentation, map</td>
+<td><code>report_metadata</code>; <code>site_boundary</code></td>
+<td>tool</td>
+</tr>
+<tr class="even">
+<td>5 · Protection status, other sites</td>
+<td>overlays with the register and the IBAs</td>
+<td>tool</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>A field it cannot compute is written empty and flagged</strong>, like an empty layer. An SDF value is never guessed.</li>
+<li><strong>No GBIF record reaches the SDF tier on its own:</strong> it can list a species, but the population stays <code>DD</code> until a survey fills it.</li>
+</ul>
+</div>
+<div class="aopk-bar"><span class="aopk-bar-left">Replicable and automated map and report production · TAIEX, Pristina · 30 September 2026</span><span class="aopk-bar-right">AOPK ČR | aopk.gov.cz</span></div>
+</section>
+<section class="slide level2">
+<h2>The SDF speaks its own codes: crosswalks</h2>
+<p>Between the tool’s vocabulary and the SDF’s sits a <strong>crosswalk</strong> — a table, not code, and the part that costs expert time.</p>
+<div class="smaller">
+<table class="caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Crosswalk</th>
+<th>From → to</th>
+<th>Why it is not a lookup</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Taxa</td>
+<td>GBIF backbone → Natura 2000 species codes</td>
+<td>Splits, lumps, synonyms; endemics folded away</td>
+</tr>
+<tr class="even">
+<td>Habitats</td>
+<td>national or EUNIS types → Annex I codes</td>
+<td>Many-to-many: same, narrower, broader, overlapping</td>
+</tr>
+<tr class="odd">
+<td>Designations</td>
+<td>national categories → CDDA codes; IDs → site codes</td>
+<td>One category can match several codes</td>
+</tr>
+<tr class="even">
+<td>Data quality</td>
+<td>survey method and coverage → <code>G</code> <code>M</code> <code>P</code> <code>VP</code> <code>DD</code></td>
+<td>A proposal for national agreement</td>
+</tr>
+<tr class="odd">
+<td>Bird status</td>
+<td>season, behaviour, breeding → <code>p</code> <code>r</code> <code>c</code> <code>w</code>, unit</td>
+<td>A rule over several fields, per species</td>
+</tr>
+<tr class="even">
+<td>Pressures</td>
+<td>field notes → Article 17 pressures and threats</td>
+<td>Observed in the field, not in the records</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Each crosswalk is a versioned table</strong> — source, author and date on every row; one more path in the config block, reviewed like data.</li>
+<li><strong>An unmatched value stops the draft.</strong> A species dropped because its name had no code is the quiet failure again.</li>
+<li>Built once, they serve every site, every update, and the Article 12 and 17 reports, which use the same codes.</li>
+</ul>
+</div>
+<div class="aopk-bar"><span class="aopk-bar-left">Replicable and automated map and report production · TAIEX, Pristina · 30 September 2026</span><span class="aopk-bar-right">AOPK ČR | aopk.gov.cz</span></div>
+</section>
+<section class="slide level2">
 <h2>Takeaways</h2>
 <ul>
 <li><strong>Separate the fast layer from the slow one</strong>, and join them in code. Hand editing is where the inconsistency enters.</li>
