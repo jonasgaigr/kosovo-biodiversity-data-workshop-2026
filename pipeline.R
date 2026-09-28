@@ -2,8 +2,8 @@
 # pipeline.R
 #
 # Kosovo biodiversity data pipeline — GBIF occurrence acquisition, taxonomic
-# matching against the EU Nature Directives, coordinate cleaning, subsetting
-# and export.
+# matching against the EU Nature Directives and the Union list of invasive
+# alien species, coordinate cleaning, subsetting and export.
 #
 # Run with:  Rscript pipeline.R
 #
@@ -67,6 +67,7 @@ config <- list(
   dir_download   = "data/gbif_download",
   dir_exports    = "data_exports",
   path_directives= "data/eu_directives_species.csv",
+  path_ias       = "data/eu_ias_union_list.csv",
   path_gadm      = "data/gadm41_XKO.gpkg",
   path_osm       = "data/osm_kosovo.gpkg",
   path_boundary  = "data/kosovo_boundary.gpkg",
@@ -75,6 +76,7 @@ config <- list(
   path_vernacular= "data/vernacular_cache.csv",
   path_iucn      = "data/iucn_cache.csv",
   path_datasets  = "data/dataset_registry.csv",
+  path_ias_neighbours = "data/ias_neighbour_counts.csv",
   path_metadata  = "data/run_metadata.rds",
   path_key       = "data/gbif_download/download_key.txt",
 
@@ -137,7 +139,8 @@ config <- list(
     "recordedBy", "identifiedBy",
     "institutionCode", "collectionCode", "catalogNumber",
     "datasetKey", "license", "issue",
-    "directive", "annex"
+    "directive", "annex",
+    "iasUnionConcern", "iasAppliesFrom"
   ),
 
   # Excel is the format most conservation officers actually open, so the GBIF
@@ -362,6 +365,90 @@ directive_keys <- function(x, ...) {
 
 
 # ==============================================================================
+# 3b. TAXONOMIC MATCHING — the Union list of invasive alien species
+# ==============================================================================
+#
+# The list of invasive alien species of Union concern under Regulation (EU)
+# No 1143/2014, built from the legal texts by `R/build_ias_list.R` with every
+# name already resolved against the GBIF backbone.
+
+#' Read the Union list and collapse it to one row per GBIF key
+#'
+#' Every listing is matched on its own key and on the key of its species,
+#' including the three listed below species rank: *Vespa velutina nigrithorax*,
+#' *Procambarus fallax* f. *virginalis* and *Pueraria montana* var. *lobata*.
+#' That is the opposite of the rule for the Nature Directives, and deliberately
+#' so. The Birds Directive lists island subspecies of common birds, and
+#' promoting those to their species would put every Wood Pigeon in Kosovo on
+#' Annex I. Each infraspecific listing here is instead the form of its species
+#' that is established in Europe — a Vespa velutina in the Balkans is the
+#' nigrithorax hornet — and records are mostly identified to species only. For
+#' an early-warning screen, a record missed is the expensive error.
+#'
+#' @param path CSV written by `R/build_ias_list.R`.
+#' @return A list with `list` (the Union list, one row per listed species) and
+#'   `keys` (one row per GBIF key, with the date the listing applies from).
+ias_lookup <- function(path) {
+
+  if (!file.exists(path)) {
+    stop("Union list not found: ", path,
+         "\nGenerate it with: Rscript R/build_ias_list.R", call. = FALSE)
+  }
+
+  ias <- readr::read_csv(path, show_col_types = FALSE,
+                         col_types = readr::cols(applies_from = "D",
+                                                 .default = "?"))
+
+  keys <- dplyr::bind_rows(
+    dplyr::tibble(key = ias$gbif_usage_key,   applies_from = ias$applies_from),
+    dplyr::tibble(key = ias$gbif_species_key, applies_from = ias$applies_from)
+  ) |>
+    dplyr::mutate(key = suppressWarnings(as.integer(.data$key))) |>
+    dplyr::filter(!is.na(.data$key)) |>
+    # A key shared by two listings keeps the earlier date, which is when the
+    # species first became of Union concern.
+    dplyr::group_by(.data$key) |>
+    dplyr::summarise(applies_from = min(.data$applies_from), .groups = "drop")
+
+  say("Union list: ", nrow(ias), " species, ",
+      sum(ias$applies_from <= Sys.Date()), " applying today, ",
+      nrow(keys), " GBIF keys.")
+
+  list(list = ias, keys = keys)
+}
+
+#' Stamp each record with its Union-list status
+#'
+#' Matched on `speciesKey` first and `taxonKey` second, like the directive
+#' subsets. Every record gains two columns, so any extract can be screened for
+#' invasive species without re-running the matching.
+#'
+#' @return `d` with `iasUnionConcern` (logical) and `iasAppliesFrom` (the date
+#'   the species' listing applies from; NA where it is not listed).
+assign_union_list <- function(d, lookup) {
+  species_key <- suppressWarnings(as.integer(d$speciesKey))
+  taxon_key   <- suppressWarnings(as.integer(d$taxonKey))
+  hit <- dplyr::coalesce(match(species_key, lookup$keys$key),
+                         match(taxon_key,   lookup$keys$key))
+  d$iasUnionConcern <- !is.na(hit)
+  d$iasAppliesFrom  <- lookup$keys$applies_from[hit]
+  d
+}
+
+ias <- ias_lookup(config$path_ias)
+run_meta$ias_list <- ias$list
+
+# The species most likely to arrive next are the ones already recorded across
+# the border. These are live API counts, not part of the download or its DOI;
+# see `fetch_neighbour_counts()`.
+say("Counting Union-list species in neighbouring countries ...")
+run_meta$ias_neighbours <- fetch_neighbour_counts(
+  species_keys = ias$list$gbif_species_key,
+  cache_path   = config$path_ias_neighbours
+)
+
+
+# ==============================================================================
 # 4. DATA CLEANING — CoordinateCleaner
 # ==============================================================================
 
@@ -517,7 +604,13 @@ occurrences <- cleaning$clean |>
   dplyr::left_join(vernacular, by = "speciesKey") |>
   dplyr::left_join(iucn, by = "speciesKey") |>
   assign_municipality(municipalities) |>
-  assign_protected_area(protected_areas)
+  assign_protected_area(protected_areas) |>
+  assign_union_list(ias)
+
+say("Records of invasive alien species of Union concern: ",
+    fmt_int(sum(occurrences$iasUnionConcern)), ", of ",
+    dplyr::n_distinct(occurrences$species[occurrences$iasUnionConcern]),
+    " species.")
 
 say("Records located within a municipality: ",
     fmt_int(sum(!is.na(occurrences$municipality))), " / ",
@@ -563,9 +656,10 @@ print(precision_report)
 # 6. SUBSETTING
 # ==============================================================================
 #
-# Five thematic subsets are produced. Directive membership is attached as
+# Seven thematic subsets are produced. Directive membership is attached as
 # `directive` / `annex` columns, collapsed to one row per taxon so that the
-# join can never duplicate occurrence records.
+# join can never duplicate occurrence records. Union-list status is already on
+# every record, as `iasUnionConcern` / `iasAppliesFrom`.
 
 #' Collapse directive listings to one row per GBIF key
 #'
@@ -755,13 +849,21 @@ subsets[["kosovo_habitats_annex_II"]] <- subset_by_directive(
 subsets[["kosovo_threatened_iucn"]] <- occurrences |>
   dplyr::filter(.data$iucnRedListCategory %in% iucn_threatened)
 
+# (7) Invasive alien species of Union concern — the Union list under
+#     Regulation (EU) No 1143/2014. The other six subsets ask what is at risk;
+#     this one asks what puts it at risk. Species whose listing applies only
+#     from a later date are kept, and `iasAppliesFrom` says so.
+subsets[["kosovo_invasive_alien_species"]] <- occurrences |>
+  dplyr::filter(.data$iasUnionConcern)
+
 subset_labels <- c(
-  kosovo_overall_biodiversity = "Overall biodiversity",
-  kosovo_birds                = "Birds (class Aves)",
-  kosovo_birds_annex_I        = "Birds Directive, Annex I",
-  kosovo_habitats_directive   = "Habitats Directive (all annexes)",
-  kosovo_habitats_annex_II    = "Habitats Directive, Annex II",
-  kosovo_threatened_iucn      = "IUCN threatened species (CR, EN, VU)"
+  kosovo_overall_biodiversity   = "Overall biodiversity",
+  kosovo_birds                  = "Birds (class Aves)",
+  kosovo_birds_annex_I          = "Birds Directive, Annex I",
+  kosovo_habitats_directive     = "Habitats Directive (all annexes)",
+  kosovo_habitats_annex_II      = "Habitats Directive, Annex II",
+  kosovo_threatened_iucn        = "IUCN threatened species (CR, EN, VU)",
+  kosovo_invasive_alien_species = "EU invasive alien species (Union list)"
 )
 
 for (nm in names(subsets)) {

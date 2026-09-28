@@ -11,13 +11,14 @@ the same vendored AOPK ČR reveal.js template in
 |---|---|
 | Source | [`gbif-data-access.qmd`](gbif-data-access.qmd) |
 | Slides | `gbif-data-access.html` — reveal.js, 16:9, one self-contained file |
-| Handout | `gbif-data-access.pdf` — 31 pages, one slide per page |
+| Handout | `gbif-data-access.pdf` — 33 pages, one slide per page |
 | Template | AOPK ČR reveal.js extension, from *Grafický manuál AOPK ČR 2026* |
 
 The deck runs the workshop slot end to end: what GBIF holds for Kosovo, the four
 routes into it, how to read occurrence records honestly, the reproducible site
-built on them, and five failure modes that return a plausible answer and no
-error message.
+built on them — including the EU's list of invasive alien species and a watch
+list of those recorded across the border — and five failure modes that return
+a plausible answer and no error message.
 
 ## Day 3, 15:15–16:00 — Replicable and automated map and report production
 
@@ -25,7 +26,7 @@ error message.
 |---|---|
 | Source | [`automated-reporting.qmd`](automated-reporting.qmd) |
 | Slides | `automated-reporting.html` — reveal.js, 16:9, one self-contained file |
-| Handout | `automated-reporting.pdf` — 22 pages, one slide per page |
+| Handout | `automated-reporting.pdf` — 24 pages, one slide per page |
 | Extra styles | [`automated-reporting.scss`](automated-reporting.scss), loaded after `custom.scss` |
 
 The deck follows the repository's own automation: the two kinds of input

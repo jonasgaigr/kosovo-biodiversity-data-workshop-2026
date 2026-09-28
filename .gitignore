@@ -41,10 +41,15 @@ render.log
 # Deliberately NOT ignored
 #
 # data/eu_directives_species.csv  — the annex list is a project input
+# data/eu_ias_union_list.csv      — the Union list of invasive alien species,
+#                                   likewise
+# data/eurlex/                    — the legal texts both lists are parsed from
 # data/vernacular_cache.csv       — cache; avoids thousands of API calls on a
 #                                   fresh clone
 # data/iucn_cache.csv             — same, for IUCN Red List categories
 # data/dataset_registry.csv       — same, for dataset and publisher titles
+# data/ias_neighbour_counts.csv   — same, for the invasive-species watch list;
+#                                   dated, and read by the report
 # data/gadm41_XKO.gpkg            — the polygon GBIF selected the records with,
 #                                   and the offline fallback for both layers
 #                                   below. Not the reference boundary; see

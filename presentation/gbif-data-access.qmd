@@ -166,6 +166,7 @@ every subsequent run.
 | Give me every record in the country, citably | Download service + DOI |
 | Rebuild the same analysis next year | `rgbif` / `pygbif` in a script |
 | Who published the records we rely on? | `/dataset`, `/organization` |
+| Which listed invasive species are recorded just across the border? | `/occurrence/search` with facets |
 :::
 
 ::: {.smaller}
@@ -250,7 +251,7 @@ A reproducible evidence base for one territory, built from the routes above.
 
 ::: {.aopk-cols}
 ::: {}
-- A **static website**: summary statistics, six interactive maps, a
+- A **static website**: summary statistics, seven interactive maps, a
   browser-side record explorer and open data downloads.
 - **One R pipeline** — acquire, screen, annotate, export, credit — and **one
   Quarto document**. Re-running does not mint a new DOI.
@@ -263,7 +264,7 @@ A reproducible evidence base for one territory, built from the routes above.
 :::
 :::
 
-## Six thematic extracts
+## Seven thematic extracts
 
 | Extract | Records | Species |
 |---|---:|---:|
@@ -273,11 +274,13 @@ A reproducible evidence base for one territory, built from the routes above.
 | Habitats Directive (all annexes) | 858 | 78 |
 | Habitats Directive, Annex II | 395 | 38 |
 | IUCN threatened (CR, EN, VU) | 650 | 37 |
+| EU invasive alien species (Union list) | 24 | 5 |
 
 ::: {.smaller}
 Each is published as **GeoPackage, CSV and Excel**, and each carries the
-municipality, protected area, Red List category and annex membership as
-columns — so the subset can be used without re-running any of the matching.
+municipality, protected area, Red List category, annex membership and
+Union-list status as columns — so the subset can be used without re-running
+any of the matching.
 :::
 
 ## Maps that answer different questions
@@ -358,12 +361,69 @@ the most conservation-relevant taxa in the country.
 :::
 :::
 
+## Invasive alien species of Union concern
+
+::: {.aopk-cols}
+::: {}
+- The **Union list** under Regulation (EU) 1143/2014: **114 species** that may
+  not be imported, kept, sold or released. 111 apply today, and three from
+  August 2027.
+- In the Kosovo extract: **5 of them, 24 records**. The 12 since 2015 are all
+  iNaturalist or Pl@ntNet; the other 12 come from older fish and mammal
+  datasets — 1983, 1992 or undated.
+- *Ailanthus altissima*, tree of heaven: **8 records here, 406 across the four
+  neighbours**. That is a recording gap, not a clean country.
+:::
+
+::: {.smaller}
+**The watch list: recorded next door, not here — 20 species**
+
+- **All four neighbours:** paper mulberry, pond sliders
+- **Three:** coypu, eastern mosquitofish
+- **Serbia, North Macedonia:** common milkweed, black bullhead, Egyptian goose
+- **Serbia, Montenegro:** Japanese, giant and Bohemian knotweed
+- **Montenegro:** small Asian mongoose, 97 records
+- **Albania:** Asian hornet, 2025
+
+The Regulation is built on early detection: only a species caught early can
+still be eradicated. The counts are live API facets, dated in the report — a
+screening aid, not a citation.
+:::
+:::
+
+## A complete checklist, and still check the names
+
+::: {.aopk-cols}
+::: {}
+- INBO publishes the Union list on GBIF — **114 of 114**, CC0,
+  doi.org/10.15468/97aucj. Unlike the Annex I checklist, it is complete.
+- The site's list is built from the **legal text** and agrees with it species
+  for species. The checklist supplies the English names.
+- **One accent:** "*Triadica sebífera*" defeats GBIF's name parser. Canonical
+  name `Triadica spec.`, no backbone link.
+:::
+
+::: {}
+**The American mink is listed as *Neogale vison*,** the genus it moved to in
+2021. The backbone does not know the combination. The matcher returns the
+genus *Neogale* — a synonym of *Mustela* — at **94 % confidence, and no
+error**.
+
+::: {.smaller}
+Taken at face value, every native weasel, stoat and polecat becomes an invasive
+species. Treat `HIGHERRANK` as a failure, never as a match. And EUR-Lex now
+answers scripts with HTTP 202 and an empty body; the same acts come from
+Cellar, `publications.europa.eu`, by content negotiation.
+:::
+:::
+:::
+
 ## The record explorer
 
 ::: {.aopk-cols}
 ::: {}
-- Filter by **class, Red List category, EU annex, basis of record,
-  municipality, coordinate precision and year**.
+- Filter by **class, Red List category, EU annex, EU invasive species, basis
+  of record, municipality, coordinate precision and year**.
 - Map and table are **linked** — filter one, the other follows.
 - All of it runs in the reader's browser. **No Shiny server, nothing to host.**
 
@@ -441,13 +501,13 @@ Two things to take away, one of them larger than the other.
 
 ## The smaller one: reuse the pipeline
 
-- The repository is a **template**. Change the area predicate and the annex
+- The repository is a **template**. Change the area predicate and the species
   lists and it runs for any territory.
 - Everything it depends on is **free and open**: GBIF, OpenStreetMap, the EEA
   inventory, EUR-Lex, R, Quarto, GitHub Pages. No licence, no server, no
   procurement.
 - It produces, from one command: a quality-controlled evidence base, a citable
-  DOI, six thematic extracts in three formats, and a public report.
+  DOI, seven thematic extracts in three formats, and a public report.
 - The **pale areas on the density map are a fieldwork plan** — the cheapest
   survey prioritisation available, and it comes free with the data you already
   have.

@@ -1230,6 +1230,10 @@ margin-right: 0; }
 <td>Who published the records we rely on?</td>
 <td><code>/dataset</code>, <code>/organization</code></td>
 </tr>
+<tr class="odd">
+<td>Which listed invasive species are recorded just across the border?</td>
+<td><code>/occurrence/search</code> with facets</td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -1344,7 +1348,7 @@ margin-right: 0; }
 <div class="aopk-cols">
 <div>
 <ul>
-<li>A <strong>static website</strong>: summary statistics, six interactive maps, a browser-side record explorer and open data downloads.</li>
+<li>A <strong>static website</strong>: summary statistics, seven interactive maps, a browser-side record explorer and open data downloads.</li>
 <li><strong>One R pipeline</strong> — acquire, screen, annotate, export, credit — and <strong>one Quarto document</strong>. Re-running does not mint a new DOI.</li>
 <li><strong>No server, no database, no hosting cost</strong> — and nothing to keep patched.</li>
 <li>Audience: ministry and agency staff who need the evidence, not the code.</li>
@@ -1357,7 +1361,7 @@ margin-right: 0; }
 <div class="aopk-bar"><span class="aopk-bar-left">Accessing and utilising GBIF data · TAIEX, Pristina · 29 September 2026</span><span class="aopk-bar-right">AOPK ČR | aopk.gov.cz</span></div>
 </section>
 <section class="slide level2">
-<h2>Six thematic extracts</h2>
+<h2>Seven thematic extracts</h2>
 <table class="caption-top">
 <thead>
 <tr class="header">
@@ -1397,10 +1401,15 @@ margin-right: 0; }
 <td style="text-align: right;">650</td>
 <td style="text-align: right;">37</td>
 </tr>
+<tr class="odd">
+<td>EU invasive alien species (Union list)</td>
+<td style="text-align: right;">24</td>
+<td style="text-align: right;">5</td>
+</tr>
 </tbody>
 </table>
 <div class="smaller">
-<p>Each is published as <strong>GeoPackage, CSV and Excel</strong>, and each carries the municipality, protected area, Red List category and annex membership as columns — so the subset can be used without re-running any of the matching.</p>
+<p>Each is published as <strong>GeoPackage, CSV and Excel</strong>, and each carries the municipality, protected area, Red List category, annex membership and Union-list status as columns — so the subset can be used without re-running any of the matching.</p>
 </div>
 <div class="aopk-bar"><span class="aopk-bar-left">Accessing and utilising GBIF data · TAIEX, Pristina · 29 September 2026</span><span class="aopk-bar-right">AOPK ČR | aopk.gov.cz</span></div>
 </section>
@@ -1471,11 +1480,55 @@ margin-right: 0; }
 <div class="aopk-bar"><span class="aopk-bar-left">Accessing and utilising GBIF data · TAIEX, Pristina · 29 September 2026</span><span class="aopk-bar-right">AOPK ČR | aopk.gov.cz</span></div>
 </section>
 <section class="slide level2">
+<h2>Invasive alien species of Union concern</h2>
+<div class="aopk-cols">
+<div>
+<ul>
+<li>The <strong>Union list</strong> under Regulation (EU) 1143/2014: <strong>114 species</strong> that may not be imported, kept, sold or released. 111 apply today, and three from August 2027.</li>
+<li>In the Kosovo extract: <strong>5 of them, 24 records</strong>. The 12 since 2015 are all iNaturalist or Pl@ntNet; the other 12 come from older fish and mammal datasets — 1983, 1992 or undated.</li>
+<li><em>Ailanthus altissima</em>, tree of heaven: <strong>8 records here, 406 across the four neighbours</strong>. That is a recording gap, not a clean country.</li>
+</ul>
+</div>
+<div class="smaller">
+<p><strong>The watch list: recorded next door, not here — 20 species</strong></p>
+<ul>
+<li><strong>All four neighbours:</strong> paper mulberry, pond sliders</li>
+<li><strong>Three:</strong> coypu, eastern mosquitofish</li>
+<li><strong>Serbia, North Macedonia:</strong> common milkweed, black bullhead, Egyptian goose</li>
+<li><strong>Serbia, Montenegro:</strong> Japanese, giant and Bohemian knotweed</li>
+<li><strong>Montenegro:</strong> small Asian mongoose, 97 records</li>
+<li><strong>Albania:</strong> Asian hornet, 2025</li>
+</ul>
+<p>The Regulation is built on early detection: only a species caught early can still be eradicated. The counts are live API facets, dated in the report — a screening aid, not a citation.</p>
+</div>
+</div>
+<div class="aopk-bar"><span class="aopk-bar-left">Accessing and utilising GBIF data · TAIEX, Pristina · 29 September 2026</span><span class="aopk-bar-right">AOPK ČR | aopk.gov.cz</span></div>
+</section>
+<section class="slide level2">
+<h2>A complete checklist, and still check the names</h2>
+<div class="aopk-cols">
+<div>
+<ul>
+<li>INBO publishes the Union list on GBIF — <strong>114 of 114</strong>, CC0, doi.org/10.15468/97aucj. Unlike the Annex I checklist, it is complete.</li>
+<li>The site’s list is built from the <strong>legal text</strong> and agrees with it species for species. The checklist supplies the English names.</li>
+<li><strong>One accent:</strong> “<em>Triadica sebífera</em>” defeats GBIF’s name parser. Canonical name <code>Triadica spec.</code>, no backbone link.</li>
+</ul>
+</div>
+<div>
+<p><strong>The American mink is listed as <em>Neogale vison</em>,</strong> the genus it moved to in 2021. The backbone does not know the combination. The matcher returns the genus <em>Neogale</em> — a synonym of <em>Mustela</em> — at <strong>94 % confidence, and no error</strong>.</p>
+<div class="smaller">
+<p>Taken at face value, every native weasel, stoat and polecat becomes an invasive species. Treat <code>HIGHERRANK</code> as a failure, never as a match. And EUR-Lex now answers scripts with HTTP 202 and an empty body; the same acts come from Cellar, <code>publications.europa.eu</code>, by content negotiation.</p>
+</div>
+</div>
+</div>
+<div class="aopk-bar"><span class="aopk-bar-left">Accessing and utilising GBIF data · TAIEX, Pristina · 29 September 2026</span><span class="aopk-bar-right">AOPK ČR | aopk.gov.cz</span></div>
+</section>
+<section class="slide level2">
 <h2>The record explorer</h2>
 <div class="aopk-cols">
 <div>
 <ul>
-<li>Filter by <strong>class, Red List category, EU annex, basis of record, municipality, coordinate precision and year</strong>.</li>
+<li>Filter by <strong>class, Red List category, EU annex, EU invasive species, basis of record, municipality, coordinate precision and year</strong>.</li>
 <li>Map and table are <strong>linked</strong> — filter one, the other follows.</li>
 <li>All of it runs in the reader’s browser. <strong>No Shiny server, nothing to host.</strong></li>
 </ul>
@@ -1528,9 +1581,9 @@ margin-right: 0; }
 <section class="slide level2">
 <h2>The smaller one: reuse the pipeline</h2>
 <ul>
-<li>The repository is a <strong>template</strong>. Change the area predicate and the annex lists and it runs for any territory.</li>
+<li>The repository is a <strong>template</strong>. Change the area predicate and the species lists and it runs for any territory.</li>
 <li>Everything it depends on is <strong>free and open</strong>: GBIF, OpenStreetMap, the EEA inventory, EUR-Lex, R, Quarto, GitHub Pages. No licence, no server, no procurement.</li>
-<li>It produces, from one command: a quality-controlled evidence base, a citable DOI, six thematic extracts in three formats, and a public report.</li>
+<li>It produces, from one command: a quality-controlled evidence base, a citable DOI, seven thematic extracts in three formats, and a public report.</li>
 <li>The <strong>pale areas on the density map are a fieldwork plan</strong> — the cheapest survey prioritisation available, and it comes free with the data you already have.</li>
 </ul>
 <div class="aopk-bar"><span class="aopk-bar-left">Accessing and utilising GBIF data · TAIEX, Pristina · 29 September 2026</span><span class="aopk-bar-right">AOPK ČR | aopk.gov.cz</span></div>
