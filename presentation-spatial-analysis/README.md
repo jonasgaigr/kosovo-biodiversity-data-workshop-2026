@@ -8,14 +8,14 @@ in this repository.
 | | |
 |---|---|
 | Slot | Day 1, Monday 28 September 2026, **14:00–14:45** |
-| Delivery | **35 minutes over 18 content slides**, leaving the balance for questions |
+| Delivery | **37.5 minutes over 19 content slides**, leaving the balance for questions |
 | Source | [`spatial-analysis.qmd`](spatial-analysis.qmd) |
 | Slides | `spatial-analysis.html` – reveal.js, 16:9, one self-contained file |
-| Handout | `spatial-analysis.pdf` – 21 pages, one slide per page |
+| Handout | `spatial-analysis.pdf` – 22 pages, one slide per page |
 | Outline | [`OUTLINE.md`](OUTLINE.md) – **generated**; timings, key messages, visual plan, speaker notes, likely questions, references |
 | Plan data | [`data/slide-plan.csv`](data/slide-plan.csv) – one row per slide: minutes, key message, visual and whether it exists |
 | Questions | [`questions.md`](questions.md) – authored; appended to the outline |
-| Figures | [`make-figures.R`](make-figures.R) builds the record-density map; [`make-eo-figures.R`](make-eo-figures.R) the two Sentinel-2 scenes and the fragmentation map; [`image-slot.lua`](image-slot.lua) stands in for any picture that is missing |
+| Figures | [`make-figures.R`](make-figures.R) builds the record-density map; [`make-eo-figures.R`](make-eo-figures.R) the two Sentinel-2 scenes and the fragmentation map; [`make-sdm-figure.R`](make-sdm-figure.R) the Eros blue model and its ground-truth plots; [`image-slot.lua`](image-slot.lua) stands in for any picture that is missing |
 | Sources | [`references.bib`](references.bib) |
 | Extra styles | [`spatial-analysis.scss`](spatial-analysis.scss), loaded after [`custom.scss`](custom.scss) |
 | Audience | MESPI and KEPA officials, national policymakers, university academics |
@@ -32,27 +32,34 @@ Five parts, each one slide-group, each handing over to the next:
    no boundary – and that is *not* a reason to wait: decisions are taken anyway,
    the burden of proof sits with the project, and the satellite archive is a
    baseline that can still be collected retrospectively.
-2. **Earth observation** (5–6). Land-cover change from Sentinel-2 and CORINE,
+2. **Earth observation** (5–7). Land-cover change from Sentinel-2 and CORINE,
    and fragmentation measures, as the immediate baseline – with the limit stated
    plainly: EO shows where and how much, never which species or what condition.
-3. **One system, shared standards** (7–9). Why project data dies on hard drives;
+   Then the way round that limit: a species distribution model for the Eros
+   blue (*Polyommatus eros*) that joins the few records there are to WorldClim
+   and CORINE, predicts where the butterfly should be, and turns the prediction
+   into thirty ground-truth plots – with the GBIF taxonomy trap it fell into
+   first.
+3. **One system, shared standards** (8–10). Why project data dies on hard drives;
    one central biodiversity information system fed by ministry, universities and
    EIA consultants; Darwin Core and INSPIRE as what makes a record readable by
    strangers and across the Sharri and Bjeshkët e Nemuna borders into the
    neighbours' Emerald Network work.
-4. **Three working models** (10–17). The open-data dilemma and the Czech NDOP
+4. **Three working models** (11–18). The open-data dilemma and the Czech NDOP
    answer (open by default, generalised for sensitive species, precise for named
    users); raw data versus an answer, and the UNCG Biodiversity Viewer that joins
    GBIF to legal status for impact assessment; the great crested newt survey trap
    and English district level licensing as spatial data turned into a priced,
    predictable permit.
-5. **Next steps** (18). Govern, build, fund: the twelve months of no-cost
+5. **Next steps** (19). Govern, build, fund: the twelve months of no-cost
    governance work that produce the baseline, owner and data series funders
    back.
 
 The great crested newt is a deliberate thread: it appears first in the NDOP
-full-precision screenshot (slide 13, with recorded absences), and is the
-subject of the English case four slides later.
+full-precision screenshot (slide 14, with recorded absences), and is the
+subject of the English case four slides later. Recorded absences are a second
+thread: the Eros blue's ground-truth plots (slide 7) are only a validation if
+the visits that find nothing are recorded too.
 
 **Three audiences, named explicitly.** Ministry officials need the obligation and
 the cheapest first step; policymakers need the economic and permitting argument;
@@ -94,6 +101,36 @@ The record counts are **GBIF-mediated and quality controlled by this
 pipeline**; they are what has been *published*, not what is *known*, and the
 deck says so out loud.
 
+### The Eros blue model – from `make-sdm-figure.R`, run 28 September 2026
+
+Every number on slide 7 is printed by the script; re-run it and compare before
+quoting any of them.
+
+| Figure | Where it comes from |
+|---|---|
+| 25 Kosovo records in 9 atlas squares, 1 square confirmed since 2007 (2024) | The pipeline extract, selected on `scientificName`; all HabiProt, all 7,071 m uncertainty, i.e. 10 km UTM squares |
+| 980 records under the name, 545 *Aricia anteros*, 123 *eroides* | GBIF download [10.15468/dl.265jgv](https://doi.org/10.15468/dl.265jgv), counted on `verbatimScientificName` |
+| 31 precise records, six countries (AL 7, BG 4, GR 6, ME 2, MK 8, RS 4), 25 cells | The same download: *P. eros* as written, outside Kosovo, ≤ 1 km or two-decimal coordinates |
+| AUC 0.85 (0.83–0.86), Boyce 0.88 | Spatial block cross-validation, 0.5° blocks, 5 folds × 5 repeats, pooled held-out predictions |
+| 2,365 km² suitable, 21 % of Kosovo; 699 km² most suitable; 55 % of it in the two national parks | Threshold: the 10th-percentile training presence (0.43); "most suitable" from the median presence (0.77) |
+| 8 of 9 atlas squares hold suitable habitat (median 51 % of the square), against 42 of 66 other butterfly squares (median 3 %); AUC 0.82 | The 66 are squares where the same atlas recorded butterflies but not this one. **They are not absences** – say "a check", never "validated" |
+| 30 plots: 15 new, 9 revisits, 6 absence tests | `data/sdm-ground-truth-plots.csv`. **Not visited.** The slide says "Next"; the talk must too |
+
+**The taxonomy trap is the reason the slide carries a warning.** The GBIF
+backbone, as of 28 September 2026, lists *Aricia anteros* (the Blue Argus, a
+different genus) as a heterotypic synonym of *P. eros*, and *P. eroides* as a
+synonym too. A query by name or key returns all three; 152 of the first 171
+"precise" calibration records were Blue Argus. The script selects on
+`verbatimScientificName` and prints the split.
+
+**The same mapping reaches this repository's pipeline** – outside this deck,
+but found by it. `data/eu_directives_species.csv` joins *P. eroides* (Habitats
+Directive Annexes II and IV) to species key 5140244, *P. eros*'s key, so
+`data_exports/kosovo_habitats_directive.csv` and `kosovo_habitats_annex_II.csv`
+list all 25 *P. eros* records **and 22 Blue Argus records** as that Annex II
+species. Nothing on this deck's slides depends on those exports; anything that
+counts Annex II species or records for Kosovo does.
+
 ### Checked against primary sources on 22 September 2026
 
 Each of these carries an `urldate` in `references.bib`.
@@ -114,12 +151,14 @@ explains the difference if someone raises it.
 
 | # | Claim | Where it appears |
 |---|---|---|
-| 1 | The precision NDOP's public view generalises sensitive species to | Slide 12, **visibly flagged on the slide** |
-| 2 | NDOP professional-access categories and access logging, as described in the notes | Slide 12 notes – from the author's working knowledge |
-| 3 | Which CORINE reference years actually carry Kosovo data | Not stated on any slide; flagged in the bibliography and the questions |
+| 1 | The precision NDOP's public view generalises sensitive species to | Slide 13, **visibly flagged on the slide** |
+| 2 | NDOP professional-access categories and access logging, as described in the notes | Slide 13 notes – from the author's working knowledge |
+| 3 | Which CORINE reference years actually carry Kosovo data. **2018 does** – the Eros blue model reads its grassland polygons inside the boundary; earlier years are unchecked | Not stated on any slide; flagged in the bibliography and the questions |
 | 4 | Published evidence on DLL conservation outcomes | Questions only – do not claim delivery without it |
 | 5 | A stable URL for the Sofia Declaration on the Green Agenda | Bibliography |
-| 6 | The minted DOI of the GBIF download | Bibliography; quote the DOI, not the key |
+| 6 | The minted DOI of the Kosovo GBIF download | Bibliography; quote the DOI, not the key |
+| 7 | An expert look at the 31 *P. eros* calibration records – identification, and the *eros*/*eroides* split in North Macedonia and Bulgaria – before the map is used for anything but choosing plots | Slide 7; the notes say "check, not validation" |
+| 8 | The ground-truth protocol (30-minute timed search per 1 km cell, July–August) is a proposal, not an agreed method | `data/sdm-ground-truth-plots.csv` |
 
 ### Where the deck deliberately says less than it could
 
@@ -129,6 +168,12 @@ explains the difference if someone raises it.
   The Habitats Directive is cited as the standard alignment leads towards; the
   Emerald Network is described through the neighbours, who are Parties.
 - **Sentinel revisit intervals.** "Every few days" only.
+- **The Eros blue's legal status.** None is claimed. *P. eros* is on no annex
+  of the Habitats Directive; *P. eroides*, which GBIF files under the same
+  name, is on Annexes II and IV – which is exactly why the two must not be
+  merged.
+- **The model's map as a distribution.** It is relative habitat suitability,
+  and the slide caption says so. It chooses plots; it does not refuse permits.
 - **The cost of a system.** No number is given; the questions section says how
   to answer without one.
 
@@ -172,6 +217,22 @@ patches at 10 m.
   without roads" difference.** At 10 m, CLC+ already maps the motorway
   corridor as a gap in the forest, so burning the roads in moves the mesh
   size by under 1 %.
+
+```bash
+Rscript make-sdm-figure.R
+```
+
+Builds the Eros blue model on slide 7 and writes the figure and the
+ground-truth plot list `data/sdm-ground-truth-plots.csv` (Darwin Core-shaped,
+with `occurrenceStatus` left blank for the field team). Same packages as
+above; about a minute once `_cache/` is filled. The first run reads the GBIF
+archive for the key in `data/sdm-gbif-download-key.txt` – fetching an existing
+download needs no account, and the script never requests a new one, so the DOI
+cited on the slide stays the one the numbers came from. It also pages about
+10,000 CORINE 2018 polygons from the EEA map service and reads a Balkan window
+of the WorldClim 2.1 30″ tile directly from the geodata server. The head of
+the script explains the choices: why the model is calibrated outside Kosovo,
+the ensemble of small models, and the three validation layers.
 
 ### Slides
 
@@ -255,18 +316,19 @@ whole of the work** – no slide is edited.
 | File | Slide | Status | What it must show |
 |---|---|---|---|
 | `kosovo-record-density.png` | 3 | **exists** – `make-figures.R` | Records per km² by municipality, protected sites, Ligatina e Hencit ringed |
-| `ndop-full-precision.png` | 13 | **exists** – cropped from the n2k deck's `ndop-record-list.png` | NDOP logged-in list, *Triturus cristatus*, NEG absences |
+| `ndop-full-precision.png` | 14 | **exists** – cropped from the n2k deck's `ndop-record-list.png` | NDOP logged-in list, *Triturus cristatus*, NEG absences |
 | `eo-change-before.jpg` | 5 | **exists** – `make-eo-figures.R` | Sentinel-2, 15 Aug 2016, 5 km of the Bjeshkët e Nemuna park edge above Pejë |
 | `eo-change-after.jpg` | 5 | **exists** – `make-eo-figures.R` | The same extent, 10 Aug 2025: a new road through the forest inside the park |
 | `fragmentation.png` | 6 | **exists** – `make-eo-figures.R` | CLC+ Backbone 2021 forest patches at the Kaçanik gorge, R6 and main roads |
-| `ndop-public-generalised.png` | 12 | **exists** – captured | NDOP public view of a sensitive species, generalised to a square |
-| `uncg-viewer-report.png` | 14 | **exists** – captured | The viewer's species/legal-status table for one area |
-| `uncg-viewer-map.png` | 15 | **exists** – captured | The viewer with an area selected, filtered records, filter panel |
-| `dll-risk-zones.png` | 17 | **exists** – supplied | A published GCN impact risk zone map; **reuse licence still to be checked** |
+| `sdm-polyommatus-eros.png` | 7 | **exists** – `make-sdm-figure.R` | Relative suitability for the Eros blue across Kosovo, the nine atlas squares, the two national parks and the 30 ground-truth plots |
+| `ndop-public-generalised.png` | 13 | **exists** – captured | NDOP public view of a sensitive species, generalised to a square |
+| `uncg-viewer-report.png` | 15 | **exists** – captured | The viewer's species/legal-status table for one area |
+| `uncg-viewer-map.png` | 16 | **exists** – captured | The viewer with an area selected, filtered records, filter panel |
+| `dll-risk-zones.png` | 18 | **exists** – supplied | A published GCN impact risk zone map; **reuse licence still to be checked** |
 
 Three things are drawn in the slide itself rather than as pictures, so they
-cannot come out too small: the Darwin Core record (slide 9), the raw CSV
-(slide 14) and the survey calendar (slide 16).
+cannot come out too small: the Darwin Core record (slide 10), the raw CSV
+(slide 15) and the survey calendar (slide 17).
 
 ### Legibility – the rule every picture has to meet
 
@@ -280,14 +342,14 @@ The space each picture actually gets:
 
 | Layout | Used on | Picture box on the canvas |
 |---|---|---|
-| `.aopk-cols` (54 % column) | 3, 12, 17 | ≈ 610 × 370 px – height binds for anything squarer than 1.6:1 |
-| `.aopk-cols-wide` (64 % column) | 6, 15 | ≈ 720 × 400 px |
-| `.aopk-pair` (half each) | 5, 14 | ≈ 550 × 340 px – but a 16:10 picture is height-capped at ≈ 430 × 270 (measured on slide 5) |
-| full width | 13 | ≈ 1130 × 400 px – for very wide strips such as a table |
+| `.aopk-cols` (54 % column) | 3, 7, 13, 18 | ≈ 610 × 370 px – height binds for anything squarer than 1.6:1 |
+| `.aopk-cols-wide` (64 % column) | 6, 16 | ≈ 720 × 400 px |
+| `.aopk-pair` (half each) | 5, 15 | ≈ 550 × 340 px – but a 16:10 picture is height-capped at ≈ 430 × 270 (measured on slide 5) |
+| full width | 14 | ≈ 1130 × 400 px – for very wide strips such as a table |
 
 **For screenshots**, that means: set the browser to 100 % zoom, crop to the
 region that matters – never the whole window – and keep the crop no wider than
-the box above in CSS pixels (so about 720 px wide for slide 15). Capture on a
+the box above in CSS pixels (so about 720 px wide for slide 16). Capture on a
 high-density screen or with device-pixel-ratio 2, so the file is twice that and
 stays sharp on a projector. A full-window screenshot shrunk into a column is the
 single most common reason slide text becomes unreadable.
@@ -319,8 +381,12 @@ and the two dead ends that preceded it:
 The `.aopk-section` dividers, the title slide and the closing slide carry
 different furniture at the foot by design and always score high. Read those by
 eye. **The Sources slide is the tightest in the deck** – on the rebuild it
-overflowed until the one-line VERIFY note beneath the bibliography was removed.
-Re-check it after any change to `references.bib`.
+overflowed until the one-line VERIFY note beneath the bibliography was removed,
+and the two species-model sources pushed it over again until its type went
+from 0.47 to 0.45 of body size. Re-check it after any change to
+`references.bib`, **and look at it**: an entry that lands wholly under the
+footer bar leaves the strip above the bar clean and scores 0. The Eros blue
+slide's closing line was lost the same way on its first build.
 
 Placeholder boxes reserve their picture's aspect ratio under the same height cap
 as a real figure, so the check is meaningful before the pictures exist – but
@@ -335,8 +401,8 @@ Rscript check-pacing.R
 The notes are written as full spoken prose, so their word count estimates how
 long the talk runs. The target is **120–140 words per allotted minute** – slower
 than a native-speaker default, because this audience hears the talk in a second
-language. The rebuild sits at about 4,530 words, 130 wpm, with no slide above
-150. **Run this after any edit to the notes.** If the timings change, change them
+language. With the species-model slide the deck sits at about 4,925 words over
+37.5 minutes, 131 wpm, with no slide above 150. **Run this after any edit to the notes.** If the timings change, change them
 in `data/slide-plan.csv`; the script reads the budget from there.
 
 ---

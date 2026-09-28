@@ -321,19 +321,23 @@
 // each entry's text in the `.csl-entry` div directly, but the theme sets
 // `font-size` on `.reveal p` at a specificity this would otherwise lose to.
 //
-// 0.47 rather than the sibling deck's 0.5. This deck has twenty-one entries to
-// its twelve, and several of them are EU legal instruments whose titles run to
-// three lines. At 0.5 the second column reached far enough down the slide that
-// the one-line note beneath the bibliography wrapped to two and the second line
-// printed through the footer bar. The rebuilt deck, whose case-study entries
-// carry access dates, no longer has room for that note at all: it was removed
-// and the [VERIFY] register lives in the README only. Do not raise the size
-// without re-running the
-// overflow check described in the README.
+// 0.45 rather than the sibling deck's 0.5. This deck has twenty-three entries
+// to its twelve, and several of them are EU legal instruments whose titles run
+// to three lines. At 0.5 the second column reached far enough down the slide
+// that the one-line note beneath the bibliography wrapped to two and the second
+// line printed through the footer bar. The rebuilt deck, whose case-study
+// entries carry access dates, no longer has room for that note at all: it was
+// removed and the [VERIFY] register lives in the README only. It was 0.47 for
+// twenty-one entries; the two species-model sources (WorldClim and the P. eros
+// download) put the left column's last line under the bar, and a break between
+// entries cannot move to the right column without doing the same there. Do not
+// raise the size without re-running the overflow check described in the README
+// – and read this slide by eye as well, because text that lands wholly under
+// the bar leaves the strip above it clean.
 .reveal .slides section #refs,
 .reveal .slides section #refs p,
 .reveal .slides section #refs .csl-entry {
-  font-size: $aopk-size-body * 0.47;
+  font-size: $aopk-size-body * 0.45;
   line-height: 1.2;
 }
 

@@ -20,7 +20,8 @@ bibliography: references.bib
 # rest on the Sources slide, which is where the audience is told to look.
 nocite: |
   @gbif_kosovo_download, @kosovo_report, @eea_natda, @copernicus_dataspace,
-  @sentinel2, @clms_clc, @eea_fragmentation, @darwin_core, @gbif_ipt,
+  @sentinel2, @clms_clc, @eea_fragmentation, @worldclim2,
+  @gbif_eros_download, @darwin_core, @gbif_ipt,
   @inspire_directive, @kca_geoportal, @habitats_directive, @bern_convention,
   @ndop, @uncg_viewer, @ne_dll, @naturespace, @chsr_2017, @ipa3,
   @green_agenda, @taiex_agenda
@@ -55,7 +56,7 @@ format:
 - **The data reality** – what Kosovo's published record shows, and why a thin
   baseline is no reason to wait.
 - **Earth observation** – land-cover change and habitat fragmentation from
-  Copernicus, available today at no cost.
+  Copernicus, and a species model built on them, available today at no cost.
 - **One system, shared standards** – from project hard drives to a central
   biodiversity information system built on Darwin Core and INSPIRE.
 - **Three working models** – Czech tiered open data, a Ukrainian GBIF viewer
@@ -339,7 +340,71 @@ And when a Natura 2000 boundary comes to be drawn, these are the edges it should
 follow – a habitat patch, a watershed, a road – never the edge of a screening
 grid cell. The grid says where to look; the boundary comes from the ground.
 
-Which raises the next question: where does the field data go once collected?
+A satellite cannot see a species. But put its layers together with the few
+records you already have, and they can predict where one should be.
+:::
+
+## Species distribution model: the Eros blue {.no-leaf}
+
+::: {.aopk-cols}
+::: {.smaller}
+1. **Existing occurrence.** Kosovo: 25 records in nine 10 km atlas squares,
+   one confirmed since 2007. The model learns instead from **31 precise
+   records** in the same ranges, from six countries.
+2. **Predicting occurrence.** WorldClim summer warmth and rainfall, CORINE
+   2018 alpine grassland, slope: **2,365 km²** suitable, over half of it in
+   the two national parks. On regions held out: AUC 0.85.
+3. **Validation by ground-truthing.** Never shown a Kosovo record, the model
+   still finds habitat in **8 of the 9** atlas squares. Next: **30 plots** in
+   one July–August flight season, absences recorded.
+
+**The trap:** 545 of the 980 GBIF records under this name are another
+butterfly, *Aricia anteros*. Filter on the name the recorder wrote.
+:::
+
+::: {}
+![](images/sdm-polyommatus-eros.png){slot="16/10" want="Relative habitat suitability for Polyommatus eros across Kosovo, the nine atlas squares and the 30 ground-truth plots. Built by make-sdm-figure.R."}
+
+::: {.figcaption}
+Relative habitat suitability for *Polyommatus eros*, 1 km, an ensemble of
+small models calibrated outside Kosovo. GBIF 10.15468/dl.265jgv, WorldClim
+2.1, CORINE Land Cover 2018.
+:::
+:::
+:::
+
+::: notes
+One worked example, built for this talk from open data alone. The Eros blue is
+a small butterfly of high mountain grassland.
+
+Step one, what exists. Kosovo's published record is twenty-five records, every
+one a ten-kilometre square from the Serbian butterfly atlases, and only one
+square confirmed since 2007. A ten-kilometre square cannot tell a model where
+on the mountain the butterfly flies. So the model learns from thirty-one
+precise records from Albania, North Macedonia, Montenegro and further afield –
+the same Šar, Korab and Prokletije ranges, across the border.
+
+Step two, predict. Four layers: summer temperature and rainfall from
+WorldClim, the share of alpine grassland from CORINE, and slope. For the
+academics: twenty-five presence cells cannot carry one large model, so this is
+six small ones averaged, tested on regions they never saw. The result: about a
+fifth of Kosovo is suitable, and over half of that lies inside Sharri and
+Bjeshkët e Nemuna.
+
+Step three matters most. The model never saw a Kosovo record, yet eight of the
+nine atlas squares hold predicted habitat. That is a check, not a validation.
+Validation is fieldwork: thirty plots drawn from this map for one flight
+season – fifteen where the butterfly was never recorded, the nine old squares,
+and six where the model says no. Every visit is recorded, absences included.
+
+One warning. Of the nine hundred and eighty GBIF records under this name, five
+hundred and forty-five are a different butterfly: GBIF's taxonomy files the
+Blue Argus under it. Nearly nine in ten records in my first calibration set
+were the wrong species, and nothing in the data said so. More on that
+tomorrow.
+
+And those thirty visits produce records. Where does the field data go once
+collected?
 :::
 
 ## Why project data dies on hard drives {.no-leaf}
