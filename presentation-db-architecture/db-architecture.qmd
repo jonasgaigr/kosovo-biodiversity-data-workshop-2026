@@ -83,7 +83,7 @@ decision. That is today's topic.
 ::: {.lyr-ref}
 **Reference layer** – every other layer points here
 
-- national **checklist**, linked to the Catalogue of Life
+- national **checklist**, with **crosswalks** to the EU and GBIF taxonomic backbones
 - **protection and Red List status**, by taxon ID
 - **grids** and **protected sites**
 - **habitat crosswalk** and **vocabularies**
@@ -112,8 +112,10 @@ is how I recommend organising them: in layers.
 
 On the left is the reference layer, and everything else points to it. The most
 important table in the whole database is the national taxonomic checklist. Every
-record points to a taxon ID, never to a name typed by hand. Link the checklist to
-the Catalogue of Life, which GBIF now uses as its taxonomy. Hang protection status
+record points to a taxon ID, never to a name typed by hand. Each taxon also
+carries its ID in the EU taxonomic backbone, PESI, and in GBIF's, now the
+Catalogue of Life. Names change on all sides; these crosswalks keep your records
+usable for EU reporting and GBIF for decades. Hang protection status
 and Red List category on the same taxon ID. When a name changes, or a species
 goes on the Red List, you change one row, not a million records. The same layer
 holds the grids, the protected-site boundaries, the crosswalk from national
@@ -468,6 +470,81 @@ ten-kilometre grid: a record with coordinates and an uncertainty can be placed
 in its grid cell automatically, and a record without them cannot. Then the open
 tools built for Darwin Core. No lock-in to one vendor. And exchange with your
 neighbours, who use the same terms.
+:::
+
+## GIS structure – one geometry, many records {.no-leaf}
+
+::: {.aopk-cols}
+::: {.smaller}
+::: {.col-head}
+Oracle Spatial (SDO) × ArcGIS geodatabase (SDE)
+:::
+
+- **Geometry stored as `SDO_GEOMETRY`** – ArcGIS, QGIS, GDAL and plain SQL
+  all read it. Esri's default, `ST_Geometry`, needs Esri's libraries for SQL
+- **Tables registered with the geodatabase** – ArcGIS edits the table SQL
+  reads; no copies to keep in sync
+- **One geometry type per table** – points, lines, polygons apart; ArcGIS
+  takes no mix
+- **Same coordinate system, tolerance and spatial index** on both sides
+- **Versioned edits are invisible to SQL** until posted – version only what
+  must be
+:::
+
+::: {}
+::: {.col-head}
+1 geometry : N records
+:::
+
+::: {.evt}
+[Geometry]{.evt-tag} **G-1042** · polygon · pond 07 with its shore
+
+::: {.evt-kids}
+[Occurrence]{.evt-tag .occ} *Bombina variegata* – 14 May 2026
+
+[Occurrence]{.evt-tag .occ} *Bombina variegata* – 3 June 2027
+:::
+:::
+
+::: {.evt}
+[Geometry]{.evt-tag} **H-0215** · polygon · meadow segment
+
+::: {.evt-kids}
+[Habitat]{.evt-tag .occ} 6510 lowland hay meadows – 70 %
+
+[Habitat]{.evt-tag .occ} 6430 tall-herb fringes – 30 %
+:::
+:::
+
+::: {.figcaption}
+Illustrative. A record holds its geometry's ID, never a shape of its own:
+drawn once, corrected once, and every record on it follows.
+:::
+:::
+:::
+
+::: notes
+Species records and habitat maps are spatial, so the database needs a GIS
+structure, and the first rule is on the right: one geometry, many records. The
+shape is stored once, in a geometry table. A record holds only the ID of its
+geometry, never a shape of its own. The pond is drawn once, and every visit to
+it, year after year, points to it. A habitat-mapping polygon works the same way:
+one segment, often a mosaic of several habitat types, each with its share. When a
+boundary is corrected, it is corrected once, and every record on it follows.
+
+On the left is a common set-up for a national database: Oracle underneath,
+ArcGIS on top. Oracle's own geometry type is SDO_GEOMETRY. Esri's enterprise
+geodatabase, still often called SDE, uses its own type by default, ST_Geometry,
+and SQL can read that only through Esri's libraries. So store the geometry as
+SDO_GEOMETRY and register the tables with the geodatabase. Then ArcGIS edits the
+same table that SQL, QGIS and the web portal read, and nobody keeps copies in
+sync.
+
+Three rules keep the two sides compatible. One geometry type per table, because
+ArcGIS does not take a mix. The same coordinate system, tolerance and spatial
+index on both sides. And versioned edits in ArcGIS stay invisible to SQL until
+they are posted. If you build on PostgreSQL instead, the choice is PostGIS
+against ST_Geometry, and the answer is the same.
 :::
 
 ## Six habits of a database that lasts {.no-leaf}

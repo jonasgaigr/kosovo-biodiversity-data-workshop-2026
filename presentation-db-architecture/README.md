@@ -12,17 +12,18 @@ work. Built on the AOPK ČR reveal.js template.
 |---|---|
 | Source | [`db-architecture.qmd`](db-architecture.qmd) |
 | Slides | `db-architecture.html` – reveal.js, 16:9, one self-contained file |
-| Slides as PDF | `db-architecture.pdf` – 12 pages, one slide per page |
+| Slides as PDF | `db-architecture.pdf` – 13 pages, one slide per page |
 | One-page handout | `db-architecture-handout.pdf`, from [`db-architecture-handout.qmd`](db-architecture-handout.qmd) (Typst, A4) |
 | Outline | [`OUTLINE.md`](OUTLINE.md) – per slide: time, key message, on-slide text, visual, speaker notes; then the Mermaid diagram. **Generated** |
 | Diagram | [`data-flow.mmd`](data-flow.mmd) – the slide 4 data-flow diagram, Mermaid |
-| Length | 15–17 minutes; notes are ~2,100 spoken words |
+| Length | 17.5–19 minutes; notes are ~2,370 spoken words – over the 15–17-minute brief since the GIS slide (10) was added; `check-pacing.R` names the first cuts |
 | Audience | Kosovo nature-protection and biodiversity-data staff; strong on biology, mixed on databases and standards |
 
-**Eleven slides and a closing slide.** Title and bridge · about me · five layers ·
+**Twelve slides and a closing slide.** Title and bridge · about me · five layers ·
 data-flow diagram · Flow A (structured monitoring) · Flow B (trusted experts) ·
-Flow C (citizen science) · feedback loops · Darwin Core · six habits · takeaways
-and discussion · AOPK closing.
+Flow C (citizen science) · feedback loops · Darwin Core · GIS structure (SDO ×
+SDE, 1 geometry : N records) · six habits · takeaways and discussion · AOPK
+closing.
 
 **Dashes are en dashes throughout**, spaced; the deck is `lang: en-GB`.
 
@@ -132,8 +133,8 @@ resolves to Demi on this machine (`pdffonts db-architecture-handout.pdf` lists
 
 | Where | Placeholder | Filled by |
 |---|---|---|
-| slide 10, card 1 | `Here: [to be named]` – the data steward | the hosts, before or in the session |
-| slide 11, discussion box | which flow first · who owns the checklist · who validates each group | the room – they are the discussion questions |
+| slide 11, card 1 | `Here: [to be named]` – the data steward | the hosts, before or in the session |
+| slide 12, discussion box | which flow first · who owns the checklist · who validates each group | the room – they are the discussion questions |
 | handout, first bullet | legal basis and steward – to be confirmed | the hosts |
 | handout, orange box | checklist owner, data steward, validators | participants, by hand |
 
@@ -179,6 +180,22 @@ no outlier trimming, citing IUCN Guidelines v16 section 4.9, and
 | eMoF is an OBIS extension, not a TDWG standard | OBIS manual |
 | GBIF has switched its taxonomy to the Catalogue of Life eXtended Release; the old Backbone was last built in 2023 and is frozen | GBIF data blog and technical documentation |
 
+**Taxonomic crosswalks and GIS** (slides 3 and 10, handout), checked on
+28 September 2026:
+
+| Claim | Checked against |
+|---|---|
+| PESI (EU-nomen) is the European taxonomic backbone, built from Euro+Med PlantBase, Fauna Europaea, ERMS and Species Fungorum | eu-nomen.eu portal; *PESI – a taxonomic backbone for Europe*, Biodiversity Data Journal 2015 |
+| ST_Geometry is the default geometry storage of a new Oracle geodatabase; SDO_GEOMETRY is chosen with the `GEOMETRY_STORAGE` parameter | Esri docs, *Oracle configuration parameters* and *ST_Geometry in Oracle* |
+| SQL access to ST_Geometry needs Esri's libraries on the Oracle server and extproc configured | Esri docs, *ST_Geometry in Oracle* |
+| ArcGIS reads SDO_GEOMETRY but not heterogeneous geometry collections; it needs a spatial index, a `USER_SDO_GEOM_METADATA` row and a NOT NULL ObjectID | Esri docs, *SDO_GEOMETRY and ArcGIS* |
+
+Stated as standing knowledge: traditional versioning keeps edits in delta
+tables, so SQL on the base table does not see them until they are posted and
+compressed; an enterprise geodatabase on PostgreSQL offers PostGIS geometry or
+ST_Geometry. The slide does not say what AOPK ČR runs on, nor anything about
+Kosovo's GIS set-up – KEPA presents that at 9:00.
+
 Stated as standing knowledge and **not** re-checked here: Art. 17 and Art. 12
 reports every six years with distribution on the 10 km ETRS89-LAEA grid;
 `identificationVerificationStatus` has no controlled vocabulary in Darwin Core.
@@ -197,8 +214,8 @@ this one and also explains `coordinateUncertaintyInMeters` and absences on its
 *Interoperability* slide, and NDOP's sensitive-species generalisation on
 *NDOP: open by default, precise by permission*.
 
-This deck points forward instead of repeating: slide 10 says the Czech
-sensitive-species solution comes "this afternoon", and slide 11 ends on the
+This deck points forward instead of repeating: slide 11 says the Czech
+sensitive-species solution comes "this afternoon", and slide 12 ends on the
 afternoon talk. **The afternoon notes may want one line –** "as we saw before
 lunch" – where they re-explain uncertainty and absences. They have not been
 changed.
