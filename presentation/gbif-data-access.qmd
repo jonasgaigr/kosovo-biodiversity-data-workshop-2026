@@ -45,6 +45,8 @@ The worked example is live at
 that builds it is open.
 :::
 
+![](images/qr-site.svg){.absolute right="52" top="28" width="160" height="160" fig-alt="QR code linking to jonasgaigr.github.io/kosovo-biodiversity-data-workshop-2026"}
+
 ## Getting the data out {.aopk-section}
 
 One aggregator, four doors, and only one of them gives you a citation.
