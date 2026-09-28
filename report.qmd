@@ -1001,7 +1001,7 @@ relying on a secondary checklist. Every name is then resolved against the GBIF
 backbone taxonomy, and occurrence records are selected by numeric key rather
 than by name, which is robust to synonymy and authorship variation.
 
-Two details materially affect what appears in these subsets.
+Three details materially affect what appears in these subsets.
 
 **Rank matters when matching.** A taxon listed at species rank is matched on
 both its species key and its taxon key, so records identified to subspecies are
@@ -1012,6 +1012,15 @@ seriously misleading: the Birds Directive lists island endemics such as
 at species level would place every Wood Pigeon and Chaffinch in Kosovo on
 Annex I — around 1,450 records for subspecies confined to the Azores and the
 Canaries.
+
+**Lumped species are not followed.** Some listed species have since been sunk
+into a widespread one. The GBIF backbone files *Dactylorhiza kalopissii* under
+*D. majalis*, *Capra aegagrus* under the domestic goat, *Polyommatus eroides*
+under *P. eros* and *Apatura metis* under *A. ilia*. Following those synonyms
+would put every record of the widespread species on the annex, so these
+listings are matched only on records that carry the listed name itself. A
+synonym that just moves a species to another genus, such as *Egretta alba* to
+*Ardea alba*, is still followed.
 
 **Exclusions are honoured.** Where an annex lists a species *except* certain
 subspecies, as Annex V does for *Rupicapra rupicapra*, the excluded taxa are
