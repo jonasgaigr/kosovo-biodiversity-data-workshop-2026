@@ -8,7 +8,7 @@ Natura 2000 network, built on the AOPK ČR reveal.js template.
 |---|---|
 | Source | [`n2k-condition-evaluation.qmd`](n2k-condition-evaluation.qmd) |
 | Slides | `n2k-condition-evaluation.html` — reveal.js, 16:9, one self-contained file |
-| Handout | `n2k-condition-evaluation.pdf` — 24 pages, one slide per page |
+| Handout | `n2k-condition-evaluation.pdf` — 26 pages, one slide per page |
 | Extra styles | [`n2k-condition-evaluation.scss`](n2k-condition-evaluation.scss), loaded after [`custom.scss`](custom.scss) |
 | Length | ~25 minutes |
 | Audience | International; data and GIS practitioners |
@@ -25,8 +25,10 @@ The Czech implementation is the vehicle, not the subject. There is no project
 framing in the deck — no PAF pillars, no action numbers, no delivery schedule —
 because none of that travels to another country, and the principles do.
 
-**The deck is capped at 24 slides**, title slide included, which is what the
-speaking slot allows. That cap is the reason several slides carry two points
+**The deck is capped at 26 slides**, title slide included, which is what the
+speaking slot allows. It was 24 until the two Article 17 slides went in –
+*Article 17: the worst parameter decides* and *Structure and functions, scored
+in the field*, the second with the 3150 bladderwort example. That cap is the reason several slides carry two points
 that used to have one slide each — the mapping layer with the segment
 attributes, area with the quality crosswalk, validation with publication, the
 forest and amphibian result charts side by side, and the two repository slides

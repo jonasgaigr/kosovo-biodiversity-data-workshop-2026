@@ -175,6 +175,44 @@ taxonomic group. A scale that is redefined per group cannot be summed across
 groups.
 :::
 
+## Article 17: the worst parameter decides {.no-leaf}
+
+::: {.aopk-cols}
+::: {}
+Reported to the Commission every **six years**, per feature and per
+**biogeographical region** – not per site. Four parameters, each scored against
+a **favourable reference value** where one applies:
+
+| Habitat types | Species |
+|---|---|
+| Range | Range |
+| Area | Population |
+| Structure and functions, incl. typical species | Habitat for the species |
+| Future prospects | Future prospects |
+
+::: {.smaller}
+**FV** favourable · **U1** unfavourable-inadequate · **U2**
+unfavourable-bad · **XX** unknown.
+:::
+:::
+
+::: {}
+| The four parameters | Overall |
+|---|---|
+| all FV, or three FV and one XX | [FV]{.chip .chip-good} |
+| one or more U1, no U2 | [U1]{.chip .chip-deteriorated} |
+| one or more U2 | [U2]{.chip .chip-bad} |
+| two or more XX, no U1 or U2 | [XX]{.chip .chip-unknown} |
+
+::: {.smaller}
+The rule does not average: three favourable parameters do not buy back one bad
+one. The **parameter in the worst state** sets the overall status, and it also
+names where the problem is. The site scale follows the same logic – "good"
+means good on every count.
+:::
+:::
+:::
+
 ## The evidence base {.aopk-section}
 
 ::: {.aopk-section-photo}
@@ -327,6 +365,47 @@ vocabularies**, and an unanticipated combination is **added to it**.
 RB, DG, SF, RH and *hodnoty ze základního mapování* the baseline REPRE and
 ZACH. *nově doplněná kombinace* – "newly added combination". The header line
 says who produced the table and who last adjusted it.
+:::
+:::
+:::
+
+## Structure and functions, scored in the field {.no-leaf}
+
+::: {.aopk-cols}
+::: {}
+**SF** is scored per segment as **P** favourable, **MP** less favourable or
+**N** unfavourable, once the whole field form is filled in.
+
+- A **synthetic** criterion: vertical and horizontal structure, share of the
+  dominants, adequacy of management, degree of degradation.
+- **Forests** also weigh the graded **SD** tree structure and **MD** dead
+  wood.
+- **Bark beetle and wood-decay fungi are not degradation** – at a natural
+  level they make dead wood. A **calamity** scores unfavourably: salvage
+  logging follows.
+:::
+
+::: {}
+::: {.worked}
+**Example – 3150 natural eutrophic lakes**
+
+What matters is the **bladderwort** (*Utricularia*) population, measured as the
+share of the water surface the species cover.
+
+| Water surface covered | SF |
+|---|---|
+| 75–100 % | [P]{.chip .chip-good} favourable |
+| 25–75 % | [MP]{.chip .chip-deteriorated} less favourable |
+| < 25 % | [N]{.chip .chip-bad} unfavourable |
+:::
+
+::: {.smaller}
+The segment scores add up to the Article 17 parameter as the area of the
+habitat in good and in not-good condition; more than 25 % not good makes it U2.
+
+The ideal state and the deviations from it are written down per habitat in the
+**Habitat Catalogue** and the **Habitat Assessment Handbook** (*Katalog
+biotopů*, *Příručka hodnocení biotopů*).
 :::
 :::
 :::
