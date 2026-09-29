@@ -430,18 +430,6 @@ try_access <- function(url, dest = NULL, timeout = 60, ssl_verify = TRUE) {
   res
 }
 
-#' Read a web page's text, or `NA` if it cannot be read; never throws
-fetch_text <- function(url, timeout = 60) {
-  tryCatch({
-    h <- curl::new_handle(timeout = timeout, followlocation = TRUE)
-    r <- curl::curl_fetch_memory(url, handle = h)
-    if (r$status_code >= 400) return(NA_character_)
-    txt <- rawToChar(r$content)
-    Encoding(txt) <- "UTF-8"
-    txt
-  }, error = function(e) NA_character_)
-}
-
 #' Integer with thousands separators, as `fmt_int()` in R/functions.R
 fmt_int <- function(x) formatC(round(x), format = "d", big.mark = ",")
 
