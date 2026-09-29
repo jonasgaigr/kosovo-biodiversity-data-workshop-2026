@@ -147,8 +147,51 @@ config <- list(
   # Viewer offers it alongside CSV. It is written only for the smaller thematic
   # extracts: an .xlsx of the full 47,000-record table would be slow to build,
   # slow to open, and close to Excel's practical limits.
-  xlsx_max_records = 12000
+  xlsx_max_records = 12000,
+
+  # --- Land cover: potential Natura 2000 habitats ---------------------------
+  #
+  # CORINE Land Cover, read through an editable crosswalk for the land cover
+  # that could hold Annex I habitats, and set against the designated sites.
+  # The report's section "Potential Natura 2000 habitats" says what this can
+  # and cannot show.
+  #
+  # clc_vintage   CLC reference year. It must have an entry in `clc_sources`
+  #               (R/functions.R), which records its DOI, version and licence;
+  #               a vintage the report cannot cite is refused. "2018" was the
+  #               latest one published when this was written.
+  # clc_path      Optional. The CLC vector product (.gpkg or .gdb) downloaded
+  #               by hand from land.copernicus.eu, which needs an EU Login.
+  #               Empty — the default — reads the same data from the EEA's map
+  #               service, which needs no account. Set it here or through the
+  #               CLC_PATH environment variable. Only the clipped Kosovo extract
+  #               is ever written; the European file stays outside the repo.
+  # clc_simplify_tolerance
+  #               Metres. Generalisation of the map layers only; every area is
+  #               measured on the full geometry. 50 m keeps shapes at CLC's own
+  #               100 m scale and drops about two vertices in three, which is
+  #               what keeps the map to a few megabytes.
+  # potential_habitat_min_confidence
+  #               Lowest crosswalk confidence kept: "low", "medium" or "high".
+  #               "low" keeps every candidate class, so that confidence is
+  #               shown on the map rather than decided here.
+  clc_vintage                      = "2018",
+  clc_path                         = Sys.getenv("CLC_PATH", unset = ""),
+  clc_simplify_tolerance           = 50,
+  potential_habitat_min_confidence = "low",
+
+  path_crosswalk     = "data/crosswalk_clc_annex1.csv",
+  path_clc_legend    = "data/clc_legend.csv",
+  path_clc_overrides = "data/clc_polygon_overrides.csv",
+  path_biogeo        = "data/kosovo_biogeo_regions.gpkg",
+  path_habitat_map   = "data/kosovo_potential_habitats_map.gpkg",
+  path_annex_text    = "data/eurlex/habitats_directive.html"
 )
+
+# Named after the vintage, so that moving to a new one cannot silently re-use
+# the old extract.
+config$path_clc <- file.path("data",
+                             paste0("kosovo_clc", config$clc_vintage, ".gpkg"))
 
 dir.create(config$dir_download, recursive = TRUE, showWarnings = FALSE)
 dir.create(config$dir_exports,  recursive = TRUE, showWarnings = FALSE)
@@ -1020,6 +1063,204 @@ if (requireNamespace("writexl", quietly = TRUE)) {
                       file.path(config$dir_exports,
                                 "kosovo_protected_areas.xlsx"))
 }
+
+
+# ==============================================================================
+# 7b. LAND COVER — potential Natura 2000 habitats
+# ==============================================================================
+#
+# A national screen for the habitat side of a Natura 2000 gap analysis: where
+# natural and semi-natural land cover suggests Annex I habitats may occur, and
+# how much of it lies outside every designated site. It uses no occurrence
+# record, so it stands beside the species evidence above rather than on it.
+#
+# Everything that is a judgement lives in files a specialist can edit without
+# reading R: the class-to-habitat crosswalk, and the list of polygons — the
+# reservoirs — that CLC files under the wrong heading for this purpose.
+
+say("Screening CORINE Land Cover for potential Annex I habitats ...")
+
+clc <- kosovo_clc(cleaning$boundary, vintage = config$clc_vintage,
+                  cache_path = config$path_clc, clc_path = config$clc_path)
+
+biogeo_regions <- kosovo_biogeo_regions(cleaning$boundary,
+                                        cache_path = config$path_biogeo)
+say("  Biogeographical regions in Kosovo: ",
+    paste(sprintf("%s %s km2", biogeo_regions$region,
+                  fmt_int(round(biogeo_regions$area_km2))), collapse = ", "))
+
+annex1_types  <- annex1_habitat_types(config$path_annex_text)
+clc_legend    <- readr::read_csv(config$path_clc_legend,
+                                 col_types = readr::cols(.default = "c"))
+crosswalk     <- read_clc_crosswalk(config$path_crosswalk, clc_legend,
+                                    annex1_types)
+clc_overrides <- readr::read_csv(config$path_clc_overrides,
+                                 col_types = readr::cols(.default = "c"))
+
+habitats <- assess_potential_habitats(
+  clc, crosswalk, clc_overrides, biogeo_regions,
+  sites          = designated_sites,
+  municipalities = municipalities,
+  vintage        = config$clc_vintage,
+  min_confidence = config$potential_habitat_min_confidence
+)
+
+hn <- habitats$national
+say("  Potential habitat: ", fmt_int(round(hn$total_km2)), " km2 (",
+    round(100 * hn$total_km2 / hn$country_km2, 1), "% of Kosovo); ",
+    round(hn$pct_inside, 1), "% of it inside a designated site, ",
+    fmt_int(round(hn$gap_km2)), " km2 outside.")
+
+# --- Exports ------------------------------------------------------------------
+# The screening layer itself, at full resolution in its native EPSG:3035, and
+# the tables the report shows. The gap layer carries the same attributes as
+# the habitat polygons it was cut from, so a field team can filter it by class
+# and confidence before planning a visit.
+
+hab_cols <- c("clc_id", "clc_code", "clc_label", "habitat_group",
+              "candidate_annex1", "confidence", "natural_status",
+              "biogeo_region", "area_ha", "ha_inside", "pct_inside", "sites")
+
+hab_gpkg <- file.path(config$dir_exports, "kosovo_potential_habitats.gpkg")
+if (file.exists(hab_gpkg)) unlink(hab_gpkg)
+sf::st_write(habitats$polygons[, hab_cols], hab_gpkg,
+             layer = "potential_habitat", quiet = TRUE)
+sf::st_write(habitats$gap[, c(setdiff(hab_cols, c("ha_inside", "pct_inside",
+                                                  "sites")), "gap_ha")],
+             hab_gpkg, layer = "gap_outside_designated_sites", quiet = TRUE)
+
+round_df <- function(d, digits = 2) {
+  dplyr::mutate(d, dplyr::across(dplyr::where(is.double), ~ round(.x, digits)))
+}
+
+hab_csv <- c(
+  by_group        = "kosovo_potential_habitats_by_group.csv",
+  by_municipality = "kosovo_potential_habitats_by_municipality.csv",
+  by_class        = "kosovo_potential_habitats_by_class.csv"
+)
+for (nm in names(hab_csv)) {
+  readr::write_csv(round_df(habitats[[nm]]),
+                   file.path(config$dir_exports, hab_csv[[nm]]), na = "")
+}
+
+# --- Map layers for the report ------------------------------------------------
+# Generalised for the web, and only for the web. The habitat polygons and the
+# gap are simplified in one pass, so that an edge the two layers share is
+# simplified once and the hatch still sits exactly on the fills; the gap is
+# then dissolved, because its internal edges are already drawn by the habitat
+# layer underneath and would only repeat them.
+
+display <- simplify_for_map(
+  rbind(
+    sf::st_sf(.layer = "habitat", .i = seq_len(nrow(habitats$polygons)),
+              geometry = sf::st_geometry(habitats$polygons)),
+    sf::st_sf(.layer = "gap", .i = seq_len(nrow(habitats$gap)),
+              geometry = sf::st_geometry(habitats$gap))
+  ),
+  config$clc_simplify_tolerance
+)
+
+hab_display <- display[display$.layer == "habitat", ]
+hab_display <- sf::st_sf(
+  sf::st_drop_geometry(habitats$polygons)[
+    hab_display$.i, c("clc_code", "clc_label", "habitat_group", "confidence",
+                      "area_ha", "pct_inside", "sites", "cw_key")],
+  geometry = sf::st_geometry(hab_display)
+)
+
+# Planar union on the rounded coordinates: the pieces share their edges
+# vertex for vertex, which is all a dissolve needs, and s2's spherical union
+# is slower for no gain here. The pieces are repaired first. Rounding to a
+# metre can pinch a narrow neck of a polygon into a self-touching ring, which
+# is invisible on the map but which GEOS refuses to union ("side location
+# conflict"), so the run would stop on a cosmetic defect.
+s2_was <- suppressMessages(sf::sf_use_s2(FALSE))
+gap_pieces <- display[display$.layer == "gap", ] |>
+  sf::st_make_valid() |>
+  polygons_only(id = ".i")
+gap_display <- sf::st_sf(
+  gap = TRUE,
+  geometry = suppressMessages(sf::st_union(gap_pieces))
+)
+suppressMessages(sf::sf_use_s2(s2_was))
+
+mun_display <- simplify_for_map(
+  municipalities |>
+    dplyr::select("municipality", "district") |>
+    dplyr::left_join(habitats$by_municipality |>
+                       dplyr::select("municipality", "potential_km2",
+                                     "pct_potential", "inside_km2",
+                                     "pct_inside", "gap_km2"),
+                     by = "municipality"),
+  config$clc_simplify_tolerance
+)
+
+if (file.exists(config$path_habitat_map)) unlink(config$path_habitat_map)
+sf::st_write(hab_display, config$path_habitat_map, layer = "habitats",
+             quiet = TRUE)
+sf::st_write(gap_display, config$path_habitat_map, layer = "gap", quiet = TRUE)
+sf::st_write(mun_display, config$path_habitat_map, layer = "municipalities",
+             quiet = TRUE)
+
+say("  Map layers: ", fmt_int(nrow(sf::st_coordinates(hab_display))),
+    " vertices for ", fmt_int(nrow(hab_display)), " polygons at ",
+    config$clc_simplify_tolerance, " m.")
+
+# --- Metadata for the report --------------------------------------------------
+
+# The manual download path is a location on somebody's own disk; the report
+# needs to know that a file was used, not where it lived.
+run_meta$config$clc_path <- basename(config$clc_path)
+
+described_export <- function(file) {
+  path <- file.path(config$dir_exports, file)
+  dplyr::tibble(file = file, size = as.numeric(file.size(path)))
+}
+
+used_codes <- unique(sub("\\*$", "", trimws(unlist(strsplit(
+  crosswalk$candidate_annex1[nzchar(crosswalk$candidate_annex1)], ";")))))
+
+run_meta$potential_habitats <- c(
+  habitats[c("by_group", "by_confidence", "by_class", "by_region",
+             "by_municipality", "all_classes", "national", "checks")],
+  list(
+    source    = c(clc_sources[[config$clc_vintage]],
+                  list(vintage  = config$clc_vintage,
+                       route    = unique(clc$source),
+                       accessed = unique(clc$accessed))),
+    biogeo    = c(biogeo_source,
+                  list(accessed = unique(biogeo_regions$accessed))),
+    regions   = sf::st_drop_geometry(biogeo_regions),
+    crosswalk = crosswalk,
+    annex1    = annex1_types,
+    annex1_used = annex1_types[annex1_types$code %in% used_codes, ],
+    legend    = clc_legend,
+    overrides = habitats$overrides |>
+      dplyr::left_join(clc_overrides |>
+                         dplyr::select("clc_id", "name", "reason", "evidence"),
+                       by = "clc_id"),
+    # Water bodies still counted: CLC cannot tell a lake from a reservoir, and
+    # these could not be identified either way.
+    unverified_water = sf::st_drop_geometry(
+      habitats$polygons[habitats$polygons$clc_code == "512",
+                        c("clc_id", "area_ha")]),
+    sites = list(
+      n_sites      = nrow(designated_sites) + nrow(protected_points),
+      n_mapped     = nrow(designated_sites),
+      n_point_only = nrow(protected_points)
+    ),
+    params = list(
+      min_confidence = config$potential_habitat_min_confidence,
+      tolerance_m    = config$clc_simplify_tolerance
+    ),
+    exports = dplyr::bind_rows(lapply(c(basename(hab_gpkg), unname(hab_csv)),
+                                      described_export))
+  )
+)
+
+print(habitats$by_group |>
+        dplyr::select("habitat_group", "area_km2", "inside_km2", "gap_km2",
+                      "pct_inside", "indicative_band"))
 
 
 # ==============================================================================

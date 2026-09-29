@@ -1,0 +1,9 @@
+clc_vintage,clc_id,clc_code,name,natural_status,reason,evidence
+2018,EU-882120,512,Gazivoda / Ujmani reservoir,not natural,reservoir,"inside OSM relation 2515976 (Gazivoda Lake); dam OSM way 186896649 (Brana Gazivode)"
+2018,EU-882116,512,Gazivoda compensation basin,not natural,reservoir,"held by the dam OSM ways 1125533797 and 1125533799, 2 km below the Gazivoda dam"
+2018,EU-882095,512,Radoniq reservoir (Liqeni i Radoniqit),not natural,reservoir,"OSM way 372019449; dam OSM ways 466530613 and 518871296"
+2018,EU-882115,512,Batllava reservoir (Liqeni i Batllavës),not natural,reservoir,"OSM way 8027166; dam OSM way 458506897"
+2018,EU-882112,512,Badovc reservoir (Liqeni i Badovcit),not natural,reservoir,"inside OSM relation 14503088, tagged water=reservoir"
+2018,EU-882105,512,Përlepnica reservoir (Liqeni i Përlepnicës),not natural,reservoir,"OSM way 230219197; dam OSM way 243905512"
+2018,EU-882117,512,Lisica reservoir (Liqeni i Lisicës),not natural,reservoir,"OSM way 98601363; dam OSM way 596661495"
+2018,EU-882085,512,Vërmica arm of the Fierza reservoir (Liqeni i Vërmicës),not natural,reservoir,"OSM way 543273642; the White Drin held back by the Fierza dam in Albania, OSM way 180669161"

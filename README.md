@@ -45,6 +45,7 @@ only; the boundaries are released on request.
 | Where the records are | Seven maps, each with points, a classed density grid, a heat surface, protected areas and municipal boundaries |
 | Survey coverage by municipality | Which parts of the country are under-recorded |
 | Protected areas | What the national register holds, how much of the country it covers, and which sites have occurrence evidence behind them |
+| Potential Natura 2000 habitats | Where CORINE Land Cover suggests Annex I habitats may occur, and how much of that lies outside every designated site — a screen for gap analysis, not a habitat map |
 | EU Nature Directives | Which species of Community interest have been recorded |
 | Extinction risk | The IUCN Red List profile, and the threatened species in detail |
 | Invasive alien species | Which species on the EU's Union list have been recorded, and a watch list of those recorded across the border but not yet here |
@@ -173,13 +174,20 @@ kosovo-biodiversity-data-workshop-2026/
 │   ├── kosovo_boundary.gpkg        # National outline, from osm_kosovo.gpkg
 │   ├── kosovo_municipalities.gpkg  # 38 municipalities, for coverage reporting
 │   ├── kosovo_protected_areas.gpkg # EEA designated areas, Kosovo only (cached)
+│   ├── crosswalk_clc_annex1.csv    # CLC class -> candidate Annex I habitats (for review)
+│   ├── clc_polygon_overrides.csv   # CLC polygons reclassified by name: the reservoirs
+│   ├── clc_legend.csv              # Official CLC labels and colours
+│   ├── kosovo_clc2018.gpkg         # CORINE Land Cover 2018, Kosovo only (cached)
+│   ├── kosovo_biogeo_regions.gpkg  # Biogeographical regions, Kosovo only (cached)
+│   ├── kosovo_potential_habitats_map.gpkg # Simplified layers for the habitat map
 │   ├── vernacular_cache.csv        # Cached common names
 │   ├── iucn_cache.csv              # Cached IUCN Red List categories
 │   ├── dataset_registry.csv        # Cached dataset and publisher titles
 │   ├── ias_neighbour_counts.csv    # Cached Union-list counts next door, dated
 │   └── run_metadata.rds            # DOI, citation, counts, cleaning report
 │
-├── data_exports/              # Published outputs (.gpkg, .csv, .xlsx), seven subsets
+├── data_exports/              # Published outputs (.gpkg, .csv, .xlsx): seven subsets,
+│                              #   the protected areas and the land-cover screen
 ├── docs/                      # Rendered website — GitHub Pages serves this
 │   └── slides/<deck>/         # Each deck's slides and handout, copied by publish_slides.R
 ├── outputs/                   # Site reports (generated; not tracked)
@@ -271,7 +279,7 @@ sits in the project root, and that you have restarted R.
 install.packages(c(
   "rgbif", "tidyverse", "sf", "leaflet", "leaflet.extras", "leafem",
   "CoordinateCleaner", "DT", "crosstalk", "htmltools", "htmlwidgets",
-  "writexl", "curl", "jsonlite", "rnaturalearth"
+  "writexl", "curl", "jsonlite", "rnaturalearth", "rmapshaper", "geojsonsf"
 ))
 ```
 
@@ -325,8 +333,11 @@ This will:
     for the smaller ones — `.xlsx`.
 12. Write the protected-area register to `data_exports/` in the same three
     formats.
-13. Resolve every contributing dataset and publisher from the GBIF registry.
-14. Save run metadata to `data/run_metadata.rds`.
+13. Screen CORINE Land Cover for potential Annex I habitats and measure the
+    gap against the designated sites (cached; see
+    [The land-cover screen](#the-land-cover-screen)).
+14. Resolve every contributing dataset and publisher from the GBIF registry.
+15. Save run metadata to `data/run_metadata.rds`.
 
 The first run takes roughly 20 minutes, most of it resolving common names for
 several thousand taxa one at a time. The Red List and registry lookups are
@@ -733,6 +744,86 @@ excluded from the site test, because each lies inside a site already counted.
 
 ---
 
+## The land-cover screen
+
+The report's section *Potential Natura 2000 habitats* reads CORINE Land Cover
+(CLC) through an editable crosswalk and asks where natural and semi-natural
+land cover suggests Annex I habitats may occur, and how much of it lies outside
+every designated site. It is national-screening evidence, not a habitat map:
+CLC's 25 ha minimum mapping unit loses springs, fens and riparian strips, and
+a land-cover class stands for several habitat types or none.
+
+| | |
+|---|---|
+| Land cover | CORINE Land Cover 2018 (vector), version V2020_20u1 — the latest CLC vintage published when this was written |
+| DOI | [10.2909/71c95a07-e296-44fc-b22b-415f42acfdf0](https://doi.org/10.2909/71c95a07-e296-44fc-b22b-415f42acfdf0) |
+| Licence | Copernicus data policy (Delegated Regulation (EU) No 1159/2013): free, full and open; state the source and any modification |
+| Regions | Biogeographical regions, Europe 2016, ver. 1 — CC-BY 4.0, © EEA; no DOI registered |
+| Kosovo | Continental 8,844 km², Alpine 2,063 km² |
+
+### Parameters (in `pipeline.R`)
+
+| Parameter | Default | What it does |
+|---|---|---|
+| `clc_vintage` | `"2018"` | CLC reference year. Refused unless its DOI, version and licence are recorded in `clc_sources` in `R/functions.R`. |
+| `clc_path` | `""` | A CLC vector file downloaded by hand. Empty reads the EEA map service instead. Also settable as `CLC_PATH` in `.Renviron`. |
+| `clc_simplify_tolerance` | `50` | Metres. Generalises the map layers only; every area is measured on the full geometry. |
+| `potential_habitat_min_confidence` | `"low"` | Lowest crosswalk confidence kept: `low`, `medium` or `high`. `low` keeps every candidate class and shows confidence on the map instead. |
+
+### Getting the data
+
+**By default nothing needs doing.** The pipeline reads the Kosovo window of
+CLC2018 from the EEA's own map service — the REST endpoint the Copernicus
+product page names for the dataset — in native EPSG:3035, clips it to the
+OpenStreetMap outline and caches the result as `data/kosovo_clc2018.gpkg`
+(tracked, so a fresh clone makes no request). It is cached rather than re-read
+because the EEA is due to publish a revised CLC2018 alongside CLC2024, and a
+published figure should not move with it. Delete the file to read it again.
+
+**To use a file from the Copernicus portal instead**, which needs an EU Login:
+
+1. Download the *vector* product of the vintage from
+   <https://land.copernicus.eu/en/products/corine-land-cover/clc2018>
+   (GeoPackage or File Geodatabase; not the raster).
+2. Unzip it outside the repository. Raw CLC files are git-ignored in case one
+   lands inside it anyway.
+3. Set `CLC_PATH=...` in `.Renviron` (see `.Renviron.example`) or `clc_path`
+   in `pipeline.R`, delete `data/kosovo_clc2018.gpkg`, and run the pipeline.
+   Only the part of the file covering Kosovo is read. If the path is set and
+   nothing is there, the run stops and says what to download.
+
+### The crosswalk and the overrides
+
+The judgements are data, not code:
+
+- `data/crosswalk_clc_annex1.csv` — one row per CLC class: `natural_status`,
+  `habitat_group`, `candidate_annex1` (semicolon-separated Annex I codes, `*`
+  for priority types), `confidence` and `note`. Every code is checked against
+  Annex I as parsed from the legal text in `data/eurlex/`, so a typo stops the
+  run. The optional `biogeo_region` column (`Alpine` or `Continental`) makes a
+  row apply in one region only, taking precedence over the general row for the
+  same class.
+- `data/clc_polygon_overrides.csv` — individual CLC polygons reclassified by
+  identifier, with the evidence. At present the eight reservoirs that CLC files
+  as water bodies (Gazivoda/Ujmani, Radoniq, Batllava, Badovc and four smaller
+  ones), each identified by its OpenStreetMap feature or dam.
+
+Areas are measured in EPSG:3035 on the unsimplified geometry, "inside" means
+inside the union of the 48 designated sites with a mapped boundary, and the
+totals by group, by municipality and inside-plus-gap are checked against each
+other on every run; a mismatch over 0.01 % stops the pipeline.
+
+### The map, and what it costs
+
+The habitat section adds about 5.7 MB to `report.html` (43.7 to 49.4 MB).
+The all-classes CLC layer is drawn from the EEA's WMS rather than as vectors
+(4.6 MB saved), the habitat polygons are simplified at 50 m with mapshaper so
+that neighbours still meet exactly, and each polygon carries only its own
+values: the class text and the Annex I names are held once per class and put
+together in the browser.
+
+---
+
 ## Site reports for individual protected areas
 
 The website answers national questions. A conservation officer asked about one
@@ -904,6 +995,12 @@ each record.
 The protected-area boundaries are © European Environment Agency and are
 redistributed under CC-BY 4.0. Cite them as
 <https://doi.org/10.2909/028003e7-7585-4d69-92fc-7f81e0cc2340>.
+
+The land-cover screen is derived from CORINE Land Cover. Any reuse must carry
+"Generated using European Union's Copernicus Land Monitoring Service
+information; <https://doi.org/10.2909/71c95a07-e296-44fc-b22b-415f42acfdf0>",
+say that the layer was clipped and reclassified, and not suggest that the EU
+endorses it.
 
 ---
 

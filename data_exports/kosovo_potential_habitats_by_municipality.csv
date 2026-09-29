@@ -1,0 +1,39 @@
+municipality,district,mun_km2,potential_km2,gap_km2,inside_km2,pct_potential,pct_inside
+Leposaviq / Leposavić,Mitrovicë / Kosovska Mitrovica,539.15,519.33,519.17,0.16,96.32,0.03
+Podujevë / Podujevo,Prishtinë / Priština,632.53,431.84,430.93,0.92,68.27,0.21
+Prishtinë / Priština,Prishtinë / Priština,523.37,433.7,414.3,19.41,82.87,4.48
+Kamenicë / Kamenica,Gjilan / Gnjilane,416.65,340.91,340.91,0,81.82,0
+Zubin Potok,Mitrovicë / Kosovska Mitrovica,334.39,320.55,320.55,0,95.86,0
+Gjakovë / Đakovica,Gjakovë / Đakovica,586.71,362.58,316.46,46.11,61.8,12.72
+Prizren,Prizren,626.96,470.3,309.89,160.41,75.01,34.11
+Mitrovicë e Jugut / Kosovska Mitrovica,Mitrovicë / Kosovska Mitrovica,330.78,285.13,284.19,0.94,86.2,0.33
+Gjilan / Gnjilane,Gjilan / Gnjilane,391.91,284.22,283.43,0.79,72.52,0.28
+Istog / Istok,Pejë / Peć,454.43,279.02,232.51,46.51,61.4,16.67
+Skenderaj / Srbica,Mitrovicë / Kosovska Mitrovica,374.44,210.14,210.14,0,56.12,0
+Suharekë / Suva Reka,Prizren,361.11,229.78,204.61,25.17,63.63,10.96
+Novobërdë / Novo Brdo,Prishtinë / Priština,204.02,181.41,181.41,0,88.92,0
+Lipjan / Lipljan,Prishtinë / Priština,338.47,178.77,178.01,0.76,52.82,0.43
+Vushtrri / Vučitrn,Mitrovicë / Kosovska Mitrovica,344.92,174.38,174.38,0,50.56,0
+Dragash / Dragaš,Prizren,433.87,406.98,171.41,235.58,93.8,57.88
+Malishevë / Mališevo,Prizren,306.48,168.29,164.99,3.3,54.91,1.96
+Ferizaj / Uroševac,Ferizaj / Uroševac,344.67,163.42,163.42,0,47.41,0
+Klinë / Klina,Pejë / Peć,309.07,161.08,155.24,5.84,52.12,3.62
+Kaçanik / Kačanik,Ferizaj / Uroševac,211.28,172.93,150.63,22.3,81.85,12.89
+Gllogoc / Glogovac,Prishtinë / Priština,275.68,141.03,140.61,0.42,51.16,0.3
+Viti / Vitina,Gjilan / Gnjilane,269.72,134.45,134.45,0,49.85,0
+Rahovec / Orahovac,Gjakovë / Đakovica,275.95,129.12,126.53,2.59,46.79,2.01
+Zveçan / Zvečan,Mitrovicë / Kosovska Mitrovica,123.03,119.72,119.72,0,97.31,0
+Shtërpcë / Štrpce,Ferizaj / Uroševac,247.75,242.24,113.38,128.86,97.78,53.19
+Pejë / Peć,Pejë / Peć,602.75,418.42,88.43,329.98,69.42,78.86
+Shtime / Štimlje,Ferizaj / Uroševac,134.45,82.66,82.42,0.24,61.48,0.29
+Hani i Elezit / Elez Han,Ferizaj / Uroševac,83.03,72.35,72.35,0,87.14,0
+Ranillug / Ranilug,Gjilan / Gnjilane,77.62,56.65,56.65,0,72.98,0
+Deçan / Dečan,Gjakovë / Đakovica,294,205.54,37.47,168.07,69.91,81.77
+Obiliq / Obilić,Prishtinë / Priština,104.86,30.34,30.34,0,28.93,0
+Fushë Kosovë / Kosovo Polje,Prishtinë / Priština,84.11,25.54,24.96,0.58,30.36,2.27
+Graçanicë / Gračanica,Prishtinë / Priština,122.44,15.35,14.61,0.74,12.54,4.81
+Partesh / Parteš,Gjilan / Gnjilane,28.67,13.33,13.33,0,46.48,0
+Junik,Gjakovë / Đakovica,77.77,63.21,10.49,52.73,81.28,83.41
+Kllokot / Klokot,Gjilan / Gnjilane,23.39,3.99,3.99,0,17.06,0
+Mamushë / Mamuša,Prizren,10.95,2.95,2.95,0,26.98,0
+Mitrovicë e Veriut / Severna Kosovska Mitrovica,Mitrovicë / Kosovska Mitrovica,5.46,2,2,0,36.62,0

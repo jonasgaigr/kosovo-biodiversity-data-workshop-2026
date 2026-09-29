@@ -951,6 +951,850 @@ summarise_protected_areas <- function(d, protected_areas) {
     dplyr::select(-"records_strict", -"species_strict") |>
     dplyr::arrange(dplyr::desc(.data$area_km2))
 }
+
+# ------------------------------------------------------------------------------
+# CORINE Land Cover and potential Natura 2000 habitats
+# ------------------------------------------------------------------------------
+#
+# The protected-area register says where the state already looks after land.
+# This section asks the question a Natura 2000 gap analysis starts from: where
+# does natural and semi-natural land cover suggest Annex I habitats could
+# occur, and how much of it lies outside every designated site?
+#
+# The answer is a screen, not a habitat map. CORINE Land Cover is interpreted
+# from satellite imagery at a 25 ha minimum mapping unit and a 100 m minimum
+# width, it records land cover rather than vegetation, and a class such as
+# "Broad-leaved forest" corresponds to half a dozen Annex I types or to none,
+# depending on elevation, substrate and management. The translation from one
+# to the other is therefore kept out of the code: it lives in
+# `data/crosswalk_clc_annex1.csv`, one row per CLC class, where a specialist can
+# read and correct it without touching R.
+#
+# Every area in this section is measured in EPSG:3035, the ETRS89 Lambert
+# Azimuthal Equal-Area projection that CLC itself is produced in. The rest of
+# the report measures in UTM 34N, which is conformal rather than equal-area and
+# reads Kosovo about 0.08 per cent small (a scale factor of 0.9996, squared);
+# harmless for record densities, but an area balance should be done in an
+# equal-area CRS, and here it is.
+
+#' Provenance of each CORINE Land Cover vintage the pipeline knows how to use
+#'
+#' Keyed by reference year. A vintage is only usable once its DOI, version,
+#' licence and access points are recorded here, so that the report can never
+#' publish figures from a layer it cannot cite. CLC2018 is the most recent
+#' vintage the Copernicus Land Monitoring Service had published when this was
+#' written (checked against the CLMS catalogue, 29 September 2026): CLC2024 is
+#' in production, and when it appears it needs one more entry below and a
+#' change of `clc_vintage` in `pipeline.R`.
+#'
+#' `service` is the EEA's own map service for the vector layer, in the native
+#' EPSG:3035. It is not a third-party mirror: the CLMS product page names the
+#' same server as the dataset's REST access point. It is used because it needs
+#' no login, where the CLMS download API needs an EU Login account and a token.
+clc_sources <- list(
+  "2018" = list(
+    title        = "CORINE Land Cover 2018 (vector), Europe, 6-yearly",
+    version      = "V2020_20u1 (May 2020)",
+    doi          = "10.2909/71c95a07-e296-44fc-b22b-415f42acfdf0",
+    licence      = paste("Copernicus data and information policy: full, free",
+                         "and open access under Commission Delegated",
+                         "Regulation (EU) No 1159/2013"),
+    # Verbatim from the CLMS data policy, "For added products or derivative
+    # works" — which is what a clipped, reclassified and simplified layer is.
+    attribution  = paste("Generated using European Union's Copernicus Land",
+                         "Monitoring Service information"),
+    product_page = "https://land.copernicus.eu/en/products/corine-land-cover/clc2018",
+    service      = paste0("https://image.discomap.eea.europa.eu/arcgis/rest/",
+                          "services/Corine/CLC2018_LAEA/MapServer/0"),
+    code_field   = "Code_18",
+    # The same data as rendered tiles, in the official CLC palette. Layer 12 is
+    # the 100 m raster, drawn at scales above 1:250,000; layer 13 the vector,
+    # drawn below it. Asking for both gives whichever suits the zoom.
+    wms          = paste0("https://image.discomap.eea.europa.eu/arcgis/",
+                          "services/Corine/CLC2018_WM/MapServer/WMSServer"),
+    wms_layers   = "12,13"
+  )
+)
+
+#' Provenance of the biogeographical regions layer
+#'
+#' The official delineation used by the Habitats Directive and by the Bern
+#' Convention's Emerald Network, which is why it covers Kosovo at all. The EEA
+#' has registered no DOI for it (DataCite returns nothing for either of its
+#' identifiers, checked 29 September 2026), so it is cited by its catalogue
+#' record instead.
+biogeo_source <- list(
+  title      = "Biogeographical regions, Europe 2016, ver. 1",
+  version    = "edition 01.00, 26 January 2016",
+  doi        = NA_character_,
+  identifier = "c6d27566-e699-4d58-a132-bbe3fe01491b",
+  catalogue  = paste0("https://sdi.eea.europa.eu/catalogue/srv/api/records/",
+                      "c6d27566-e699-4d58-a132-bbe3fe01491b"),
+  licence    = "CC-BY 4.0",
+  copyright  = paste("European Environment Agency (EEA); administrative",
+                     "boundaries &copy; EuroGeographics, &copy; FAO (UN),",
+                     "&copy; TurkStat, source: European Commission &ndash;",
+                     "Eurostat/GISCO"),
+  service    = paste0("https://bio.discomap.eea.europa.eu/arcgis/rest/services/",
+                      "BioRegions/BiogeographicalRegions_LAEA/MapServer/0")
+)
+
+#' Page through an ArcGIS feature layer and return an `sf` layer
+#'
+#' The EEA's map services answer at most 1,000 features a request, so the query
+#' is repeated with an offset until a short page comes back. Geometry is asked
+#' for in `out_sr` and at full resolution: no `maxAllowableOffset`, because the
+#' areas computed downstream should be the layer's own, not a generalisation's.
+#'
+#' An ArcGIS server reports a failed query as HTTP 200 with an `error` object in
+#' the body, so the body is checked as well as the status code.
+#'
+#' @param layer_url The feature layer, ending in `/MapServer/<id>`.
+#' @param bbox Query envelope in EPSG:4326, as xmin, ymin, xmax, ymax.
+#' @param fields Attribute fields to return.
+#' @param out_sr EPSG code of the geometry returned.
+#' @param where Attribute filter.
+#' @param page_size Features per request; the server's own maximum.
+#' @param verbose Print progress.
+#' @return An `sf` layer in `out_sr`.
+arcgis_query_sf <- function(layer_url, bbox, fields = "*", out_sr = 3035,
+                            where = "1=1", page_size = 1000, verbose = TRUE) {
+
+  parts  <- list()
+  offset <- 0
+
+  # Padded by about a kilometre, so that rounding the envelope can never leave
+  # the edge of the area of interest outside it.
+  envelope <- sprintf("%.5f", as.numeric(bbox) + c(-0.01, -0.01, 0.01, 0.01))
+
+  repeat {
+    args <- c(where = where,
+              geometry = paste(envelope, collapse = ","),
+              geometryType = "esriGeometryEnvelope", inSR = "4326",
+              spatialRel = "esriSpatialRelIntersects", outFields = fields,
+              outSR = out_sr, orderByFields = "OBJECTID",
+              resultOffset = offset, resultRecordCount = page_size,
+              f = "geojson")
+    url <- paste0(layer_url, "/query?",
+                  paste0(names(args), "=", curl::curl_escape(args),
+                         collapse = "&"))
+
+    txt <- NULL
+    for (attempt in 1:3) {
+      got <- tryCatch(
+        curl::curl_fetch_memory(url, handle = curl::new_handle(timeout = 300)),
+        error = function(e) conditionMessage(e))
+      why <- if (is.character(got)) {
+        got
+      } else if (got$status_code != 200) {
+        paste("HTTP", got$status_code)
+      } else {
+        body <- rawToChar(got$content)
+        Encoding(body) <- "UTF-8"
+        if (grepl('^\\s*\\{\\s*"error"', body)) substr(body, 1, 200) else {
+          txt <- body
+          NA_character_
+        }
+      }
+      if (!is.null(txt)) break
+      if (verbose) say("  ... map service declined (", why, "); attempt ",
+                       attempt, " of 3")
+      if (attempt < 3) Sys.sleep(15)
+    }
+    if (is.null(txt)) {
+      stop("The EEA map service did not answer (", why, "): ", layer_url,
+           call. = FALSE)
+    }
+
+    if (grepl('"features"\\s*:\\s*\\[\\s*\\]', txt)) break
+
+    page <- sf::st_read(txt, quiet = TRUE)
+
+    # The GeoJSON carries its CRS as a `crs` member naming EPSG:3035. GDAL
+    # honours it; a reader that did not would silently take the metres for
+    # degrees, so the CRS is checked rather than assumed.
+    if (!identical(sf::st_crs(page)$epsg, as.integer(out_sr))) {
+      stop("The map service returned geometry in ", sf::st_crs(page)$input,
+           " rather than EPSG:", out_sr, ".", call. = FALSE)
+    }
+
+    parts[[length(parts) + 1]] <- page
+    offset <- offset + nrow(page)
+    if (verbose) say("  ... ", fmt_int(offset), " features")
+    if (nrow(page) < page_size) break
+  }
+
+  if (!length(parts)) {
+    stop("The map service returned no features for this area: ", layer_url,
+         call. = FALSE)
+  }
+  do.call(rbind, parts)
+}
+
+#' Reduce a layer to its polygons, one row per feature, as MULTIPOLYGON
+#'
+#' Clipping a polygon layer to an outline returns a mix of POLYGON,
+#' MULTIPOLYGON and — where a polygon only touches the outline — a
+#' GEOMETRYCOLLECTION holding stray lines and points. Those have no area, and
+#' left in they break every later step that expects polygons.
+#'
+#' @param x An `sf` layer.
+#' @param id Column that identifies a feature, so that the pieces of one
+#'   collection are put back together rather than split into several rows.
+#' @return `x`, polygons only, cast to MULTIPOLYGON.
+polygons_only <- function(x, id) {
+  x <- x[!sf::st_is_empty(x), ]
+  if (any(sf::st_geometry_type(x) == "GEOMETRYCOLLECTION")) {
+    x <- suppressWarnings(sf::st_collection_extract(x, "POLYGON"))
+  }
+  x <- sf::st_cast(x, "MULTIPOLYGON", warn = FALSE)
+
+  # A collection with two polygon parts comes out of the extraction as two
+  # rows. The parts are disjoint by construction, so combining them is exact.
+  dup <- x[[id]][duplicated(x[[id]])]
+  if (length(dup)) {
+    single <- x[!x[[id]] %in% dup, ]
+    multi  <- x[x[[id]] %in% dup, ]
+    merged <- do.call(rbind, lapply(split(multi, multi[[id]]), function(p) {
+      g <- sf::st_cast(sf::st_combine(sf::st_geometry(p)), "MULTIPOLYGON")
+      sf::st_set_geometry(p[1, ], g)
+    }))
+    x <- rbind(single, merged)
+  }
+  x
+}
+
+#' Build (and cache) CORINE Land Cover for Kosovo
+#'
+#' Clipped to the OpenStreetMap national outline — the same polygon every
+#' other layer in the report is screened against, and not GADM's, for the
+#' reasons given at the top of this file. Only the clipped extract is ever
+#' stored; the pan-European product is never written to disk.
+#'
+#' Two routes to the data, tried in this order:
+#'
+#' 1. `clc_path`, a vector file downloaded by hand from the CLMS portal (the
+#'    GeoPackage or File Geodatabase of the chosen vintage). The portal needs an
+#'    EU Login, so the path is configuration, never a credential in code. Only
+#'    the pages of the file that cover Kosovo are read.
+#' 2. Otherwise the EEA's map service, which needs no account. It is the
+#'    default because it keeps `Rscript pipeline.R` working from a clean clone.
+#'
+#' The cache records which route built it (`source`) and which vintage
+#' (`vintage`), and a cache of another vintage is rebuilt rather than trusted.
+#'
+#' @param boundary National outline from `kosovo_boundary()`.
+#' @param vintage CLC reference year; must be a key of `clc_sources`.
+#' @param cache_path GeoPackage used to cache the clipped extract.
+#' @param clc_path Optional path to a manually downloaded CLC vector file.
+#' @param verbose Print progress messages.
+#' @return An `sf` layer in EPSG:3035 with `clc_id`, `clc_code`, `area_ha`,
+#'   `vintage` and `source`.
+kosovo_clc <- function(boundary, vintage = "2018",
+                       cache_path = paste0("data/kosovo_clc", vintage, ".gpkg"),
+                       clc_path = "", verbose = TRUE) {
+
+  src <- clc_sources[[vintage]]
+  if (is.null(src)) {
+    stop("No provenance is recorded for CLC vintage '", vintage, "'. Add its ",
+         "title, version, DOI, licence and access points to `clc_sources` in ",
+         "R/functions.R before using it.", call. = FALSE)
+  }
+
+  if (!is.null(cache_path) && file.exists(cache_path)) {
+    cached <- sf::st_read(cache_path, quiet = TRUE)
+    if (identical(unique(cached$vintage), vintage)) return(cached)
+    if (verbose) say("Cached land cover is not CLC", vintage, "; rebuilding.")
+  }
+
+  outline <- sf::st_geometry(boundary) |>
+    sf::st_transform(3035) |>
+    sf::st_union() |>
+    sf::st_make_valid()
+  bbox <- sf::st_bbox(sf::st_transform(outline, 4326))
+
+  if (nzchar(clc_path)) {
+
+    if (!file.exists(clc_path)) {
+      stop("`clc_path` is set to '", clc_path, "', but there is no file there.\n",
+           "Download the vector product of CLC", vintage, " from\n  ",
+           src$product_page, "\n(an EU Login is needed), unzip it, and point ",
+           "`clc_path` — or the CLC_PATH environment variable — at the ",
+           ".gpkg or .gdb inside. Or leave `clc_path` empty to read the same ",
+           "data from the EEA map service instead.", call. = FALSE)
+    }
+
+    layers <- sf::st_layers(clc_path)
+    poly <- which(vapply(layers$geomtype, function(g)
+      any(grepl("polygon", g, ignore.case = TRUE)), logical(1)))
+    if (!length(poly)) {
+      stop(clc_path, " holds no polygon layer. `clc_path` must be the CLC ",
+           "vector product, not the raster.", call. = FALSE)
+    }
+    lyr <- layers$name[poly[1]]
+    if (verbose) say("Reading CLC", vintage, " for Kosovo from ", basename(clc_path),
+                     " (layer ", lyr, ") ...")
+
+    # A spatial filter, not a WHERE clause: the European file holds some two
+    # million polygons and only the pages covering Kosovo should be read.
+    box <- sf::st_as_text(sf::st_transform(sf::st_as_sfc(bbox), layers$crs[[poly[1]]]))
+    raw <- sf::st_read(clc_path, layer = lyr, wkt_filter = box, quiet = TRUE)
+    route <- basename(clc_path)
+
+  } else {
+    if (verbose) say("Reading CLC", vintage, " for Kosovo from the EEA map service ...")
+    raw <- arcgis_query_sf(src$service, bbox,
+                           fields = paste(src$code_field, "ID", sep = ","),
+                           verbose = verbose)
+    route <- "EEA map service"
+  }
+
+  if (!src$code_field %in% names(raw)) {
+    stop("The land-cover layer has no `", src$code_field, "` column; is it CLC",
+         vintage, "?", call. = FALSE)
+  }
+
+  x <- sf::st_sf(
+    clc_id   = as.character(raw$ID %||% seq_len(nrow(raw))),
+    clc_code = as.character(raw[[src$code_field]]),
+    geometry = sf::st_geometry(raw)
+  ) |>
+    sf::st_transform(3035) |>
+    sf::st_make_valid()
+
+  x <- suppressWarnings(sf::st_intersection(x, outline)) |>
+    polygons_only(id = "clc_id")
+
+  x$area_ha  <- as.numeric(sf::st_area(x)) / 1e4
+  x$vintage  <- vintage
+  x$source   <- route
+  # The day the data was read, which is what a citation's "accessed on" means;
+  # the pipeline may re-run on the cache long after.
+  x$accessed <- as.character(Sys.Date())
+  x <- x[order(x$clc_code, x$clc_id), ]
+
+  if (verbose) {
+    say("  ", fmt_int(nrow(x)), " polygons, ",
+        fmt_int(round(sum(x$area_ha) / 100)), " km2 inside the outline.")
+  }
+
+  if (!is.null(cache_path)) {
+    dir.create(dirname(cache_path), recursive = TRUE, showWarnings = FALSE)
+    sf::st_write(x, cache_path, layer = "clc", append = FALSE, quiet = TRUE)
+  }
+
+  x
+}
+
+#' Build (and cache) the biogeographical regions of Kosovo
+#'
+#' Needed because the Annex I type a land-cover class stands for can differ
+#' between regions — an alpine grassland and a lowland one are different
+#' habitats — and the crosswalk may therefore carry region-specific rows. The
+#' layer is at 1:1,000,000, so its boundaries are good to about a kilometre.
+#'
+#' @param boundary National outline from `kosovo_boundary()`.
+#' @param cache_path GeoPackage used to cache the clipped regions.
+#' @param verbose Print progress messages.
+#' @return An `sf` layer in EPSG:3035 with `region` (the layer's short code,
+#'   e.g. "Alpine"), `name` and `area_km2`.
+kosovo_biogeo_regions <- function(boundary,
+                                  cache_path = "data/kosovo_biogeo_regions.gpkg",
+                                  verbose = TRUE) {
+
+  if (!is.null(cache_path) && file.exists(cache_path)) {
+    return(sf::st_read(cache_path, quiet = TRUE))
+  }
+
+  if (verbose) say("Reading the biogeographical regions from the EEA map service ...")
+
+  outline <- sf::st_geometry(boundary) |>
+    sf::st_transform(3035) |>
+    sf::st_union() |>
+    sf::st_make_valid()
+
+  raw <- arcgis_query_sf(biogeo_source$service,
+                         sf::st_bbox(sf::st_transform(outline, 4326)),
+                         fields = "code,name", verbose = FALSE)
+
+  x <- sf::st_sf(region = raw$code, name = raw$name,
+                 geometry = sf::st_geometry(raw)) |>
+    sf::st_make_valid()
+
+  x <- suppressWarnings(sf::st_intersection(x, outline)) |>
+    polygons_only(id = "region")
+
+  x$area_km2 <- as.numeric(sf::st_area(x)) / 1e6
+  x <- x[x$area_km2 > 0, ]
+  x <- x[order(-x$area_km2), ]
+  x$accessed <- as.character(Sys.Date())
+
+  if (!is.null(cache_path)) {
+    dir.create(dirname(cache_path), recursive = TRUE, showWarnings = FALSE)
+    sf::st_write(x, cache_path, append = FALSE, quiet = TRUE)
+  }
+
+  x
+}
+
+#' Annex I habitat types, with their names, from the legal text
+#'
+#' Read from the consolidated Habitats Directive already kept under
+#' `data/eurlex/` for the species lists, so that the names shown beside each
+#' code are the Directive's own. Doing it this way also checks the crosswalk: a
+#' code that is not in Annex I is caught here rather than published.
+#'
+#' @param path The consolidated directive as saved from EUR-Lex.
+#' @return A tibble of `code`, `name` and `priority` (the asterisk).
+annex1_habitat_types <- function(path = "data/eurlex/habitats_directive.html") {
+
+  html <- paste(readLines(path, warn = FALSE, encoding = "UTF-8"), collapse = " ")
+
+  # Annex I is set as a definition list: the four-character code in one cell,
+  # the name in the next, and a priority type's asterisk leading the name.
+  pattern <- paste0('<p class="dlist-term">\\s*([0-9]{2}[0-9A-Z]{2})\\s*</p>',
+                    '\\s*</td>\\s*<td[^>]*>\\s*',
+                    '<p class="dlist-definition">(.*?)</p>')
+  hits  <- regmatches(html, gregexpr(pattern, html, perl = TRUE))[[1]]
+  parts <- regmatches(hits, regexec(pattern, hits, perl = TRUE))
+
+  # The Directive sets syntaxon and species names in italics; that is kept, as
+  # <i>, and every other tag is dropped.
+  code <- vapply(parts, `[`, character(1), 2)
+  name <- vapply(parts, `[`, character(1), 3) |>
+    gsub(pattern = "<span class=\"italics\">(.*?)</span>",
+         replacement = "\u0001\\1\u0002", perl = TRUE) |>
+    gsub(pattern = "<[^>]+>", replacement = "") |>
+    gsub(pattern = "\u0001", replacement = "<i>", fixed = TRUE) |>
+    gsub(pattern = "\u0002", replacement = "</i>", fixed = TRUE) |>
+    gsub(pattern = "[\u25BA\u25C4\u25BC]", replacement = "") |>
+    gsub(pattern = "&amp;", replacement = "&", fixed = TRUE) |>
+    gsub(pattern = "&nbsp;", replacement = " ", fixed = TRUE) |>
+    gsub(pattern = "\\s+", replacement = " ") |>
+    trimws()
+
+  priority <- startsWith(name, "*")
+  name <- trimws(sub("^\\*", "", name))
+
+  out <- dplyr::tibble(code = code, name = name, priority = priority)
+  out[!duplicated(out$code), ]
+}
+
+#' Read and check the CLC to Annex I crosswalk
+#'
+#' The crosswalk is a project input for specialist review, so it is checked
+#' strictly: a typo in a status or a confidence would otherwise drop a class
+#' from the analysis without a word. Classes missing from the file are treated
+#' as "not natural", which is what the file itself says of every class it does
+#' not list, and are reported.
+#'
+#' `biogeo_region` is optional. Left empty, a row applies everywhere; filled
+#' with a region code from `kosovo_biogeo_regions()` ("Alpine", "Continental"),
+#' it applies only there and takes precedence over the general row for the same
+#' class.
+#'
+#' @param path CSV with the documented columns.
+#' @param legend The CLC legend, `data/clc_legend.csv`.
+#' @param annex1 Annex I types from `annex1_habitat_types()`.
+#' @return The crosswalk as a tibble, one row per class and region.
+read_clc_crosswalk <- function(path, legend, annex1) {
+
+  cw <- readr::read_csv(path, col_types = readr::cols(.default = "c"),
+                        na = character(), show_col_types = FALSE)
+
+  required <- c("clc_code", "clc_label", "natural_status", "habitat_group",
+                "candidate_annex1", "confidence", "note")
+  missing <- setdiff(required, names(cw))
+  if (length(missing)) {
+    stop("The crosswalk ", path, " is missing column(s): ",
+         paste(missing, collapse = ", "), call. = FALSE)
+  }
+  if (!"biogeo_region" %in% names(cw)) cw$biogeo_region <- ""
+  cw <- dplyr::mutate(cw, dplyr::across(dplyr::everything(), trimws))
+
+  bad <- function(test, what) {
+    if (any(test)) {
+      stop("Crosswalk ", path, ": ", what, " in the row(s) for CLC ",
+           paste(cw$clc_code[test], collapse = ", "), ".", call. = FALSE)
+    }
+  }
+  bad(!cw$clc_code %in% legend$clc_code, "an unknown CLC code")
+  bad(!cw$natural_status %in% c("natural", "semi-natural", "not natural"),
+      "natural_status must be natural, semi-natural or not natural")
+  bad(!cw$confidence %in% c("high", "medium", "low", ""),
+      "confidence must be high, medium or low")
+  potential <- cw$natural_status != "not natural"
+  bad(potential & (!nzchar(cw$habitat_group) | !nzchar(cw$confidence)),
+      "a natural or semi-natural class needs a habitat_group and a confidence")
+  bad(duplicated(paste(cw$clc_code, cw$biogeo_region)),
+      "a class is listed twice for the same region")
+
+  # Every candidate code must be an Annex I type, and flagged as a priority
+  # type exactly when the Directive flags it.
+  codes <- unlist(strsplit(cw$candidate_annex1[nzchar(cw$candidate_annex1)], ";"))
+  codes <- unique(trimws(codes))
+  plain <- sub("\\*$", "", codes)
+  unknown <- codes[!plain %in% annex1$code]
+  if (length(unknown)) {
+    stop("Crosswalk ", path, ": not Annex I habitat type(s): ",
+         paste(unknown, collapse = ", "), call. = FALSE)
+  }
+  starred <- endsWith(codes, "*")
+  wrong <- codes[starred != annex1$priority[match(plain, annex1$code)]]
+  if (length(wrong)) {
+    warning("Crosswalk priority asterisks disagree with Annex I for: ",
+            paste(wrong, collapse = ", "), call. = FALSE)
+  }
+
+  absent <- setdiff(legend$clc_code, cw$clc_code)
+  if (length(absent)) {
+    say("NOTE: CLC class(es) ", paste(absent, collapse = ", "), " are not in ",
+        "the crosswalk and are treated as not natural.")
+    cw <- dplyr::bind_rows(cw, dplyr::tibble(
+      clc_code = absent,
+      clc_label = legend$clc_label[match(absent, legend$clc_code)],
+      natural_status = "not natural", habitat_group = "", candidate_annex1 = "",
+      confidence = "", note = "", biogeo_region = ""))
+  }
+
+  cw
+}
+
+#' The indicative sufficiency band a network share falls in
+#'
+#' The biogeographical seminars have long used rough reference values when
+#' judging whether the Natura 2000 network holds enough of a feature: 60 per
+#' cent or more of its national resource inside the network as likely
+#' sufficient, under 20 per cent as likely insufficient. They were written for
+#' Annex I habitat types and species, not for land-cover classes, and they were
+#' never meant to be used on their own; here they are an orientation only, and
+#' the report says so wherever it shows them.
+#'
+#' @param pct Share of the resource inside designated sites, in per cent.
+#' @return A character vector: "below 20 %", "20 to 60 %" or "60 % or more".
+sufficiency_band <- function(pct) {
+  as.character(cut(pct, c(-Inf, 20, 60, Inf), right = FALSE,
+                   labels = c("below 20 %", "20 to 60 %", "60 % or more")))
+}
+
+#' Screen CORINE Land Cover for potential Annex I habitats
+#'
+#' Joins each polygon to the crosswalk, keeps the natural and semi-natural
+#' classes at or above `min_confidence`, and measures how much of what is kept
+#' lies inside a designated site and how much outside it — the gap — in total,
+#' by habitat group, by confidence, by class, by region and by municipality.
+#'
+#' Four decisions are worth stating, because each changes a number:
+#'
+#' * **Sites, not points or zones.** "Inside" means inside the union of the
+#'   designated sites with a mapped boundary. The strict-protection zones are
+#'   nested inside those sites and add nothing; the natural monuments recorded
+#'   only as a point have no area and cannot hold any.
+#' * **The union, not the sum.** Seven sites overlap along their edges, and
+#'   summing per-site overlaps would count the shared ground twice.
+#' * **One region per polygon.** A CLC polygon takes the biogeographical region
+#'   holding most of it, rather than being cut along the region boundary: that
+#'   boundary is drawn at 1:1,000,000 and is good to a kilometre, and cutting
+#'   100 m polygons along it would invent precision it does not have.
+#' * **Overrides by polygon.** `overrides` reclassifies named polygons — in
+#'   practice the reservoirs, which CLC files under "Water bodies" with the
+#'   natural lakes — and the reclassification is reported, not hidden.
+#'
+#' @param clc Land cover from `kosovo_clc()`, EPSG:3035.
+#' @param crosswalk From `read_clc_crosswalk()`.
+#' @param overrides Polygon overrides, `data/clc_polygon_overrides.csv`.
+#' @param regions From `kosovo_biogeo_regions()`.
+#' @param sites Designated sites with a mapped boundary (any CRS).
+#' @param municipalities Municipal polygons (any CRS).
+#' @param vintage CLC vintage, used to select the overrides that apply.
+#' @param min_confidence Lowest crosswalk confidence kept: "low", "medium" or
+#'   "high".
+#' @return A list of layers, tables and reconciliation checks; see the body.
+assess_potential_habitats <- function(clc, crosswalk, overrides, regions, sites,
+                                      municipalities, vintage,
+                                      min_confidence = "low") {
+
+  conf_levels <- c("low", "medium", "high")
+  if (!min_confidence %in% conf_levels) {
+    stop("`potential_habitat_min_confidence` must be one of: ",
+         paste(conf_levels, collapse = ", "), call. = FALSE)
+  }
+
+  x <- sf::st_transform(clc, 3035)
+
+  # --- Biogeographical region: the one holding most of each polygon ---------
+  cut_up <- suppressWarnings(sf::st_intersection(x[, "clc_id"],
+                                                 regions[, "region"]))
+  cut_up$share <- as.numeric(sf::st_area(cut_up))
+  best <- sf::st_drop_geometry(cut_up) |>
+    dplyr::arrange(dplyr::desc(.data$share)) |>
+    dplyr::distinct(.data$clc_id, .keep_all = TRUE)
+  x$biogeo_region <- best$region[match(x$clc_id, best$clc_id)]
+
+  # --- Crosswalk: a region-specific row first, then the general one ---------
+  cw <- crosswalk
+  cw$row <- seq_len(nrow(cw))
+  general  <- cw[!nzchar(cw$biogeo_region), ]
+  regional <- cw[nzchar(cw$biogeo_region), ]
+  i_reg <- match(paste(x$clc_code, x$biogeo_region),
+                 paste(regional$clc_code, regional$biogeo_region))
+  i_gen <- match(x$clc_code, general$clc_code)
+  x$cw_row <- ifelse(!is.na(i_reg), regional$row[i_reg], general$row[i_gen])
+
+  take <- function(col) cw[[col]][x$cw_row]
+  x$clc_label        <- take("clc_label")
+  x$natural_status   <- take("natural_status")
+  x$habitat_group    <- take("habitat_group")
+  x$candidate_annex1 <- take("candidate_annex1")
+  x$confidence       <- take("confidence")
+  # The key the report's pop-ups use to look up the class-level text, so that
+  # a region-specific row carries its own candidates.
+  x$cw_key <- ifelse(nzchar(take("biogeo_region")),
+                     paste(x$clc_code, take("biogeo_region"), sep = "-"),
+                     x$clc_code)
+
+  # --- Overrides ------------------------------------------------------------
+  ov <- overrides[as.character(overrides$clc_vintage) == vintage, ]
+  hit <- match(x$clc_id, ov$clc_id)
+  x$override <- ov$name[hit]
+  x$natural_status <- ifelse(is.na(hit), x$natural_status, ov$natural_status[hit])
+  unmatched <- setdiff(ov$clc_id, x$clc_id)
+  if (length(unmatched)) {
+    warning("Override(s) for CLC polygon(s) not found in the extract: ",
+            paste(unmatched, collapse = ", "), call. = FALSE)
+  }
+
+  # `%in% TRUE` so that a code the crosswalk cannot place counts as not
+  # potential rather than as NA, which would put empty rows into the layer.
+  rank <- match(x$confidence, conf_levels)
+  x$potential <- (x$natural_status != "not natural" &
+    !is.na(rank) & rank >= match(min_confidence, conf_levels)) %in% TRUE
+
+  pot <- x[x$potential, ]
+
+  # --- Inside the designated sites, and the gap -----------------------------
+  sites <- sf::st_make_valid(sf::st_transform(sites, 3035))
+  network <- sf::st_make_valid(sf::st_union(sites))
+
+  inside <- suppressWarnings(sf::st_intersection(pot[, "clc_id"], network))
+  inside$ha <- as.numeric(sf::st_area(inside)) / 1e4
+  ha_in <- tapply(inside$ha, inside$clc_id, sum)
+  pot$ha_inside  <- dplyr::coalesce(as.numeric(ha_in[pot$clc_id]), 0)
+  pot$pct_inside <- 100 * pot$ha_inside / pot$area_ha
+
+  # Which sites, for the pop-ups: largest overlap first. Shared edges between a
+  # 100 m land-cover line and a surveyed site boundary produce slivers of a few
+  # square metres, which are not "in" a site in any sense a reader means, so
+  # overlaps under a tenth of a hectare are not named.
+  by_site <- suppressWarnings(sf::st_intersection(pot[, "clc_id"],
+                                                  sites[, "site_name"]))
+  by_site$ha <- as.numeric(sf::st_area(by_site)) / 1e4
+  named <- sf::st_drop_geometry(by_site) |>
+    dplyr::filter(.data$ha >= 0.1) |>
+    dplyr::arrange(.data$clc_id, dplyr::desc(.data$ha)) |>
+    dplyr::group_by(.data$clc_id) |>
+    dplyr::summarise(sites = paste(unique(.data$site_name), collapse = "; "),
+                     .groups = "drop")
+  pot$sites <- named$sites[match(pot$clc_id, named$clc_id)]
+
+  gap <- suppressWarnings(sf::st_difference(pot, network)) |>
+    polygons_only(id = "clc_id")
+  gap$gap_ha <- as.numeric(sf::st_area(gap)) / 1e4
+  gap <- gap[gap$gap_ha > 0, ]
+
+  # --- Summaries, all from EPSG:3035 areas ----------------------------------
+  d <- sf::st_drop_geometry(pot)
+
+  summarise_area <- function(g) {
+    g |>
+      dplyr::summarise(
+        polygons   = dplyr::n(),
+        area_km2   = sum(.data$area_ha) / 100,
+        inside_km2 = sum(.data$ha_inside) / 100,
+        .groups    = "drop"
+      ) |>
+      dplyr::mutate(
+        gap_km2    = .data$area_km2 - .data$inside_km2,
+        pct_inside = 100 * .data$inside_km2 / .data$area_km2
+      )
+  }
+
+  by_group <- d |>
+    dplyr::group_by(habitat_group = .data$habitat_group) |>
+    summarise_area() |>
+    dplyr::left_join(
+      d |>
+        dplyr::group_by(habitat_group = .data$habitat_group,
+                        confidence = .data$confidence) |>
+        dplyr::summarise(km2 = sum(.data$area_ha) / 100, .groups = "drop") |>
+        tidyr::pivot_wider(names_from = "confidence", values_from = "km2",
+                           names_prefix = "km2_", values_fill = 0),
+      by = "habitat_group") |>
+    dplyr::mutate(indicative_band = sufficiency_band(.data$pct_inside)) |>
+    dplyr::arrange(dplyr::desc(.data$area_km2))
+  for (cl in paste0("km2_", conf_levels)) {
+    if (!cl %in% names(by_group)) by_group[[cl]] <- 0
+  }
+
+  by_confidence <- d |>
+    dplyr::group_by(confidence = .data$confidence) |>
+    summarise_area() |>
+    dplyr::arrange(match(.data$confidence, rev(conf_levels)))
+
+  by_class <- d |>
+    dplyr::group_by(clc_code = .data$clc_code, clc_label = .data$clc_label,
+                    habitat_group = .data$habitat_group,
+                    confidence = .data$confidence) |>
+    summarise_area() |>
+    dplyr::arrange(.data$clc_code)
+
+  by_region <- d |>
+    dplyr::group_by(biogeo_region = .data$biogeo_region,
+                    habitat_group = .data$habitat_group) |>
+    summarise_area()
+
+  # Every class present, potential or not, for the account of what was left
+  # out and why.
+  all_classes <- sf::st_drop_geometry(x) |>
+    dplyr::group_by(clc_code = .data$clc_code, clc_label = .data$clc_label,
+                    natural_status = .data$natural_status,
+                    potential = .data$potential) |>
+    dplyr::summarise(polygons = dplyr::n(),
+                     area_km2 = sum(.data$area_ha) / 100, .groups = "drop") |>
+    dplyr::arrange(.data$clc_code)
+
+  # --- By municipality ------------------------------------------------------
+  mun <- sf::st_make_valid(sf::st_transform(municipalities, 3035))
+  mun$mun_km2 <- as.numeric(sf::st_area(mun)) / 1e6
+
+  per_mun <- function(layer, col) {
+    cut_mun <- suppressWarnings(sf::st_intersection(layer[, "clc_id"],
+                                                    mun[, "municipality"]))
+    a <- tapply(as.numeric(sf::st_area(cut_mun)) / 1e6, cut_mun$municipality, sum)
+    dplyr::tibble(municipality = names(a), !!col := as.numeric(a))
+  }
+
+  by_municipality <- sf::st_drop_geometry(mun) |>
+    dplyr::select("municipality", "district", "mun_km2") |>
+    dplyr::left_join(per_mun(pot, "potential_km2"), by = "municipality") |>
+    dplyr::left_join(per_mun(gap, "gap_km2"), by = "municipality") |>
+    dplyr::mutate(
+      potential_km2 = dplyr::coalesce(.data$potential_km2, 0),
+      gap_km2       = dplyr::coalesce(.data$gap_km2, 0),
+      # A difference of two areas, so a municipality with no site at all comes
+      # out at 1e-12 km² rather than zero; rounded to the square metre.
+      inside_km2    = pmax(0, round(.data$potential_km2 - .data$gap_km2, 6)),
+      pct_potential = 100 * .data$potential_km2 / .data$mun_km2,
+      pct_inside    = ifelse(.data$potential_km2 > 0,
+                             100 * .data$inside_km2 / .data$potential_km2,
+                             NA_real_)
+    ) |>
+    dplyr::arrange(dplyr::desc(.data$gap_km2))
+
+  # --- Reconciliation -------------------------------------------------------
+  # Three routes to the same totals; they must agree to a hundredth of a per
+  # cent, or something in the geometry is wrong and the run stops here rather
+  # than publishing figures that do not add up.
+  total_km2  <- sum(d$area_ha) / 100
+  inside_km2 <- sum(d$ha_inside) / 100
+  gap_geom_km2 <- sum(gap$gap_ha) / 100
+  checks <- dplyr::tibble(
+    check = c("groups sum to the total",
+              "inside + gap (from geometry) = total",
+              "municipalities sum to the total",
+              "municipal gaps sum to the gap"),
+    expected = c(total_km2, total_km2, total_km2, gap_geom_km2),
+    observed = c(sum(by_group$area_km2), inside_km2 + gap_geom_km2,
+                 sum(by_municipality$potential_km2),
+                 sum(by_municipality$gap_km2))
+  ) |>
+    # Relative where there is something to be relative to; a confidence floor
+    # that keeps nothing leaves every total at zero, and 0 / 0 is not a pass.
+    dplyr::mutate(rel_diff = abs(.data$observed - .data$expected) /
+                    pmax(.data$expected, 1e-9))
+  if (any(checks$rel_diff > 1e-4)) {
+    print(checks)
+    stop("The potential-habitat areas do not reconcile; see the checks above.",
+         call. = FALSE)
+  }
+
+  list(
+    polygons        = pot,
+    gap             = gap,
+    network         = network,
+    by_group        = by_group,
+    by_confidence   = by_confidence,
+    by_class        = by_class,
+    by_region       = by_region,
+    by_municipality = by_municipality,
+    all_classes     = all_classes,
+    overrides       = sf::st_drop_geometry(x[!is.na(x$override),
+                                             c("clc_id", "clc_code", "override",
+                                               "area_ha")]),
+    national = dplyr::tibble(
+      country_km2 = sum(x$area_ha) / 100,
+      total_km2   = total_km2,
+      inside_km2  = inside_km2,
+      gap_km2     = gap_geom_km2,
+      pct_inside  = 100 * inside_km2 / total_km2
+    ),
+    checks          = checks
+  )
+}
+
+#' Generalise a polygon layer for the web map, keeping its topology
+#'
+#' Done with mapshaper (through `rmapshaper`), not `sf::st_simplify()`. The
+#' difference matters for a land-cover layer, where every edge is shared by two
+#' polygons: `st_simplify()` generalises each polygon on its own, so the two
+#' copies of an edge move apart and open slivers and overlaps along every
+#' boundary; mapshaper simplifies each shared edge once, and neighbours still
+#' meet exactly.
+#'
+#' `tolerance_m` is mapshaper's `interval`, in metres even for longitude and
+#' latitude. At 50 m it removes about two vertices in three from CLC, which is
+#' already generalised to 100 m, while keeping every shape of that size;
+#' `keep-shapes` stops a small polygon being simplified out of existence.
+#'
+#' Coordinates are then rounded, to four decimals by default: about 8 m east
+#' to west and 11 m north to south at Kosovo's latitude. That is well inside
+#' both the tolerance and CLC's own stated positional accuracy of 100 m, and
+#' every vertex written to the page costs about a tenth less for it. Rounding
+#' is deterministic, so a vertex two polygons share still lands in the same
+#' place in both.
+#'
+#' Areas are never computed from the result. They come from the full geometry.
+#'
+#' @param x An `sf` polygon layer.
+#' @param tolerance_m Simplification interval in metres.
+#' @param digits Decimal places kept in longitude and latitude.
+#' @return `x` in EPSG:4326, simplified, as MULTIPOLYGON.
+simplify_for_map <- function(x, tolerance_m, digits = 4) {
+
+  stopifnot(requireNamespace("rmapshaper", quietly = TRUE),
+            requireNamespace("geojsonsf", quietly = TRUE))
+
+  x <- sf::st_transform(x, 4326)
+  x$.row <- seq_len(nrow(x))
+
+  # Only the row number goes through mapshaper and back, because a GeoJSON
+  # round trip does not preserve column types or order; the attributes are
+  # re-attached afterwards by that number.
+  gj  <- geojsonsf::sf_geojson(x[, ".row"])
+  out <- rmapshaper::apply_mapshaper_commands(
+    gj, sprintf("-simplify interval=%s keep-shapes", tolerance_m),
+    force_FC = TRUE, quiet = TRUE)
+  y <- geojsonsf::geojson_sf(out)
+
+  g <- sf::st_as_sfc(sf::st_as_binary(sf::st_geometry(y),
+                                      precision = 10^digits),
+                     crs = 4326)
+  attrs <- sf::st_drop_geometry(x)[match(y$.row, x$.row), , drop = FALSE]
+  attrs$.row <- NULL
+
+  sf::st_sf(attrs, geometry = g) |>
+    sf::st_cast("MULTIPOLYGON", warn = FALSE)
+}
 # ------------------------------------------------------------------------------
 # Vernacular names
 # ------------------------------------------------------------------------------
@@ -1779,7 +2623,39 @@ map_palette <- list(
     site   = "#2E7D32",
     strict = "#0F4A1E",
     point  = "#2E7D32"
-  )
+  ),
+
+  # Potential Natura 2000 habitats, one hue per habitat group. Six groups is
+  # twice the number the kingdom palette stops at, and on a map any two of them
+  # can touch, so the set was measured over ALL pairs with the dataviz palette
+  # validator (OKLab, Machado protanopia and deuteranopia) on the light basemap:
+  # worst colour-blind pair Heath & scrub / Forests at dE 7.6, worst pair for
+  # full colour vision Rocky / Grasslands at dE 15.6. dE 7.6 is below the 8
+  # target, which is allowed only with a second encoding, and there is one:
+  # every polygon names its group on hover, and the legend lists them.
+  #
+  # These are Okabe-Ito hues, with the forest hue the bluish green rather than
+  # a leaf green, to keep it apart from the protected-area green (dE 10.8). No
+  # six-hue set was found that also clears every hue from that green under
+  # colour blindness — rock and forest come closest to it — so on the habitat
+  # map the protected areas are drawn as an outline over these fills, and are
+  # told apart by form as well as by colour.
+  habitat = c(
+    "Forests"          = "#009E73",
+    "Grasslands"       = "#E69F00",
+    "Heath & scrub"    = "#CC79A7",
+    "Rocky habitats"   = "#D55E00",
+    "Wetlands & mires" = "#56B4E9",
+    "Freshwater"       = "#0072B2"
+  ),
+
+  # Crosswalk confidence, carried by fill opacity so that the hue stays free
+  # for the habitat group: a confident class reads as solid, a doubtful one as
+  # a faint wash over the basemap.
+  confidence = c(high = 0.8, medium = 0.5, low = 0.22),
+
+  # The gap layer: a dark hatch and outline, the one neutral mark on the map.
+  gap = "#1A1A1A"
 )
 
 # Order used wherever IUCN categories are listed, most severe first.
@@ -2097,10 +2973,18 @@ add_boundary_outline <- function(m, boundary, group = "Kosovo boundary",
 #'   `NULL` to add nothing.
 #' @param points Point layer from `kosovo_protected_areas(layer = "points")`,
 #'   or `NULL`.
+#' On a map whose subject is itself a set of coloured fills — the habitat map —
+#' the wash would tint every fill beneath a site and change its apparent hue,
+#' so `outline_only` draws the boundaries alone. The strict zones are then
+#' dashed, so that the two kinds of line stay apart without a fill to tell
+#' them by.
+#'
 #' @param group Overlay group name.
+#' @param outline_only Draw boundaries without a fill.
 #' @return A list with the map and the overlay group names added.
 add_protected_areas <- function(m, protected_areas, points = NULL,
-                                group = "Protected areas") {
+                                group = "Protected areas",
+                                outline_only = FALSE) {
 
   if (is.null(protected_areas) || !nrow(protected_areas)) {
     return(list(map = m, groups = character(0)))
@@ -2138,9 +3022,10 @@ add_protected_areas <- function(m, protected_areas, points = NULL,
   if (nrow(sites)) {
     m <- leaflet::addPolygons(
       m, data = sites,
-      fill = TRUE, fillColor = map_palette$protected[["site"]],
+      fill = !outline_only, fillColor = map_palette$protected[["site"]],
       fillOpacity = 0.16,
-      color = map_palette$protected[["site"]], weight = 1.2, opacity = 0.85,
+      color = map_palette$protected[["site"]],
+      weight = if (outline_only) 2 else 1.2, opacity = 0.85,
       smoothFactor = 0,
       label = site_label(sites),
       highlightOptions = leaflet::highlightOptions(
@@ -2156,9 +3041,10 @@ add_protected_areas <- function(m, protected_areas, points = NULL,
     strict_group <- "Strict protection zones"
     m <- leaflet::addPolygons(
       m, data = strict,
-      fill = TRUE, fillColor = map_palette$protected[["strict"]],
+      fill = !outline_only, fillColor = map_palette$protected[["strict"]],
       fillOpacity = 0.3,
       color = map_palette$protected[["strict"]], weight = 1.2, opacity = 0.9,
+      dashArray = if (outline_only) "5 3" else NULL,
       smoothFactor = 0,
       label = site_label(strict),
       options = leaflet::pathOptions(pane = "protected"),
@@ -2893,4 +3779,358 @@ build_explorer_map <- function(sd, boundary = NULL, legend_codes = NULL,
     add_layer_switcher(overlay_groups) |>
     add_map_tools(draw = FALSE) |>
     leaflet::setView(lng = 20.9, lat = 42.58, zoom = 8)
+}
+
+#' The class-level text for the habitat map, one entry per crosswalk row
+#'
+#' A class's name, group, confidence, candidate Annex I types and note are the
+#' same for every polygon of that class, and the candidate list with the
+#' Directive's names runs to several hundred bytes. Written into each of 3,000
+#' pop-ups and hover labels it would cost well over a megabyte; kept here once
+#' per class and put together in the browser (see `build_habitat_gap_map()`),
+#' it costs a few kilobytes.
+#'
+#' @param crosswalk The crosswalk as used, from `read_clc_crosswalk()`.
+#' @param annex1 Annex I types from `annex1_habitat_types()`.
+#' @param keys The `cw_key` values present on the map.
+#' @return A named list keyed by `cw_key`, each entry holding `tip` (the hover
+#'   label's first lines), `head` and `cand` (the pop-up's header and body) as
+#'   HTML strings.
+habitat_popup_lookup <- function(crosswalk, annex1, keys) {
+
+  cw <- crosswalk[crosswalk$natural_status != "not natural", ]
+  cw$key <- ifelse(nzchar(cw$biogeo_region),
+                   paste(cw$clc_code, cw$biogeo_region, sep = "-"), cw$clc_code)
+  cw <- cw[cw$key %in% keys, ]
+
+  entry <- function(r) {
+    codes <- trimws(unlist(strsplit(r$candidate_annex1, ";")))
+    codes <- codes[nzchar(codes)]
+    items <- if (length(codes)) {
+      plain <- sub("\\*$", "", codes)
+      nm <- annex1$name[match(plain, annex1$code)]
+      paste0("<li><b>", codes, "</b> ", nm, "</li>", collapse = "")
+    } else {
+      "<li>none proposed</li>"
+    }
+    region <- if (nzchar(r$biogeo_region)) {
+      paste0(" &middot; ", r$biogeo_region, " region")
+    } else ""
+    list(
+      tip = sprintf("<strong>%s %s</strong><br>%s &middot; %s confidence%s",
+                    r$clc_code, r$clc_label, r$habitat_group, r$confidence,
+                    region),
+      head = sprintf(
+        "<b>%s</b><small>CLC %s &middot; %s &middot; %s confidence%s</small>",
+        r$clc_label, r$clc_code, r$habitat_group, r$confidence, region),
+      cand = paste0(
+        "<span>Candidate Annex I types</span><ul>", items, "</ul>",
+        if (nzchar(r$note)) paste0("<em>", r$note, "</em>") else "")
+    )
+  }
+
+  stats::setNames(lapply(seq_len(nrow(cw)), function(i) entry(cw[i, ])), cw$key)
+}
+
+#' Build the potential Natura 2000 habitat map
+#'
+#' The map for the land-cover screen, on the same basemaps, layer control and
+#' toolbar as every other map in the report. Its layers, in drawing order:
+#'
+#' 1. **CORINE Land Cover, all classes** — the EEA's own rendering, as WMS
+#'    tiles, off by default. Tiles rather than polygons because the layer is
+#'    context rather than subject: drawn as vectors it would add 4.6 MB to the
+#'    page to repeat, in a second copy, most of the geometry of layer 2. The
+#'    tiles are the official palette by construction, but they are not clipped
+#'    to Kosovo and they depend on the EEA's server.
+#' 2. **Potential natural habitats** — the kept CLC polygons, coloured by
+#'    habitat group, with the crosswalk's confidence as fill opacity.
+#' 3. **Protected areas** — the register, as outlines, from
+#'    `add_protected_areas()`.
+#' 4. **The gap** — potential habitat outside every designated site, hatched
+#'    and outlined, on by default. It is not interactive, so hovering and
+#'    clicking reach the habitat polygon underneath.
+#' 5. **Municipalities** — each with its own gap figures on hover. Off by
+#'    default, and on top when on, so while it is showing it takes the hover
+#'    from the habitat polygons.
+#'
+#' The hatch is an SVG pattern. Leaflet writes a path's `fillColor` straight
+#' into the SVG `fill` attribute, so a fill of `url(#gap-hatch)` works as soon
+#' as a pattern with that id exists in the page; the `onRender` hook adds it.
+#' The same hook fills each habitat pop-up from `habitat_popup_lookup()` when
+#' it opens.
+#'
+#' @param habitats Potential-habitat polygons for display, EPSG:4326, with
+#'   `clc_code`, `clc_label`, `habitat_group`, `confidence`, `area_ha`,
+#'   `pct_inside`, `sites` and `cw_key`.
+#' @param gap The gap, dissolved, for display.
+#' @param crosswalk,annex1 For the pop-up text; see `habitat_popup_lookup()`.
+#' @param clc Provenance of the CLC vintage (an entry of `clc_sources`, plus
+#'   `vintage`).
+#' @param clc_legend Legend rows (`clc_code`, `clc_label`, `colour`) for the
+#'   classes present in Kosovo.
+#' @param municipalities Municipal polygons for display, with `potential_km2`,
+#'   `pct_potential`, `inside_km2`, `pct_inside` and `gap_km2`.
+#' @param protected_areas,protected_points The register, as on the other maps.
+#' @param boundary National outline.
+#' @param caption Text for the dismissible note in the corner.
+#' @return A `leaflet` htmlwidget.
+build_habitat_gap_map <- function(habitats, gap, crosswalk, annex1, clc,
+                                  clc_legend = NULL, municipalities = NULL,
+                                  protected_areas = NULL,
+                                  protected_points = NULL, boundary = NULL,
+                                  caption = NULL) {
+
+  g_clc <- sprintf("CORINE Land Cover %s (all classes)", clc$vintage)
+  g_hab <- "Potential natural habitats"
+  g_gap <- "Gap: potential habitat outside designated sites"
+  g_mun <- "Municipalities"
+
+  credit <- sprintf(
+    paste0("Land cover: generated using European Union's Copernicus Land ",
+           "Monitoring Service information; <a href='https://doi.org/%s'>",
+           "CLC%s</a>"), clc$doi, clc$vintage)
+
+  m <- leaflet::leaflet(options = leaflet::leafletOptions(minZoom = 6)) |>
+    add_basemaps() |>
+    leaflet::addMapPane("gap", zIndex = 420) |>
+    leaflet::addMapPane("municipal", zIndex = 430)
+
+  # --- 1. All classes, as the EEA renders them ------------------------------
+  # zIndex above the basemaps', so that switching basemap cannot bury it.
+  m <- leaflet::addWMSTiles(
+    m, baseUrl = clc$wms, layers = clc$wms_layers,
+    options = leaflet::WMSTileOptions(format = "image/png", transparent = TRUE,
+                                      opacity = 0.8, zIndex = 10),
+    attribution = credit, group = g_clc
+  )
+  if (!is.null(clc_legend) && nrow(clc_legend)) {
+    m <- leaflet::addLegend(
+      m, position = "bottomleft", colors = clc_legend$colour,
+      labels = sprintf("%s %s", clc_legend$clc_code, clc_legend$clc_label),
+      title = sprintf("CORINE Land Cover %s", clc$vintage), opacity = 0.8,
+      group = g_clc, className = "info legend clc-legend"
+    )
+  }
+
+  # --- 2. Potential natural habitats ----------------------------------------
+  where <- ifelse(
+    habitats$pct_inside < 0.5, "Outside every designated site",
+    ifelse(habitats$pct_inside > 99.5,
+           paste0("Inside ", habitats$sites),
+           sprintf("%.0f %% inside %s", habitats$pct_inside,
+                   dplyr::coalesce(habitats$sites, "a designated site"))))
+
+  # Only what differs between polygons of a class travels with each polygon:
+  # its lookup key, its size and where it lies. The onRender hook below builds
+  # the hover label from that line and the class's entry in the lookup, and
+  # completes the pop-up the same way when it opens, so neither the class text
+  # nor a second copy of the per-polygon line is written 3,000 times.
+  popups <- sprintf(
+    "<div class='hab-popup' data-k='%s'><p>%s ha &middot; %s</p></div>",
+    habitats$cw_key, fmt_int(round(habitats$area_ha)), where)
+
+  m <- leaflet::addPolygons(
+    m, data = habitats,
+    fillColor = unname(map_palette$habitat[habitats$habitat_group]),
+    fillOpacity = unname(map_palette$confidence[habitats$confidence]),
+    color = "#FFFFFF", weight = 0.5, opacity = 0.7,
+    popup = popups,
+    highlightOptions = leaflet::highlightOptions(
+      weight = 2, color = map_palette$boundary, opacity = 1,
+      bringToFront = FALSE),
+    options = leaflet::pathOptions(attribution = credit),
+    group = g_hab
+  )
+
+  overlay_groups <- c(g_clc, g_hab)
+
+  # --- 3. Protected areas, as outlines --------------------------------------
+  if (!is.null(protected_areas)) {
+    pa <- add_protected_areas(m, protected_areas, protected_points,
+                              outline_only = TRUE)
+    m  <- pa$map
+    overlay_groups <- c(overlay_groups, pa$groups)
+  }
+
+  # --- 4. The gap -----------------------------------------------------------
+  m <- leaflet::addPolygons(
+    m, data = gap,
+    fill = TRUE, fillColor = "url(#gap-hatch)", fillOpacity = 1,
+    color = map_palette$gap, weight = 1.2, opacity = 0.85,
+    options = leaflet::pathOptions(pane = "gap", interactive = FALSE),
+    group = g_gap
+  )
+  overlay_groups <- c(overlay_groups, g_gap)
+
+  # --- 5. Municipalities ----------------------------------------------------
+  if (!is.null(municipalities)) {
+    m <- leaflet::addPolygons(
+      m, data = municipalities,
+      fill = TRUE, fillColor = "#ffffff", fillOpacity = 0.01,
+      color = map_palette$municipality, weight = 1.2, opacity = 0.8,
+      label = lapply(sprintf(
+        paste0("<strong>%s</strong><br>Potential habitat: %s km&sup2;, ",
+               "%.0f %% of the municipality<br>Inside a designated site: ",
+               "%s km&sup2; (%s)<br><strong>Gap: %s km&sup2;</strong><br>",
+               "<em>%s district</em>"),
+        municipalities$municipality,
+        formatC(municipalities$potential_km2, format = "f", digits = 1,
+                big.mark = ","),
+        municipalities$pct_potential,
+        formatC(municipalities$inside_km2, format = "f", digits = 1,
+                big.mark = ","),
+        ifelse(is.na(municipalities$pct_inside), "&mdash;",
+               sprintf("%.0f %%", municipalities$pct_inside)),
+        formatC(municipalities$gap_km2, format = "f", digits = 1,
+                big.mark = ","),
+        municipalities$district), htmltools::HTML),
+      highlightOptions = leaflet::highlightOptions(
+        weight = 2.5, color = map_palette$municipality, fillOpacity = 0.08,
+        bringToFront = FALSE),
+      options = leaflet::pathOptions(pane = "municipal"),
+      group = g_mun
+    )
+    overlay_groups <- c(overlay_groups, g_mun)
+  }
+
+  if (!is.null(boundary)) {
+    m <- add_boundary_outline(m, boundary)
+    overlay_groups <- c(overlay_groups, "Kosovo boundary")
+  }
+
+  # --- Legend ---------------------------------------------------------------
+  # One control rather than several legends, because the confidence key and
+  # the hatch belong to the same reading as the group colours. A <details>
+  # element, so that on a phone it can be folded out of the way; the onRender
+  # hook folds it by default on narrow screens.
+  present <- names(map_palette$habitat)[
+    names(map_palette$habitat) %in% habitats$habitat_group]
+  swatch_row <- function(style, text) {
+    sprintf("<div class='row'><i style='%s'></i>%s</div>", style, text)
+  }
+  legend_html <- paste0(
+    "<details open><summary>Potential natural habitat</summary>",
+    paste0(vapply(present, function(g) swatch_row(
+      sprintf("background:%s", map_palette$habitat[[g]]), g), ""),
+      collapse = ""),
+    "<div class='key'>Confidence</div><div class='conf'>",
+    paste0(vapply(c("high", "medium", "low"), function(k) sprintf(
+      "<span><i style='background:%s;opacity:%s'></i>%s</span>",
+      map_palette$boundary, map_palette$confidence[[k]], k), ""),
+      collapse = ""),
+    "</div>",
+    sprintf(paste0("<div class='row'><svg class='hatch' width='14' ",
+                   "height='14' viewBox='0 0 14 14' aria-hidden='true'>",
+                   "<rect width='14' height='14' ",
+                   "fill='url(#gap-hatch)' stroke='%s'/></svg>",
+                   "Outside every designated site</div>"), map_palette$gap),
+    swatch_row(sprintf("background:transparent;border:2px solid %s",
+                       map_palette$protected[["site"]]), "Designated site"),
+    "<p class='caveat'>Land cover, not habitat: candidates for field ",
+    "verification.</p></details>"
+  )
+
+  m <- leaflet::addControl(m, html = legend_html, position = "bottomright",
+                           className = "info legend habitat-legend")
+
+  if (!is.null(caption)) {
+    m <- leaflet::addControl(
+      m, position = "bottomleft",
+      html = paste0(
+        "<div class='map-caption'><span>", caption, "</span>",
+        "<button type='button' class='map-caption-close' title='Dismiss' ",
+        "aria-label='Dismiss this note' ",
+        "onclick='this.closest(\".leaflet-control\").remove()'>&times;",
+        "</button></div>"))
+  }
+
+  lookup <- habitat_popup_lookup(crosswalk, annex1, unique(habitats$cw_key))
+
+  bb <- sf::st_bbox(if (is.null(boundary)) habitats else boundary)
+
+  m |>
+    add_layer_switcher(overlay_groups) |>
+    leaflet::hideGroup(intersect(
+      c(g_clc, g_mun, "Strict protection zones",
+        "Natural monuments (point only)"), overlay_groups)) |>
+    add_map_tools() |>
+    htmlwidgets::onRender(sprintf("
+function(el, x, data) {
+  var map = this;
+
+  // The hatch the gap layer is filled with. A path can only reference a
+  // pattern that exists somewhere in the document; one hidden <svg> holding
+  // it serves the map and the legend swatch alike. Zero-sized rather than
+  // display:none, because some browsers do not paint from a pattern inside an
+  // undisplayed element.
+  if (!document.getElementById('gap-hatch')) {
+    var ns = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('width', '0'); svg.setAttribute('height', '0');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.style.position = 'absolute';
+    var pat = document.createElementNS(ns, 'pattern');
+    pat.setAttribute('id', 'gap-hatch');
+    pat.setAttribute('patternUnits', 'userSpaceOnUse');
+    pat.setAttribute('width', '7'); pat.setAttribute('height', '7');
+    pat.setAttribute('patternTransform', 'rotate(45)');
+    var line = document.createElementNS(ns, 'line');
+    line.setAttribute('x1', '0'); line.setAttribute('y1', '0');
+    line.setAttribute('x2', '0'); line.setAttribute('y2', '7');
+    line.setAttribute('stroke', '%s'); line.setAttribute('stroke-width', '1.6');
+    line.setAttribute('stroke-opacity', '0.75');
+    pat.appendChild(line);
+    var defs = document.createElementNS(ns, 'defs');
+    defs.appendChild(pat); svg.appendChild(defs);
+    document.body.appendChild(svg);
+  }
+
+  // Each habitat polygon arrives with a one-line pop-up: its lookup key, its
+  // size and where it lies. Parsed once here, that line becomes the hover
+  // label, prefixed with the class text from the lookup.
+  var parse = function(c) {
+    if (typeof c !== 'string' || c.indexOf('hab-popup') < 0) { return null; }
+    var k = (c.match(/data-k='([^']+)'/) || [])[1];
+    var line = (c.match(/<p>([\\s\\S]*?)<\\/p>/) || [])[1];
+    var entry = data.lookup[k];
+    return (entry && line) ? { entry: entry, line: line } : null;
+  };
+
+  var habitats = map.layerManager &&
+    map.layerManager.getLayerGroup('%s', false);
+  if (habitats) {
+    habitats.eachLayer(function(layer) {
+      var p = layer.getPopup && layer.getPopup();
+      var got = p && parse(p.getContent());
+      if (got) {
+        layer.bindTooltip(got.entry.tip + '<br>' + got.line,
+                          { sticky: true, direction: 'auto',
+                            className: 'hab-tip' });
+      }
+    });
+  }
+
+  // The pop-up is completed the first time it opens. setContent() rather than
+  // editing the DOM, so that Leaflet measures and places the grown pop-up
+  // itself; the data-done marker stops it being filled twice.
+  map.on('popupopen', function(e) {
+    var c = e.popup.getContent();
+    if (typeof c !== 'string' || c.indexOf('data-done') >= 0) { return; }
+    var got = parse(c);
+    if (!got) { return; }
+    e.popup.setContent(
+      \"<div class='hab-popup' data-done='1'><div class='hab-class'>\" +
+      got.entry.head + '</div><p>' + got.line + \"</p><div class='hab-cand'>\" +
+      got.entry.cand + '</div></div>');
+  });
+
+  // On a phone the legend would cover a third of the map; start it folded.
+  if (el.offsetWidth < 640) {
+    var d = el.querySelector('.habitat-legend details');
+    if (d) { d.removeAttribute('open'); }
+  }
+}", map_palette$gap, g_hab), data = list(lookup = lookup)) |>
+    leaflet::fitBounds(lng1 = as.numeric(bb$xmin), lat1 = as.numeric(bb$ymin),
+                       lng2 = as.numeric(bb$xmax), lat2 = as.numeric(bb$ymax))
 }

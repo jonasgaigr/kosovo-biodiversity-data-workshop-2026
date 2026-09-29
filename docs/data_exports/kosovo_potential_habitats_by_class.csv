@@ -1,0 +1,16 @@
+clc_code,clc_label,habitat_group,confidence,polygons,area_km2,inside_km2,gap_km2,pct_inside
+231,Pastures,Grasslands,low,208,166.77,2.68,164.09,1.61
+243,"Land principally occupied by agriculture, with significant areas of natural vegetation",Grasslands,low,887,1169.97,14.24,1155.74,1.22
+311,Broad-leaved forest,Forests,medium,507,4010.41,395.85,3614.56,9.87
+312,Coniferous forest,Forests,medium,110,209.47,169.12,40.35,80.74
+313,Mixed forest,Forests,medium,120,115.41,66.61,48.8,57.71
+321,Natural grasslands,Grasslands,high,386,705.14,334.73,370.41,47.47
+322,Moors and heathland,Heath & scrub,high,19,51.68,49.86,1.81,96.49
+323,Sclerophyllous vegetation,Heath & scrub,low,8,0.01,0,0.01,19.89
+324,Transitional woodland-shrub,Heath & scrub,low,977,917.84,177.92,739.93,19.38
+332,Bare rocks,Rocky habitats,high,12,7.14,6.58,0.57,92.09
+333,Sparsely vegetated areas,Rocky habitats,medium,141,175.55,33.13,142.42,18.87
+411,Inland marshes,Wetlands & mires,medium,2,0.95,0.32,0.63,33.67
+412,Peat bogs,Wetlands & mires,high,1,0.36,0,0.36,0
+511,Water courses,Freshwater,low,2,1.87,0.64,1.23,34.05
+512,Water bodies,Freshwater,low,3,1.07,0.74,0.34,68.59
