@@ -1,0 +1,122 @@
+---
+title: "Important Plant Areas"
+subtitle: "Plantlife's framework for the richest sites for wild plants; its global database was offline, and no Kosovo IPA was confirmed."
+actions:
+  - kind: check
+    what: "Whether any Important Plant Area has been identified in Kosovo, and by whom"
+    contact: "Global IPA Manager at Plantlife (the offline notice names the contact); University of Prishtina botanists"
+  - kind: check
+    what: "Whether Serbia's 62 IPAs include sites in Kosovo; Plantlife's Serbia page mentions pine in 'the mountains of Kosovo and Metochia province'"
+    contact: "Plantlife (2023), Conserving Plant Areas: Investing in the Green Gold of South-East Europe, pages 63–68"
+  - kind: check
+    what: "Confirm the IPAs on the Albanian and North Macedonian side of Korab-Koritnik and Šar, reported by the desk review"
+    contact: "Plantlife's South-East Europe report; the Global IPA Database when it is back online"
+todo:
+  doi: "No DOI; check the 2023 report"
+  licence: "Terms of the Global IPA Database; unreadable while it is offline"
+  access: "The database was offline on 29 September 2026"
+  format: "Site records and boundaries in the database; not seen"
+  access_method: "Unknown while the database is offline"
+  spatial_resolution: "IPA boundaries or points; not seen"
+  temporal_coverage: "Year of identification per IPA"
+  latest_version: "Date of the database or the 2023 South-East Europe report"
+  kosovo_coverage: "No IPA in Kosovo found; not ruled out"
+  kosovo_codes_seen: "Whether Serbian IPAs in Kosovo are filed under Serbia"
+  tier: "National or site, depending on the boundary precision"
+  n2k_question: "Where botanists judged plant importance highest, as a check on candidate SCIs for Annex I habitats and Annex II plants"
+  effort: "Unknown until data are available"
+  sensitivity: "IPA criteria name threatened plants; site boundaries are not sensitive"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+row <- source_row("important-plant-areas")
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+Important Plant Areas (IPAs) are sites identified, under a programme run by
+Plantlife, as the most important places for wild plants and their habitats.
+Plantlife's Global IPA Database, which holds them, was offline when checked:
+its home page states that the database is "currently offline and unavailable
+until further notice".
+
+Plantlife's own page on Serbia reports 62 IPAs, drawing on a 2023 report on
+South-East Europe, and mentions Macedonian pine in "the mountains of Kosovo
+and Metochia province". That phrase suggests the Serbian inventory may reach
+into Kosovo, as the Serbian Emerald candidate sites do (see
+[Emerald Network](emerald-network.qmd)); it does not confirm any IPA there.
+The desk review reported IPAs on the Albanian side of Korab-Koritnik; that was
+not verified.
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(
+  try_access("https://www.plantlifeipa.org/home"),
+  try_access("https://www.plantlife.org.uk/our-work/important-plant-areas-of-serbia/")
+))
+```
+
+## Kosovo coverage check
+
+::: {.callout-warning}
+## To be completed
+With the database offline, nothing could be counted. When it is back, or once
+the 2023 report is obtained: list IPAs within 20 km of Kosovo, check whether
+any Serbian IPA lies inside Kosovo and under which country it is filed, and
+set them against the report's habitat screen.
+:::
+
+## What it adds for Natura 2000 in Kosovo
+
+The Habitats Directive's plant side, Annex I habitats and Annex II plants, is
+where Kosovo's data are thinnest. IPAs are expert judgements of where plant
+importance concentrates. A Kosovo IPA list, if one exists, would be an
+obvious shortlist to test against candidate SCIs.
+
+The Serbian page raises the same question as the
+[Emerald Network](emerald-network.qmd) and [IBA](iba-kba.qmd) pages: whether
+a regional inventory compiled with Serbia counts Kosovo's mountains as
+Serbian sites. If it does, those IPAs are Kosovo evidence filed under another
+country, and they should be found and read, not dismissed as foreign.
+
+## Caveats and sensitivity
+
+- Lead, not verified: no Kosovo IPA was confirmed.
+- The Serbian page's wording is evidence of scope, not of any particular site.
+
+## Integration into the pipeline
+
+None until data exist. `pipeline.R` is not changed.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+::: {.callout-warning}
+## To be completed
+Cite the Global IPA Database or the 2023 South-East Europe report as
+Plantlife requests, once either is read.
+:::

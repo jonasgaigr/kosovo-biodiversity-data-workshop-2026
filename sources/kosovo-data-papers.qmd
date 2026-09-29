@@ -1,0 +1,192 @@
+---
+title: "Occurrence data papers from Kosovo (Biodiversity Data Journal)"
+subtitle: "Recent papers on new records and new species from Kosovo, and whether their data already reach GBIF."
+actions:
+  - kind: check
+    what: "Extend the search beyond titles and beyond BDJ: papers with Kosovo records in other journals (ZooKeys, Check List, Hacquetia, Acta Zoologica Bulgarica, national journals), and whether each deposited data"
+    contact: "Europe PMC and Crossref searches; Pensoft journals publish data to GBIF automatically"
+  - kind: check
+    what: "For the 2014 paper without a GBIF dataset (doi:10.3897/bdj.2.e4140), check whether its records are in GBIF under another dataset"
+    contact: "https://www.gbif.org/occurrence/search?country=XK&taxon_key=Limnephilus"
+  - kind: check
+    what: "Re-run the check after the next GBIF download, so papers published after the current extract are picked up"
+    contact: "This page's build chunk"
+todo:
+  sensitivity: "New species are known from one or two sites; check whether any paper withheld coordinates"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+row <- source_row("kosovo-data-papers")
+cache <- file.path(cache_dir("kosovo-data-papers"), "bdj_kosovo_gbif_check.csv")
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+Kosovo's biodiversity is being described paper by paper. The *Biodiversity
+Data Journal* (BDJ), published by Pensoft, is one of the main venues: its
+articles are open under CC BY 4.0, and Pensoft publishes each article's
+occurrence records to GBIF as a dataset of its own. The desk review's example,
+Krasniqi & Berisha (2025), records *Anchusella cretica* for the first time in
+Kosovo, a new genus and species for the national flora, from four
+populations found in 2024–2025 and assessed as Near Threatened nationally.
+Most of the other Kosovo papers in BDJ describe caddisflies, including
+species new to science from Kosovo's mountain rivers.
+
+The question for this page is not whether the papers exist but whether their
+records are already in the GBIF extract the report is built on.
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(
+  try_access("https://bdj.pensoft.net/"),
+  try_access("https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=JOURNAL:%22Biodiversity%20Data%20Journal%22%20AND%20TITLE:Kosovo&format=json"),
+  try_access("https://api.gbif.org/v1/dataset/doi/10.3897/bdj.13.e164900")
+))
+```
+
+PubMed Central served a reCAPTCHA to automated reads, so the papers were
+listed through the Europe PMC API instead, which returns the same records.
+
+## Kosovo coverage check
+
+For every BDJ paper with Kosovo in its title, the check looks up GBIF's
+dataset for the article's DOI, counts its records inside Kosovo (GADM XKO),
+notes the country codes they carry, and tests whether the dataset is among
+those in the report's download.
+
+```{r}
+#| label: build
+#| echo: true
+#| code-fold: true
+#| code-summary: "Show the check"
+if (!file.exists(cache)) {
+  res <- tryCatch({
+    papers <- jsonlite::fromJSON(paste0(
+      "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=",
+      "JOURNAL:%22Biodiversity%20Data%20Journal%22%20AND%20TITLE:Kosovo",
+      "&format=json&pageSize=100"))$resultList$result
+    reg <- read.csv(file.path(sources_root(), "data", "dataset_registry.csv"))
+    do.call(rbind, lapply(seq_len(nrow(papers)), function(i) {
+      doi <- papers$doi[i]
+      ds  <- jsonlite::fromJSON(paste0("https://api.gbif.org/v1/dataset/doi/", doi))$results
+      key <- if (length(ds) && NROW(ds)) ds$key[1] else NA
+      occ <- if (is.na(key)) NULL else jsonlite::fromJSON(sprintf(
+        "https://api.gbif.org/v1/occurrence/search?datasetKey=%s&limit=300&facet=country", key))
+      codes <- if (is.null(occ) || !length(occ$facets$counts)) "" else
+        paste(occ$facets$counts[[1]]$name, collapse = ", ")
+      u <- if (is.null(occ)) NULL else occ$results$coordinateUncertaintyInMeters
+      unc <- if (is.null(u) || all(is.na(u))) NA_real_ else stats::median(u, na.rm = TRUE)
+      xko <- if (is.na(key)) NA else jsonlite::fromJSON(sprintf(
+        "https://api.gbif.org/v1/occurrence/search?datasetKey=%s&gadmGid=XKO&limit=0", key))$count
+      data.frame(year = papers$pubYear[i], doi = doi,
+                 title = trimws(gsub("[[:space:]]+", " ", gsub("<[^>]+>|&lt;[^&]*&gt;", " ",
+                                                         papers$title[i]))),
+                 gbif_dataset = key, records_total = if (is.null(occ)) NA else occ$count,
+                 records_in_kosovo = xko, country_codes = codes,
+                 median_uncertainty_m = unc,
+                 in_report_download = !is.na(key) & key %in% reg$datasetKey)
+    }))
+  }, error = function(e) NULL)
+  if (!is.null(res)) write.csv(res, cache, row.names = FALSE)
+}
+have_cache <- file.exists(cache)
+```
+
+```{r}
+#| label: check
+#| eval: !expr have_cache
+d <- read.csv(cache)
+d <- d[order(-d$year), ]
+knitr::kable(data.frame(
+  Year = d$year, Paper = sprintf("[%s](https://doi.org/%s)", substr(d$title, 1, 70), d$doi),
+  `GBIF dataset` = ifelse(is.na(d$gbif_dataset), "none found",
+                          sprintf("[yes](https://www.gbif.org/dataset/%s)", d$gbif_dataset)),
+  `Records in Kosovo` = d$records_in_kosovo, `Country codes` = d$country_codes,
+  `Median uncertainty (m)` = ifelse(is.na(d$median_uncertainty_m), "not stated",
+                                    format(d$median_uncertainty_m, big.mark = ",")),
+  `In the report's download` = ifelse(d$in_report_download, "yes", "no"),
+  check.names = FALSE), align = "lllllll", row.names = FALSE)
+```
+
+```{r}
+#| label: check-text
+#| eval: !expr have_cache
+#| output: asis
+n_ds <- sum(!is.na(d$gbif_dataset))
+cat(sprintf(paste(
+  "%d of %d papers have a GBIF dataset, holding %s records inside Kosovo in",
+  "all. %d of those %d datasets are in the report's download%s. Country",
+  "codes seen: %s."),
+  n_ds, nrow(d), fmt_int(sum(d$records_in_kosovo, na.rm = TRUE)),
+  sum(d$in_report_download), n_ds,
+  if (sum(d$in_report_download) < n_ds) "; the rest were published after it or fell outside its GADM filter" else "",
+  paste(sort(unique(unlist(strsplit(d$country_codes[nzchar(d$country_codes)], ", ")))), collapse = ", ")))
+```
+
+```{r}
+#| label: no-cache
+#| eval: !expr "!have_cache"
+#| output: asis
+cat("::: {.callout-warning}\n## To be completed\nThe Europe PMC or GBIF API did not answer at render time; re-render to run the check.\n:::\n")
+```
+
+## What it adds for Natura 2000 in Kosovo
+
+New national records and newly described species are exactly the features a
+Natura 2000 gap analysis must not miss, and they are usually known from a
+single site. Knowing which of them are already in GBIF, and so in the report,
+tells the reader whether the report's species lists are current. None of the
+paper datasets states a coordinate uncertainty, so by the report's rules they
+sit at the [national screening tier](../natura2000.qmd#q1) until someone
+checks each locality against the paper; a verified locality could then reach
+the delineation tier.
+
+## Caveats and sensitivity
+
+- The search covers BDJ titles containing "Kosovo" only; papers that name a
+  mountain or river instead are missed.
+- A dataset on GBIF is not necessarily in the report's download: the
+  download is a dated snapshot.
+- Newly described species with one known site are vulnerable to collecting;
+  check before mapping them publicly.
+
+## Integration into the pipeline
+
+Low effort: the records already reach GBIF. What the pipeline lacks is a
+refresh. Re-running the download (a new DOI) picks them up, and a proposed
+`check_recent_datasets(since = download_date)` could list GBIF datasets with
+Kosovo records created after the snapshot, so the report can say what it
+does not yet include. `pipeline.R` is not changed.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+Cite each paper by its own DOI, and each GBIF dataset as GBIF shows it. The
+example paper: Krasniqi, E. & Berisha, N. (2025). *Anchusella cretica*
+(Boraginaceae): a new genus and species record for the flora of Kosovo
+(Southeast Europe). *Biodiversity Data Journal* 13.
+[doi:10.3897/bdj.13.e164900](https://doi.org/10.3897/bdj.13.e164900).

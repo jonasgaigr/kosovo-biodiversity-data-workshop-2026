@@ -34,6 +34,17 @@ from the same pipeline outputs. The Important Bird Areas it lists come from
 BirdLife's DataZone through [`R/fetch_iba.R`](R/fetch_iba.R), as attributes
 only; the boundaries are released on request.
 
+[`sources/`](sources/) is the site's *Data sources* section: one short page
+per candidate dataset for Natura 2000 site identification, beyond those the
+report already uses, plus a hub page. Each page shows only values verified
+against the custodian, keeps them in
+[`sources/registry.csv`](sources/registry.csv) with one evidence row per value
+in [`sources/registry_evidence.csv`](sources/registry_evidence.csv), and runs a
+Kosovo coverage check where the data could be reached. The helpers are in
+[`R/sources_helpers.R`](R/sources_helpers.R); downloads are cached under
+`data/sources/<slug>/`. The folder renders with `freeze: auto`, so after
+editing the registry run `quarto render sources/`.
+
 ---
 
 ## What the report contains
@@ -155,7 +166,14 @@ kosovo-biodiversity-data-workshop-2026/
 │   ├── site_report.R          # Site-level helpers, sourced by site_reports.R AND
 │   │                          #   reports/site_report.qmd
 │   ├── build_directive_list.R # Builds the annex lists from the EUR-Lex texts
-│   └── build_ias_list.R       # Builds the Union list of invasive alien species
+│   ├── build_ias_list.R       # Builds the Union list of invasive alien species
+│   └── sources_helpers.R      # Registry, badges and access checks for sources/
+│
+├── sources/                   # "Data sources" section: one page per dataset
+│   ├── index.qmd              # Hub: registry by category, data gaps, requests
+│   ├── registry.csv           # One row per dataset; blank = not verified
+│   ├── registry_evidence.csv  # One row per verified value, with its evidence URL
+│   └── _metadata.yml          # freeze: auto for this folder only
 │
 ├── reports/
 │   ├── site_report.qmd        # Parameterised Typst report for one site

@@ -1,0 +1,111 @@
+---
+title: "Forest Information System for Europe: Kosovo"
+subtitle: "The EEA's forest portal keeps a country profile for Kosovo built from FAO and FOREST EUROPE reporting."
+actions:
+  - kind: check
+    what: "Read the profile's figures (forest share 2020, growing stock, increment) in a browser; the automated fetch returned the indicator labels without their values"
+    contact: "https://forest.eea.europa.eu/countries/cooperating-countries/kosovo"
+  - kind: check
+    what: "Compare the FAO/FOREST EUROPE forest area with the NFI 2012 figure of 481,000 ha"
+    contact: "Kosovo NFI 2012 page in this section"
+todo:
+  doi: "Not applicable to a web profile; cite FAO FRA or FOREST EUROPE datasets by their own DOIs if used"
+  licence: "Terms of use of the FISE portal; read on forest.eea.europa.eu"
+  access_method: "Whether FISE offers the country data as download or API; check the portal's data pages"
+  spatial_resolution: "National figures only; confirm whether FISE maps (e.g. forest type map) cover Kosovo"
+  latest_version: "Update date of the profile; not shown in the fetched page"
+  kosovo_codes_seen: "Which code FISE uses in its data downloads for Kosovo"
+  effort: "Low if a download exists; estimate after checking"
+  sensitivity: "None expected for national statistics"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+row <- source_row("fise-kosovo")
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+The Forest Information System for Europe (FISE), run by the European
+Environment Agency, keeps country profiles for EEA members and cooperating
+countries, and Kosovo has one. Its indicators are the share of land covered
+by forest (2020), forest per capita (2020), growing stock and its density
+(2020), and gross annual increment (2015). The profile names its sources as
+the FAO Global Forest Resources Assessment, the FOREST EUROPE pan-European
+dataset, Eurostat and the EEA. It is therefore a secondary compilation of
+national reporting, not a dataset of its own.
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(
+  try_access("https://forest.eea.europa.eu/countries/cooperating-countries/kosovo")
+))
+```
+
+The page is large (about 2 MB) and answered HTTP 200. Its figures are drawn
+in the browser, and the automated read returned the indicator names and
+sources without their values, so no figure is quoted here.
+
+## Kosovo coverage check
+
+::: {.callout-warning}
+## To be completed
+The profile exists for Kosovo, which settles coverage at national level. Its
+values were not read. Open the page in a browser, record the four indicator
+values with their years, and compare the forest share with the 45 per cent
+the NFI 2012 abstract reports and with the 43 per cent broadleaved-woodland
+share on the [ecosystem-type map](eea-ecosystem-types.qmd).
+:::
+
+## What it adds for Natura 2000 in Kosovo
+
+Little directly for site identification: these are national totals. They are
+useful as the internationally reported denominator for forest area, a check
+on the forest share in the report's CORINE screen, and as a pointer to which
+international datasets already hold Kosovo forest data. That serves the
+[national tier](../natura2000.qmd#q1).
+
+## Caveats and sensitivity
+
+- A compilation of other datasets; cite the underlying FAO or FOREST EUROPE
+  figures, not the portal.
+- The values were not read in this check.
+- No sensitive content.
+
+## Integration into the pipeline
+
+None needed. If the report quotes a national forest figure, it should take it
+from the FAO or FOREST EUROPE source and state the year. `pipeline.R` is not
+changed.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+::: {.callout-warning}
+## To be completed
+No citation guidance was visible in the fetched page. Cite the underlying
+dataset (FAO FRA or FOREST EUROPE) for any figure used.
+:::

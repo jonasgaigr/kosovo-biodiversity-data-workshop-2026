@@ -1,0 +1,180 @@
+---
+title: "Natural history collections holding Kosovo material"
+subtitle: "Which museums already publish Kosovo specimens to GBIF, and which of the regional collections do not publish at all."
+actions:
+  - kind: request
+    what: "A list of Kosovo specimens (taxon, locality, date, collector) held by the natural history museums in Tirana, Belgrade, Skopje, Vienna and Budapest, and whether they would digitise and publish them to GBIF"
+    contact: "Each museum's collection manager; start with those that already publish Kosovo specimens to GBIF, such as the Natural History Museum, Vienna"
+  - kind: check
+    what: "Search the museums' own online catalogues for 'Kosovo', 'Kosova', 'Kosovo i Metohija' and older names (Metohija, Šar planina, Prokletije)"
+    contact: "Museum online databases"
+  - kind: check
+    what: "Check whether specimens labelled 'Serbia' or 'Yugoslavia' from before 2008 fall inside Kosovo, by testing their coordinates against kosovo_outline()"
+    contact: "GBIF records with country RS or YU and coordinates inside Kosovo"
+todo:
+  custodian: "One per museum; identify the collection manager in each"
+  url: "Each museum's collection database"
+  doi: "GBIF dataset DOIs for the museums that publish; none for the others"
+  licence: "Per dataset"
+  access: "Per museum: open on GBIF, or on request"
+  format: "Specimen records"
+  access_method: "GBIF API for publishers; request for the rest"
+  spatial_resolution: "Specimen localities, often only a place name on old labels"
+  temporal_coverage: "Collecting dates of the specimens"
+  latest_version: "Per dataset"
+  kosovo_codes_seen: "Read from the check below; old specimens may carry RS, YU or no code"
+  tier: "Mostly national: old labels rarely give coordinates finer than a place name"
+  effort: "High for undigitised material; low for material already on GBIF"
+  sensitivity: "Specimen localities of rare plants and insects; generalise before publishing"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+row <- source_row("museum-collections")
+cache <- file.path(cache_dir("museum-collections"), "gbif_specimen_publishers.csv")
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+Specimens collected in Kosovo over the last two centuries sit in museum
+drawers in the region and in Central Europe. The desk review named the
+natural history collections in Tirana, Belgrade, Skopje, Vienna and Budapest
+as likely holders of Kosovo material outside GBIF. The desk review did not
+verify that, and this page is a lead rather than a dataset.
+
+What can be verified is the GBIF side: which institutions already publish
+Kosovo specimens, and whether the five named ones publish at all.
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(
+  try_access("https://api.gbif.org/v1/occurrence/search?gadmGid=XKO&basisOfRecord=PRESERVED_SPECIMEN&limit=0"),
+  try_access("https://api.gbif.org/v1/organization?q=museum&country=HU&limit=5")
+))
+```
+
+## Kosovo coverage check
+
+```{r}
+#| label: build
+#| echo: true
+#| code-fold: true
+#| code-summary: "Show the GBIF check"
+if (!file.exists(cache)) {
+  res <- tryCatch({
+    api <- "https://api.gbif.org/v1/"
+    j <- jsonlite::fromJSON(paste0(api, "occurrence/search?gadmGid=XKO&basisOfRecord=",
+                                   "PRESERVED_SPECIMEN&limit=0&facet=publishingOrg&facetLimit=100"))
+    f <- j$facets$counts[[1]]
+    f$publisher <- vapply(f$name, function(k)
+      jsonlite::fromJSON(paste0(api, "organization/", k))$title, "")
+    f$country <- vapply(f$name, function(k)
+      jsonlite::fromJSON(paste0(api, "organization/", k))$country %||% NA_character_, "")
+    f$total <- j$count
+    f
+  }, error = function(e) NULL)
+  if (!is.null(res)) write.csv(res, cache, row.names = FALSE)
+}
+have_cache <- file.exists(cache)
+```
+
+```{r}
+#| label: build-failed
+#| eval: !expr "!have_cache"
+#| output: asis
+cat("::: {.callout-warning}\n## To be completed\nThe GBIF API did not answer at render time; re-render to run the check.\n:::\n")
+```
+
+```{r}
+#| label: check
+#| eval: !expr have_cache
+f <- read.csv(cache)
+knitr::kable(head(data.frame(Publisher = f$publisher, Country = f$country,
+                             `Specimens in Kosovo` = fmt_int(f$count), check.names = FALSE), 15),
+             align = "llr", row.names = FALSE,
+             caption = sprintf("Publishers of preserved specimens inside GADM XKO on GBIF (%s specimens in all; top 15)",
+                               fmt_int(f$total[1])))
+```
+
+```{r}
+#| label: check-text
+#| eval: !expr have_cache
+#| output: asis
+named <- c(AL = "Tirana", RS = "Belgrade", MK = "Skopje", AT = "Vienna", HU = "Budapest")
+hit <- f$country %in% names(named)
+cat(sprintf(paste(
+  "Of the %d publishers, %d are based in the five countries the desk review",
+  "named: %s. Whether the specific museums in %s publish Kosovo specimens",
+  "under another name, or not at all, is the open question below."),
+  nrow(f), sum(hit),
+  if (any(hit)) paste(sprintf("%s (%s)", f$publisher[hit], f$country[hit]), collapse = "; ") else "none",
+  paste(named, collapse = ", ")))
+```
+
+The table answers a narrower question than the desk review asked, and the
+difference is worth keeping in view. It shows which institutions already
+publish preserved specimens that fall inside the GADM outline of Kosovo, and
+so which ones the report already draws on. It cannot show what any museum
+holds and has not published, which is precisely the material the desk review
+had in mind.
+
+::: {.callout-warning}
+## To be completed
+The museums' own holdings outside GBIF were not examined: none of their
+catalogues was searched and no one was asked. Specimens labelled "Serbia" or
+"Yugoslavia" from before 2008 are a second blind spot; they only surface in a
+Kosovo search if their coordinates are tested against the outline.
+:::
+
+## What it adds for Natura 2000 in Kosovo
+
+Historical specimens are the baseline against which losses are judged, and
+for many invertebrates and plants they are the only evidence of occurrence.
+For a sufficiency ledger ([question 4](../natura2000.qmd#q4)) an old specimen
+from a site is a reason to survey it, not proof that the species is still
+there. Most old labels give a place name only, so the data serve the
+[national tier](../natura2000.qmd#q1).
+
+## Caveats and sensitivity
+
+- Only GBIF was checked. Material held but not published is by definition
+  invisible here.
+- Specimen localities of rare plants and insects are sensitive; publishing
+  them precisely can prompt collecting.
+
+## Integration into the pipeline
+
+Material on GBIF is already in the download when its coordinates fall inside
+the GADM outline. For undigitised material there is nothing to integrate
+until a museum publishes it. `pipeline.R` is not changed.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+::: {.callout-warning}
+## To be completed
+Cite each museum's dataset by its GBIF DOI once identified.
+:::

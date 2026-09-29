@@ -1,0 +1,131 @@
+---
+title: "Biogeographical regions of Europe"
+subtitle: "The official delineation used by the Habitats Directive and the Emerald Network; it maps Kosovo, and the report already uses it."
+actions:
+  - kind: check
+    what: "Whether the Alpine/Continental split through Kosovo, drawn at 1:1,000,000 to 1:10,000,000, is fit for assigning sites; the NBSAP lists 'definition of clear boundaries between bio-geographic regions' as a preparatory task"
+    contact: "Kosovo Institute for Nature Protection; the EEA's biogeographical process team"
+todo:
+  doi: "No DOI: R/functions.R records that DataCite returns none for the record's identifiers"
+  temporal_coverage: "Not applicable: a delineation, edition 2016"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+suppressPackageStartupMessages({
+  library(sf)
+  library(leaflet)
+})
+row <- source_row("eea-biogeographical-regions")
+regions_path <- file.path(sources_root(), "data", "kosovo_biogeo_regions.gpkg")
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+The biogeographical regions dataset is, in the words of its catalogue record,
+"the official delineations used in the Habitats Directive" and for the
+Emerald Network under the Bern Convention. The 2016 version (edition 01.00,
+26 January 2016) corrected the Pannonian region of Serbia, among other fixes.
+It is licensed CC-BY 4.0 by the EEA and drawn at scales between 1:1,000,000
+and 1:10,000,000.
+
+The desk review listed it as a lead. It is in fact already in use: the
+pipeline reads it from the EEA's map service, clips it to Kosovo in
+`kosovo_biogeo_regions()`, caches it as `data/kosovo_biogeo_regions.gpkg`,
+and uses it in the habitat screen, so that the crosswalk can differ between
+regions.
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(
+  try_access("https://sdi.eea.europa.eu/catalogue/srv/api/records/c6d27566-e699-4d58-a132-bbe3fe01491b"),
+  try_access("https://bio.discomap.eea.europa.eu/arcgis/rest/services/BioRegions/BiogeographicalRegions_LAEA/MapServer/0?f=json")
+))
+```
+
+## Kosovo coverage check
+
+The pipeline's cached extract answers the question directly.
+
+```{r}
+#| label: check
+#| eval: !expr file.exists(regions_path)
+reg <- st_read(regions_path, quiet = TRUE)
+knitr::kable(data.frame(Region = reg$name, Code = reg$region,
+                        `Area in Kosovo (km²)` = fmt_int(reg$area_km2),
+                        Share = sprintf("%.1f %%", 100 * reg$area_km2 / sum(reg$area_km2)),
+                        check.names = FALSE),
+             align = "llrr", row.names = FALSE,
+             caption = sprintf("Read from the EEA map service on %s", reg$accessed[1]))
+```
+
+```{r}
+#| label: map
+#| eval: !expr file.exists(regions_path)
+source("../R/functions.R", local = TRUE)
+pal <- colorFactor(c("#009E73", "#E69F00", "#56B4E9"), domain = reg$region)
+leaflet(st_transform(reg, 4326)) |>
+  add_basemaps() |>
+  addPolygons(fillColor = ~pal(region), fillOpacity = 0.4, weight = 1,
+              color = ~pal(region), label = ~name) |>
+  add_boundary_outline(kosovo_outline()) |>
+  addLegend(pal = pal, values = ~region, title = "Biogeographical region") |>
+  addLayersControl(baseGroups = basemap_groups,
+                   options = layersControlOptions(collapsed = TRUE))
+```
+
+Kosovo is mapped; the regions carry no country attribute, so no country code
+applies. The line between the regions follows the dataset's coarse scale and
+should not be read to the kilometre.
+
+## What it adds for Natura 2000 in Kosovo
+
+Every Natura 2000 site is assessed in its biogeographical region, and
+sufficiency is judged region by region. Which region each part of Kosovo lies
+in therefore decides which biogeographical seminar would review its sites and
+which reference lists apply. The NBSAP names a clear delineation of these
+boundaries within Kosovo as a preparatory task; this dataset is the European
+starting point for it. It serves the [national tier](../natura2000.qmd#q1).
+
+## Caveats and sensitivity
+
+- Drawn at 1:1,000,000 or coarser: the boundary is good to about a kilometre
+  at best, as `R/functions.R` notes.
+- No sensitive content.
+
+## Integration into the pipeline
+
+Already integrated (`kosovo_biogeo_regions()` in `R/functions.R`). Nothing
+further is needed unless Kosovo defines its own finer delineation.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+As recorded in `biogeo_source` in `R/functions.R`, from the catalogue record:
+*Biogeographical regions, Europe 2016, ver. 1.* European Environment Agency,
+CC-BY 4.0; administrative boundaries © EuroGeographics, © FAO (UN),
+© TurkStat, source: European Commission – Eurostat/GISCO. Catalogue record
+c6d27566-e699-4d58-a132-bbe3fe01491b.

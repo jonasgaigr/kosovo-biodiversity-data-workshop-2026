@@ -1,0 +1,139 @@
+---
+title: "Fauna Europaea"
+subtitle: "The European checklist of animal species; its portal did not resolve, and its GBIF copy carries names without distribution areas."
+actions:
+  - kind: check
+    what: "Find the current home of Fauna Europaea; fauna-eu.org did not resolve (DNS) on 29 September 2026"
+    contact: "A web search for the Fauna Europaea portal, or the PESI species infrastructure, which draws on it"
+  - kind: check
+    what: "Whether Fauna Europaea's distribution scheme has a Kosovo area or files Kosovo records under Serbia"
+    contact: "Fauna Europaea documentation, once the portal is found"
+todo:
+  custodian: "Current host of Fauna Europaea; the domain did not resolve and the GBIF record's publisher was not read"
+  spatial_resolution: "Presence per country or region, according to the desk review; confirm in the documentation"
+  temporal_coverage: "Not applicable to a checklist; record the version date instead"
+  kosovo_coverage: "Unknown: the GBIF copy exposes no distribution areas, and the portal is unreachable"
+  kosovo_codes_seen: "Whether Kosovo is an area of its own (the desk review expected it folded into Serbia)"
+  tier: "National at best: presence per country"
+  n2k_question: "Whether an animal is recorded for Kosovo, as a check on range statements for Annex II and IV animals"
+  effort: "Unknown until the distribution data can be reached"
+  sensitivity: "None: presence per country"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+row <- source_row("fauna-europaea")
+key <- "90d9e8a6-0ce1-472d-b682-3451095dbc5a"
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+Fauna Europaea is a checklist of Europe's animals that records which species
+occur in which European country. The
+desk review asked whether it treats Kosovo as an area of its own or folds it
+into Serbia. That question could not be answered in this check. The project's
+web domain did not resolve, and the copy of the checklist published to GBIF
+(DOI 10.15468/ymk1bx, dated 9 September 2016, licence "unspecified") holds
+names without the distribution data that would show Kosovo.
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(
+  try_access("https://fauna-eu.org/"),
+  try_access(paste0("https://api.gbif.org/v1/dataset/", key))
+))
+```
+
+## Kosovo coverage check
+
+The executable check asks the GBIF copy for the distribution records of a few
+well-known species that occur in Kosovo.
+
+```{r}
+#| label: check
+#| echo: true
+#| code-fold: true
+probe <- c("Rupicapra rupicapra", "Ursus arctos", "Salamandra salamandra",
+           "Lycaena dispar", "Rosalia alpina")
+res <- do.call(rbind, lapply(probe, function(nm) tryCatch({
+  s <- jsonlite::fromJSON(paste0("https://api.gbif.org/v1/species/search?datasetKey=",
+                                 key, "&limit=1&q=", utils::URLencode(nm)))$results
+  d <- jsonlite::fromJSON(sprintf("https://api.gbif.org/v1/species/%s/distributions?limit=200",
+                                  s$key[1]))$results
+  areas <- if (NROW(d) && "locality" %in% names(d)) sum(!is.na(d$locality)) else 0
+  data.frame(Species = nm, `Name found` = "yes", `Distribution areas` = areas,
+             check.names = FALSE)
+}, error = function(e) data.frame(Species = nm, `Name found` = "no",
+                                  `Distribution areas` = NA, check.names = FALSE))))
+knitr::kable(res, align = "llr")
+```
+
+None of the probed species carries a distribution area in the GBIF copy, so
+the Kosovo question cannot be answered from it.
+
+The probe is small on purpose: five species, all of them known from Kosovo,
+chosen across groups. If any carried distribution areas, the next step would
+be to list them and look for Kosovo; since none does, a larger sample would
+only confirm the same absence. The check is kept on the page so that it
+re-runs, and flags the change, if the GBIF copy is ever republished with
+distributions.
+
+::: {.callout-warning}
+## To be completed
+Find the current Fauna Europaea service, read its area scheme, and check the
+probe species above for a Kosovo entry. Record whether Kosovo is separate,
+merged into Serbia, or labelled "Serbia and Montenegro" or "Yugoslavia".
+:::
+
+## What it adds for Natura 2000 in Kosovo
+
+The animal counterpart of [Euro+Med](euro-med-plantbase.qmd): a reference for
+whether an annex species is known from Kosovo at all, and so a check on GBIF
+records that may be new national records or errors. Only useful if Kosovo is
+an area of its own. It would serve the [national tier](../natura2000.qmd#q1).
+
+## Caveats and sensitivity
+
+- The checklist's own service was unreachable; everything here rests on the
+  GBIF copy.
+- The GBIF copy's licence is "unspecified".
+- No sensitive content.
+
+## Integration into the pipeline
+
+Nothing to integrate until the distribution data are reachable.
+`pipeline.R` is not changed.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+Cite the GBIF copy as GBIF shows it:
+[doi:10.15468/ymk1bx](https://doi.org/10.15468/ymk1bx).
+
+::: {.callout-warning}
+## To be completed
+The citation Fauna Europaea itself requests could not be read.
+:::

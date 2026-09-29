@@ -1,0 +1,188 @@
+---
+title: "R packages for reaching these sources"
+subtitle: "The R packages the pages in this section use, their current CRAN versions, what each reaches, and how each handles Kosovo."
+actions:
+  - kind: check
+    what: "Install rredlist, eurostat and ows4R on the machine that renders the site (they are on CRAN but not installed there) and run their Kosovo examples"
+    contact: "install.packages(c('rredlist', 'eurostat', 'ows4R'))"
+  - kind: check
+    what: "How rredlist (IUCN API) and eurostat code Kosovo in their results"
+    contact: "Package documentation; the IUCN API needs a token"
+todo:
+  doi: "CRAN packages carry DOIs of the form 10.32614/CRAN.package.<name>; record them per package if cited"
+  licence: "Each package's licence is on its CRAN page"
+  spatial_resolution: "Not applicable: software"
+  temporal_coverage: "Not applicable: software"
+  latest_version: "Per package, in the table below (CRAN, 29 September 2026)"
+  tier: "Not applicable: software"
+  n2k_question: "Not applicable: this page supports every other page"
+  sensitivity: "None"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+row <- source_row("r-access-toolkit")
+cache <- file.path(cache_dir("r-access-toolkit"), "cran_versions.csv")
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+Every page in this section reaches its data from R, with a handful of
+packages. This page lists them with the version CRAN offered on the day of
+the check and the version installed where the site was rendered, what each
+reaches, and, because it decides whether a Kosovo query returns anything, how
+each identifies Kosovo. `rgbif` and `CoordinateCleaner` are already used by
+`pipeline.R` and are listed for completeness.
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(try_access("https://cloud.r-project.org/src/contrib/PACKAGES")))
+```
+
+```{r}
+#| label: build
+#| echo: true
+#| code-fold: true
+#| code-summary: "Show how the versions are read"
+pk <- c("rgbif", "CoordinateCleaner", "sf", "terra", "geodata", "giscoR",
+        "eurostat", "rredlist", "ows4R", "leaflet", "curl", "pdftools",
+        "eunis.habitats", "rnaturalearth")
+if (!file.exists(cache)) {
+  ap <- tryCatch(available.packages(repos = "https://cloud.r-project.org"),
+                 error = function(e) NULL)
+  if (!is.null(ap)) {
+    ip <- installed.packages()
+    write.csv(data.frame(
+      package = pk, cran = ap[pk, "Version"],
+      installed = ifelse(pk %in% rownames(ip), ip[pmatch(pk, rownames(ip)), "Version"], "not installed"),
+      checked = format(Sys.Date())), cache, row.names = FALSE)
+  }
+}
+have_cache <- file.exists(cache)
+```
+
+```{r}
+#| label: table
+#| eval: !expr have_cache
+v <- read.csv(cache)
+reach <- c(
+  rgbif = "GBIF occurrence downloads and APIs (the report's data)",
+  CoordinateCleaner = "Automated coordinate tests (the pipeline's cleaning)",
+  sf = "Vector data; GDAL, including /vsicurl/ remote reads",
+  terra = "Raster data; remote crops of COGs and tiled GeoTIFFs",
+  geodata = "Per-country climate, elevation and boundary downloads",
+  giscoR = "Eurostat GISCO boundaries",
+  eurostat = "Eurostat statistics",
+  rredlist = "IUCN Red List API (token needed)",
+  ows4R = "OGC web services (WMS, WFS, CSW) from R",
+  leaflet = "The interactive maps on these pages",
+  curl = "HTTP requests behind try_access()",
+  pdftools = "Text from PDF reports and tables",
+  eunis.habitats = "EUNIS codes and crosswalks, including to Annex I",
+  rnaturalearth = "Natural Earth boundaries (the pipeline's last fallback)")
+kosovo <- c(
+  rgbif = "Country code XK; GADM GID XKO for geometry filters",
+  CoordinateCleaner = "No usable Kosovo code in its default reference; the pipeline supplies its own polygon",
+  sf = "None: geometry only",
+  terra = "None: geometry only",
+  geodata = "XKO (ISO3) and XK (ISO2), as GADM",
+  giscoR = "No Kosovo feature in the 2024 countries layer: Kosovo lies inside Serbia (RS/SRB)",
+  eurostat = "Not checked",
+  rredlist = "Not checked",
+  ows4R = "None: depends on the service",
+  leaflet = "None",
+  curl = "None",
+  pdftools = "None",
+  eunis.habitats = "None: habitat codes only",
+  rnaturalearth = "adm0_a3 'KOS'; iso_a3 '-99' (no ISO code), per R/functions.R")
+knitr::kable(data.frame(Package = v$package, CRAN = v$cran, Installed = v$installed,
+                        Reaches = reach[v$package], `How it identifies Kosovo` = kosovo[v$package],
+                        check.names = FALSE), align = "lllll", row.names = FALSE,
+             caption = sprintf("CRAN versions read on %s", v$checked[1]))
+```
+
+## Kosovo coverage check
+
+The question for a toolkit is how each package names Kosovo, and three of the
+answers were tested in this session rather than taken from documentation.
+
+```{r}
+#| label: check-geodata
+#| echo: true
+#| code-fold: show
+cc <- geodata::country_codes()
+cc[cc$NAME == "Kosovo", c("NAME", "ISO3", "ISO2")]
+```
+
+```{r}
+#| label: check-gisco
+#| echo: true
+#| code-fold: show
+g <- tryCatch(giscoR::gisco_get_countries(resolution = "20", year = "2024"),
+              error = function(e) NULL)
+if (!is.null(g)) {
+  print(sf::st_drop_geometry(g[g$CNTR_ID %in% c("XK", "RS"), c("CNTR_ID", "ISO3_CODE", "NAME_ENGL")]))
+  print(sf::st_bbox(g[g$CNTR_ID == "RS", ]))
+}
+```
+
+GISCO's 2024 country layer has no feature for Kosovo, and Serbia's polygon
+reaches south to about 41.86° N: Kosovo is inside it. The pipeline already
+knows this (`R/functions.R` compares its border against GISCO's
+international boundary only), but anyone who clips data to "Serbia" from
+GISCO is clipping Kosovo in with it.
+
+Across this section, Kosovo turned up under at least six different
+identifiers: **XK** (GBIF, EU country code), **XKO** (GADM, geodata), **XKX**
+(the pipeline's own ISO3-style code), **KS** (EFFIS), **RS** (Emerald
+candidate sites, BirdLife's inventory and GISCO, where it is merged into
+Serbia), and **Ko** (Euro+Med). A script that filters any of these sources
+by one code will silently miss what the others file under another.
+
+## What it adds for Natura 2000 in Kosovo
+
+Reproducibility. Every figure on these pages can be recomputed with free
+software from the sources' own servers, and each check is shown as code a
+participant can run and change. Tier: not applicable.
+
+## Caveats and sensitivity
+
+- `rredlist`, `eurostat` and `ows4R` are on CRAN but were not installed where
+  the site was rendered, so their Kosovo behaviour is not tested here.
+- Versions move; the table records the day of the check.
+
+## Integration into the pipeline
+
+`pipeline.R` already loads `rgbif`, `sf`, `CoordinateCleaner` and friends.
+The pages here would add `terra` (rasters) and `eunis.habitats` (crosswalk)
+if their proposed functions are adopted. `pipeline.R` is not changed.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+Cite each package with `citation("<package>")`; for example
+`citation("eunis.habitats")` gives Magno, Monteiro & Bentes (2023),
+doi:10.32614/CRAN.package.eunis.habitats.

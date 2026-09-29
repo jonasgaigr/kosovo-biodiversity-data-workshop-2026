@@ -1,0 +1,171 @@
+---
+title: "CHELSA climatologies"
+subtitle: "High-resolution global climatologies, read here as cloud-hosted GeoTIFFs for 1981–2010 and cut to Kosovo."
+actions:
+  - kind: check
+    what: "Read CHELSA's licence and requested citation on its own site, and record the custodian (the institution behind envicloud)"
+    contact: "https://chelsa-climate.org/"
+  - kind: check
+    what: "Compare CHELSA bio1 with WorldClim's mean temperature for Kosovo, pixel by pixel, to see where the two climatologies disagree"
+    contact: "The WorldClim page in this section"
+todo:
+  custodian: "Institution maintaining CHELSA; read on chelsa-climate.org"
+  doi: "The CHELSA data paper and dataset DOIs; read on chelsa-climate.org"
+  licence: "CHELSA's licence; read on its site"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+suppressPackageStartupMessages({
+  library(sf)
+  library(terra)
+  library(leaflet)
+})
+row <- source_row("chelsa")
+dir <- cache_dir("chelsa")
+base <- "https://os.zhdk.cloud.switch.ch/chelsav2/GLOBAL/climatologies/1981-2010/bio/"
+vars <- c(bio1 = "CHELSA_bio1_1981-2010_V.2.1.tif", bio12 = "CHELSA_bio12_1981-2010_V.2.1.tif")
+cache <- file.path(dir, "chelsa_bio1_bio12_1981-2010_kosovo.tif")
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+CHELSA ("Climatologies at high resolution for the earth's land surface
+areas") provides bioclimatic layers at 30 arc-seconds, about 1 km, for the
+whole globe. Version 2.1 is served from a public object store at
+`os.zhdk.cloud.switch.ch`; the 1981–2010 climatology is used here. The two
+layers used here are `bio1`, mean annual air
+temperature, and `bio12`, annual precipitation.
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(lapply(vars, function(f) try_access(paste0(base, f))))
+```
+
+The files are global GeoTIFFs; GDAL reads only the part over Kosovo.
+
+```{r}
+#| label: build
+#| echo: true
+#| code-fold: true
+#| code-summary: "Show the remote crop"
+build_error <- NULL
+if (!file.exists(cache)) {
+  build_error <- tryCatch({
+    Sys.setenv(GDAL_DISABLE_READDIR_ON_OPEN = "EMPTY_DIR")
+    ko <- vect(kosovo_outline())
+    k <- rast(lapply(vars, function(f)
+      mask(crop(rast(paste0("/vsicurl/", base, f)), ko, snap = "out"), ko)))
+    names(k) <- names(vars)
+    writeRaster(k, cache, overwrite = TRUE, gdal = "COMPRESS=DEFLATE")
+    NULL
+  }, error = function(e) conditionMessage(e))
+}
+have_cache <- file.exists(cache)
+```
+
+```{r}
+#| label: build-failed
+#| eval: !expr "!have_cache"
+#| output: asis
+cat("::: {.callout-warning}\n## To be completed\nThe remote crop failed at render time (",
+    build_error %||% "no message", "). Re-render when the CHELSA store answers.\n:::\n", sep = "")
+```
+
+## Kosovo coverage check
+
+```{r}
+#| label: check
+#| eval: !expr have_cache
+k <- rast(cache)
+inside <- !is.na(values(rasterize(vect(kosovo_outline()), k[[1]]), mat = FALSE))
+s <- sapply(names(k), function(n) {
+  v <- values(k[[n]], mat = FALSE)[inside]
+  c(cells = length(v), na = sum(is.na(v)), min = min(v, na.rm = TRUE),
+    mean = mean(v, na.rm = TRUE), max = max(v, na.rm = TRUE))
+})
+knitr::kable(data.frame(Layer = c("bio1, mean annual temperature (°C)",
+                                  "bio12, annual precipitation (mm)"),
+                        Cells = fmt_int(s["cells", ]), `No-data` = s["na", ],
+                        Min = round(s["min", ], 1), Mean = round(s["mean", ], 1),
+                        Max = round(s["max", ], 1), check.names = FALSE),
+             align = "lrrrrr", row.names = FALSE)
+```
+
+Kosovo is fully covered. The values are those GDAL returns after applying
+the scale and offset stored in each file. No country attribute exists, so no
+country code applies.
+
+Two things about the read are worth teaching. First, nothing is downloaded
+in full: GDAL's `/vsicurl/` prefix turns the file's address into something
+`terra` can open, and the crop asks the server only for the parts of the
+global grid that cover Kosovo. Second, the check counts no-data cells inside
+the outline rather than trusting a map to look complete. A European or
+global product can leave a country blank for reasons of its own, and a
+blank that falls on the country being studied is easy to miss on a map at
+continental scale. Here there is none.
+
+```{r}
+#| label: map
+#| eval: !expr have_cache
+source("../R/functions.R", local = TRUE)
+pal <- colorNumeric(grDevices::hcl.colors(9, "RdYlBu", rev = TRUE),
+                    values(k[["bio1"]]), na.color = NA)
+leaflet() |>
+  add_basemaps() |>
+  addRasterImage(k[["bio1"]], colors = pal, opacity = 0.75) |>
+  add_boundary_outline(kosovo_outline()) |>
+  addLegend(pal = pal, values = values(k[["bio1"]]), title = "Mean annual<br>temperature (°C)") |>
+  addLayersControl(baseGroups = basemap_groups,
+                   options = layersControlOptions(collapsed = TRUE))
+```
+
+## What it adds for Natura 2000 in Kosovo
+
+Climate covariates for species distribution models, and for explaining the
+split between Kosovo's Alpine and Continental regions. At about 1 km they suit
+national screening ([tier](../natura2000.qmd#q1)). If CHELSA also offers
+future scenarios at the same resolution, which this check did not confirm,
+they would bear on the "future prospects" parameter of habitat assessments.
+
+## Caveats and sensitivity
+
+- Interpolated climate: in mountains the 1 km cells average steep gradients.
+- Licence and citation not yet read on CHELSA's site.
+- No sensitive content.
+
+## Integration into the pipeline
+
+Low effort: a proposed `kosovo_climate(boundary, source = "chelsa")` would
+cache the layers above for the SDM work. `pipeline.R` is not changed.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+::: {.callout-warning}
+## To be completed
+Use the citation CHELSA requests on its site; it was not read in this check.
+:::

@@ -1,0 +1,120 @@
+---
+title: "European Red Lists"
+subtitle: "The European Commission's European and EU-level red list assessments of over 10,000 species, published as tables on the EEA datahub."
+actions:
+  - kind: check
+    what: "Download the current tables and check whether any assessment records Kosovo as a country of occurrence, or Serbia with Kosovo folded in"
+    contact: "https://www.eea.europa.eu/en/datahub/datahubitem-view/202f3c2e-54a9-4ff4-a1da-ed7ca524f634"
+  - kind: check
+    what: "Read the IUCN pages on the European Red List in a browser; iucnredlist.org served a Cloudflare challenge (HTTP 403) to automated reads"
+    contact: "https://www.iucnredlist.org/regions/european-red-list"
+  - kind: check
+    what: "Whether Kosovo's plant red list (2013) is among the national lists compiled in the 2024 database of European vascular plant red lists, and in what form"
+    contact: "Lončarević et al. 2024, Scientific Data, doi:10.1038/s41597-024-03963-0 (supplementary list of sources)"
+todo:
+  doi: "DOI of the EEA dataset; not shown on the datahub page read"
+  licence: "Licence of the EEA tables; not shown on the datahub page read"
+  spatial_resolution: "Not spatial: status per species at European and EU level"
+  temporal_coverage: "Assessment years per group, 2009–2022"
+  kosovo_coverage: "Whether assessments list Kosovo as a country of occurrence; check in the tables"
+  kosovo_codes_seen: "Country codes used for Kosovo in the tables, if any"
+  effort: "Low: a species table joined on name or GBIF key"
+  sensitivity: "None: status per species"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+row <- source_row("european-red-lists")
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+The European Red Lists assess the extinction risk of more than 10,000
+European species, from mammals and birds to bees, grasshoppers and ferns,
+under the IUCN guidelines for regional assessment, at two levels: the EU and
+pan-Europe. The EEA publishes the results as tables on its datahub; the
+current series covers assessments from 2009 to 2022, and the dataset's owner
+is the European Commission's Directorate-General for Environment.
+
+For Kosovo, the pan-European level is the relevant one, and whether its
+assessments count Kosovo as a country of occurrence is the open question.
+A related finding bears on it. The 2024 *Scientific Data* database of European
+national red lists for vascular plants (Lončarević et al.) treats Kosovo as a
+country with a red list of its own. Its authors removed the Kosovo taxa from
+Serbia's red book of 1999, and did not add them to the Kosovo list.
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(
+  try_access("https://www.eea.europa.eu/en/datahub/datahubitem-view/202f3c2e-54a9-4ff4-a1da-ed7ca524f634"),
+  try_access("https://www.iucnredlist.org/regions/european-red-list"),
+  try_access("https://www.nature.com/articles/s41597-024-03963-0")
+))
+```
+
+The EEA page answers; its tables were not downloaded in this check. IUCN's own
+page returned a Cloudflare challenge to every automated request.
+
+## Kosovo coverage check
+
+::: {.callout-warning}
+## To be completed
+Download the EEA tables, look for a country-of-occurrence field, and record
+whether Kosovo appears, under which code, or whether it is folded into
+Serbia. Then join the European categories to the species in the GBIF extract
+by GBIF key, as the pipeline does for the global Red List.
+:::
+
+## What it adds for Natura 2000 in Kosovo
+
+The report already carries each species' global IUCN category. A European
+category is often more telling for Natura 2000: a species of Least Concern
+globally can be threatened in Europe, and the Habitats Directive is a
+European instrument. Where the assessments list countries of occurrence, they
+also give a European view of which species occur in Kosovo. It serves the
+[national tier](../natura2000.qmd#q1).
+
+## Caveats and sensitivity
+
+- Assessment years range over more than a decade; categories may be dated.
+- European and EU27 categories differ; the report should say which it uses.
+- No sensitive content.
+
+## Integration into the pipeline
+
+Low effort. A proposed `fetch_european_red_list(path)` would read the EEA
+table and join it by GBIF key, adding `europeanRedListCategory` beside the
+existing `iucnRedListCategory`, just as `fetch_iucn_categories()` does for the
+global list. `pipeline.R` is not changed.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+::: {.callout-warning}
+## To be completed
+The citation for the EEA tables was not shown on the page read; take it from
+the dataset's catalogue record once the tables are downloaded.
+:::

@@ -1,0 +1,127 @@
+---
+title: "National park spatial plans"
+subtitle: "The spatial plan for Bjeshkët e Nemuna National Park and the draft strategic environmental assessment of Sharri's plan, both published as PDFs."
+actions:
+  - kind: request
+    what: "The zoning of both national parks (protection zones, special zones, planned development) as GIS layers"
+    contact: "Institute for Spatial Planning, Ministry of Environment, Spatial Planning and Infrastructure"
+  - kind: check
+    what: "Whether the Sharri spatial plan itself (not only its SEA) is published, and whether the SEA has been finalised"
+    contact: "MMPHI and KEPA websites"
+  - kind: check
+    what: "If the zoning exists only as map figures in the PDFs, record their scale; digitising them is an open action for the Institute's agreement, not something this page does"
+    contact: "The two PDFs"
+todo:
+  doi: "No DOI; government plans"
+  licence: "No terms stated in the plans; the Sharri SEA carries a UN-Habitat copyright notice allowing reproduction of excerpts with the source cited"
+  spatial_resolution: "Scale of the zoning maps; read in the plans"
+  temporal_coverage: "Planning horizon of each plan; read in the documents"
+  effort: "Low with GIS layers; high if the zoning must be digitised from figures"
+  sensitivity: "None expected: zoning and planned development"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+row <- source_row("np-spatial-plans")
+bj <- "https://mmphi.rks-gov.net/mmphifolder/OtherDocuments/Plani%20Hap%C3%ABsinor%20PK%20Bjeshk%C3%ABt%20e%20Nemuna.pdf"
+sh <- "https://www.ammk-rks.net/assets/cms/uploads/files/Draft%20Raporti%20-%20Vler%C3%ABsimi%20Strategjik%20Mjedisor%20p%C3%ABr%20Parkun%20Komb%C3%ABtar%20Sharri_.pdf"
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+Kosovo's two national parks, Bjeshkët e Nemuna in the west and Sharri in the
+south, are the core of any future Natura 2000 network. Each is governed by a
+spatial plan that zones the park and says where development may go.
+
+The *Plani Hapësinor për Parkun Kombëtar "Bjeshkët e Nemuna"* is published by
+the Ministry of Environment, Spatial Planning and Infrastructure and drafted by
+its Institute for Spatial Planning; the PDF (89 pages, in Albanian) dates from
+June 2023. It notes that the park law adopted by the Assembly on 13 December
+2012 gave an area of 62,488 ha, revised to 63,028 ha after detailed
+measurement, and it defines an impact zone of 50 m around the park boundary.
+
+For Sharri the document found is a draft *Strategic Environmental Assessment*
+of the park's spatial plan (161 pages, PDF dated March 2025), prepared with
+UN-Habitat. It sets environmental objectives for the plan, among them
+avoiding the fragmentation of habitats and impacts on the integrity of
+"protected areas and Natura 2000 areas".
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(
+  try_access(bj),
+  try_access(sh),
+  try_access(sh, ssl_verify = FALSE)
+))
+```
+
+The Bjeshkët e Nemuna plan is on the ministry's server (14.6 MB). The Sharri
+SEA is on KEPA's server, whose certificate had expired; the third request
+skips verification. Neither document links to GIS data.
+
+## Kosovo coverage check
+
+::: {.callout-warning}
+## To be completed
+The plans cover the two parks, which are in NatDA with mapped boundaries. The
+check that matters, overlaying the parks' zoning with the report's habitat
+screen and GBIF evidence, needs the zoning as GIS layers. Until then: record
+the scale of the zoning maps in each PDF, and compare the Bjeshkët e Nemuna
+area (63,028 ha) with the area NatDA gives the park.
+:::
+
+## What it adds for Natura 2000 in Kosovo
+
+A Natura 2000 site inside a national park has to fit the park's zoning:
+strict zones are candidate cores, and zones planned for tourism or
+infrastructure are where an appropriate assessment will be needed. The plans
+also show what the parks' managers already consider their key values. With
+GIS layers, the zoning would serve the [site tier](../natura2000.qmd#q1)
+directly.
+
+## Caveats and sensitivity
+
+- The Sharri document is a draft SEA, not the adopted plan.
+- Plans record intentions and rules, not the state of the habitats.
+
+## Integration into the pipeline
+
+Belongs with the site-report tool rather than `pipeline.R`: a proposed
+`read_park_zoning(path)` in `R/site_report.R` would add a zoning layer to the
+two pilot site reports (see [question 8](../natura2000.qmd#q8)). `pipeline.R`
+is not changed.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+::: {.callout-warning}
+## To be completed
+Neither PDF gives a citation form in the pages read. Cite each by title,
+issuing body and date: MMPHI, Instituti për Planifikim Hapësinor (2023),
+*Plani Hapësinor për Parkun Kombëtar "Bjeshkët e Nemuna"*; MMPHI with
+UN-Habitat (2025), *Raporti i Vlerësimit Strategjik Mjedisor për Planin
+Hapësinor të Parkut Kombëtar Sharri* (draft).
+:::

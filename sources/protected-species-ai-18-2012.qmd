@@ -1,0 +1,116 @@
+---
+title: "Protected and strictly protected wild species (AI 18/2012 and its successors)"
+subtitle: "Kosovo's legal lists of protected wild species; the instruction of 2012 has since been followed by instructions of 2017 and 2020."
+actions:
+  - kind: check
+    what: "Confirm the chain of repeal: whether AI 12/2017 repealed AI 18/2012, and whether AI 12/2020 is the instruction in force today"
+    contact: "Official Gazette, https://gzk.rks-gov.net/ (search 'llojeve të egra')"
+  - kind: check
+    what: "Extract the species lists from the annexes of AI 12/2020 into a table (name, protected or strictly protected), and match them to the GBIF backbone"
+    contact: "https://gzk.rks-gov.net/ActDocumentDetail.aspx?ActID=35969"
+todo:
+  doi: "Legal acts carry no DOI; cite by number and Gazette date"
+  licence: "Official acts are public; confirm the Gazette's terms for reuse"
+  access_method: "Read how the annexes are published on the Gazette (HTML or PDF)"
+  spatial_resolution: "Not spatial: a legal list of species"
+  temporal_coverage: "In force from its entry into force; read the date in the act"
+  effort: "Low once the annex is a table; medium if it must be parsed from a PDF"
+  sensitivity: "None: a public legal list"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+row <- source_row("protected-species-ai-18-2012")
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+Under the Law on Nature Protection (No. 03/L-233), the ministry responsible
+for the environment declares by administrative instruction which wild
+species are protected and which strictly protected. The desk review named
+Administrative Instruction No. 18/2012, which the Red Book of Vascular Flora
+(2013) also cites as one basis for its selection. It is not the current act.
+The Official Gazette holds Administrative Instruction MEA No. 12/2020 "for the
+declaration of protected and strictly protected wild species", published on
+29 December 2020, which supersedes Administrative Instruction No. 12/2017 on
+strictly protected wild species. Whether 12/2017 in turn repealed 18/2012 was
+not confirmed.
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(
+  try_access("https://gzk.rks-gov.net/ActDetail.aspx?ActID=35969"),
+  try_access("https://gzk.rks-gov.net/ActDocumentDetail.aspx?ActID=35969")
+))
+```
+
+The Gazette pages answer and the act is public. The exact URL of 18/2012 was
+not found: a search of the Gazette for it returned the 2017 and 2020
+instructions and a related instruction on trade in protected species
+(No. 26/2012), but not 18/2012 itself.
+
+## Kosovo coverage check
+
+::: {.callout-warning}
+## To be completed
+The act is Kosovo's own and applies to its whole territory. The check that
+matters is a comparison of lists: extract the species in AI 12/2020's annexes,
+resolve them against the GBIF backbone, and set them against Annexes II, IV
+and V of the Habitats Directive and Annex I of the Birds Directive, which the
+pipeline already holds in `data/eu_directives_species.csv`. Species strictly
+protected nationally but absent from the annexes, and annex species with no
+national protection, are both findings.
+:::
+
+## What it adds for Natura 2000 in Kosovo
+
+Transposition of the Nature Directives includes making annex species legally
+protected in national law. A table of the national lists, matched to the same
+backbone as the annexes, shows how far that has gone and lets the report flag
+records of nationally protected species beside the directive columns it
+already carries. It serves the [national tier](../natura2000.qmd#q1).
+
+## Caveats and sensitivity
+
+- The act named by the desk review is not the one in force; the current one
+  is 12/2020, subject to the repeal check above.
+- Legal names may use older taxonomy; matching needs the same care as the
+  annex lists (see `R/build_directive_list.R`).
+- No sensitive content.
+
+## Integration into the pipeline
+
+Low to medium effort. A proposed `R/build_national_protection_list.R`, on the
+pattern of `R/build_directive_list.R`, would parse the annex, resolve the
+names and write `data/kosovo_protected_species.csv`; `pipeline.R` would add a
+`nationalProtection` column. `pipeline.R` is not changed here.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+Cite the act in force by its number and Gazette date: *Udhëzim Administrativ
+MEA – Nr. 12/2020 për shpalljen e llojeve të egra të mbrojtura dhe strikt të
+mbrojtura.* Gazeta Zyrtare e Republikës së Kosovës, 29 December 2020.

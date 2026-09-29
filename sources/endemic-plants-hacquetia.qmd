@@ -1,0 +1,110 @@
+---
+title: "Conservation assessment of the endemic plants from Kosovo (Hacquetia, 2017)"
+subtitle: "An IUCN assessment of 16 endemic plant taxa of Kosovo, most of them confined to serpentine or limestone."
+actions:
+  - kind: check
+    what: "List the 16 taxa from the PDF with their categories, match them to the GBIF backbone, and count their records in the GBIF extract"
+    contact: "https://ojs.zrc-sazu.si/hacquetia/article/view/4787/4403"
+  - kind: check
+    what: "Whether the localities behind the assessments exist as a dataset, and whether the authors would share them at a generalised resolution"
+    contact: "The paper's authors (Millaku et al.), through the journal"
+todo:
+  temporal_coverage: "Years of the field observations behind the assessments; read in the paper's methods"
+  spatial_resolution: "Whether the paper gives localities, coordinates or maps; the abstract page does not say"
+  effort: "Low for the species list (16 names); higher for any localities"
+  sensitivity: "Stenoendemics with tiny populations (Solenanthus krasniqii: 20 mature individuals) must not be mapped finer than 10 km"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+row <- source_row("endemic-plants-hacquetia")
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+Millaku, Krasniqi, Berisha and Rexhepi assessed the conservation status of 16
+plant taxa endemic to Kosovo or the Balkans against the IUCN Red List
+categories and criteria (guidelines version 8.1). The paper appeared in
+*Hacquetia* 16(1) in 2017 under a CC BY-NC-ND 4.0 licence. Of the 16 taxa,
+four are Balkan endemics, eight local endemics and four stenoendemics. Six
+grow only on serpentine, five on limestone, four on carbonate substrates and
+one on silicate. The most threatened, *Solenanthus krasniqii*, was reduced to
+about 20 mature individuals.
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(
+  try_access("https://ojs.zrc-sazu.si/hacquetia/article/view/4787"),
+  try_access("https://ojs.zrc-sazu.si/hacquetia/article/view/4787/4403"),
+  try_access("https://doi.org/10.1515/hacq-2016-0024")
+))
+```
+
+The article and its PDF are open. The licence permits sharing with
+attribution for non-commercial use, but not adapted versions, so a species
+list derived from it should be cited rather than presented as new work.
+
+## Kosovo coverage check
+
+::: {.callout-warning}
+## To be completed
+The paper is about Kosovo, so coverage is not in doubt. The useful check has
+not been run: extract the 16 names and categories from the PDF, match them to
+the GBIF backbone with `rgbif::name_backbone_checklist()`, and count how many
+records of each the GBIF extract holds. A stenoendemic with no GBIF record is
+invisible to the report's species tables, however threatened it is.
+:::
+
+## What it adds for Natura 2000 in Kosovo
+
+Endemic plants of serpentine and limestone mark exactly the habitats, such as
+serpentine grasslands and rocky slopes, that a Kosovo site list would need to
+cover. Several may not be on Annex II, but a national assessment of their
+status is evidence for choosing between candidate sites that hold the same
+Annex I habitat. It serves the [national tier](../natura2000.qmd#q1); with
+localities, it could inform site boundaries.
+
+## Caveats and sensitivity
+
+- Sixteen taxa is a small, focused set, not a flora-wide list; the Red Book
+  of Vascular Flora (2013) covers 237.
+- National assessments made in 2017 may be out of date.
+- Stenoendemics with a few dozen individuals are at risk from collecting and
+  must never be mapped precisely in public.
+
+## Integration into the pipeline
+
+Low effort for the names: a proposed `data/kosovo_endemic_plants.csv` with
+name, category, source DOI and GBIF key, read by `pipeline.R` like the annex
+lists, would flag endemic records in every export. `pipeline.R` is not
+changed here.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+Millaku, F., Krasniqi, E., Berisha, N. & Rexhepi, F. (2017). Conservation
+assessment of the endemic plants from Kosovo. *Hacquetia* 16(1).
+[doi:10.1515/hacq-2016-0024](https://doi.org/10.1515/hacq-2016-0024).

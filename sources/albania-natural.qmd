@@ -1,0 +1,129 @@
+---
+title: "NaturAL project, Albania: small terrestrial mammals"
+subtitle: "An open data paper from Albania's Natura 2000 preparation project, with fieldwork on the Albanian side of Kosovo's border."
+actions:
+  - kind: check
+    what: "Whether the BioNNA database the paper cites (http://www.bionna.al/) has moved; its host name did not resolve on 29 September 2026"
+    contact: "National Agency of Protected Areas, Albania, or the paper's corresponding author"
+  - kind: check
+    what: "Whether the paper's locality records are on GBIF; a dataset search for the paper found none"
+    contact: "https://www.gbif.org/dataset/search?q=Albania"
+  - kind: check
+    what: "Other NaturAL outputs (habitat mapping, other taxa) and whether they are published as data"
+    contact: "Search the NaturAL project's final reports"
+todo:
+  format: "The paper is open; whether its locality table is machine-readable has not been checked"
+  spatial_resolution: "Precision of the trapping localities; read from the paper's locality table"
+  latest_version: "2018 publication; check for later NaturAL data releases"
+  kosovo_codes_seen: "Not applicable (Albania only); confirm if records near the border are ever merged with Kosovo data"
+  tier: "Depends on the locality precision in the paper"
+  effort: "Estimate once the locality table's format is known"
+  sensitivity: "Small mammals are not usually persecuted; confirm no restricted species are included"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+row <- source_row("albania-natural")
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+NaturAL, "Strengthening capacity in National Nature Protection – preparation
+for Natura 2000 network", was Albania's project to prepare its Natura 2000
+network. One of its published outputs is a data paper in *ZooKeys* (Bego,
+Saçdanaku, Pacifici & Rondinini 2018) on the distribution and diversity of
+Albania's small terrestrial mammals. It reports 31 species from field
+campaigns in the summers and autumns of 2016 and 2017 in priority protected
+areas, and it is licensed CC BY 4.0.
+
+The paper is relevant here because of where the fieldwork took place. It
+covers Kukës district (Novosejë-Shishtavec and Korab-Koritnik), Tropojë, Has
+(Krumë and Pashtrik) and the Albanian Alps: the Albanian side of the Sharr,
+Pashtrik and Bjeshkët e Nemuna/Prokletije massifs that Kosovo shares.
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(
+  try_access("https://doi.org/10.3897/zookeys.742.22364"),
+  try_access("https://pmc.ncbi.nlm.nih.gov/articles/PMC5904422/"),
+  try_access("http://www.bionna.al/")
+))
+```
+
+The paper is open at the publisher and in PubMed Central. The paper says that
+"all previous and recent records" of small mammals are held in the BioNNA
+database at `http://www.bionna.al/`. That host name did not resolve on
+29 September 2026, so the database could not be reached. A GBIF dataset
+search found no copy of the paper's records.
+
+## Kosovo coverage check
+
+::: {.callout-warning}
+## To be completed
+The data describe Albania only, so there is nothing inside Kosovo to count.
+The useful check, not yet run, is to take the paper's localities in Kukës,
+Tropojë and Has, keep those within 20 km of Kosovo, and compare their species
+with the small mammals in the Kosovo GBIF extract. That needs the locality
+table read from the paper, or the BioNNA records if the database reappears.
+:::
+
+## What it adds for Natura 2000 in Kosovo
+
+Most small mammals on the Habitats Directive annexes are not among the
+species here. The value is as a reference list for the same mountains: which
+shrews, voles and mice a systematic survey found a few kilometres across the
+border, against which the patchy Kosovo record can be judged. It also shows
+what a Natura 2000 preparation project in a neighbour chose to survey and
+publish, which is a model for Kosovo's own. Tier: to be set once the locality
+precision is read ([tiers](../natura2000.qmd#q1)).
+
+## Caveats and sensitivity
+
+- The paper covers one group; other NaturAL outputs were not checked.
+- Only the paper was reached; the database behind it was not.
+- Records in the paper are Albanian and must not be counted as Kosovo
+  records.
+
+## Integration into the pipeline
+
+Low to medium effort. If the locality table is machine-readable, a proposed
+`neighbour_reference_records(path, buffer_km = 20)` would read it into a
+separate layer beside the GBIF extract, for comparison only. `pipeline.R` is
+not changed.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+As the paper gives it: Bego, F., Saçdanaku, E., Pacifici, M. & Rondinini, C.
+(2018). Small terrestrial mammals of Albania: distribution and diversity
+(Mammalia, Eulipotyphla, Rodentia). *ZooKeys* 742.
+[doi:10.3897/zookeys.742.22364](https://doi.org/10.3897/zookeys.742.22364).
+
+::: {.callout-warning}
+## To be completed
+The page range of the article was not read; take it from the publisher's
+page.
+:::

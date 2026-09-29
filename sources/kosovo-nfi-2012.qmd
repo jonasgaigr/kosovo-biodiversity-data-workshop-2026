@@ -1,0 +1,119 @@
+---
+title: "Kosovo National Forest Inventory 2012"
+subtitle: "The second national forest inventory re-measured permanent plots across all of Kosovo's forest; only a four-page abstract is public."
+actions:
+  - kind: request
+    what: "Plot-level data of the 2012 inventory (and 2003): plot coordinates, tree species, stand structure, dead wood and damage codes, under a data-use agreement"
+    contact: "Kosovo Forest Agency (Ministry of Agriculture, Forestry and Rural Development); the Norwegian Forestry Group, which hosts the abstract, can say who holds the data"
+  - kind: check
+    what: "Whether a full NFI 2012 report exists in print or PDF, and whether a third inventory is planned or under way"
+    contact: "Kosovo Forest Agency"
+todo:
+  custodian: "The abstract names no data holder; confirm with the Kosovo Forest Agency"
+  doi: "No DOI expected; confirm once the full report is found"
+  licence: "Terms for plot data; to be set in a data-use agreement with the holder"
+  access: "Not established: plot data are not published, and no request route is stated"
+  effort: "Estimate once the plot data format is known"
+  sensitivity: "Plot coordinates of national inventories are often kept confidential to keep plots unbiased; ask the holder"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+row <- source_row("kosovo-nfi-2012")
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+Kosovo's second National Forest Inventory (NFI) was carried out in 2012. The
+public abstract, hosted by the Norwegian Forestry Group, says that "for the
+first time, Kosovo's entire forest area has been assessed". Of 3,453 permanent
+sample plots laid across the country, 1,860 forest plots were visited in six
+months of 2012 by twelve foresters, re-measuring trees mapped in the first
+inventory of 2003. The abstract reports 481,000 ha of forest, 45 per cent of
+the land, with a growing stock of about 40 million m³ that has stayed stable
+since 2003. It also records that almost 99 per cent of forests show traces of
+human activity, that fire affected over 12,000 ha, and that the two national
+parks hold about 90 per cent of the coniferous growing stock.
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(
+  try_access("https://nfg.no/wp-content/uploads/2024/06/Kosovo-National-Forest-Inventory-2012-abstract.pdf")
+))
+```
+
+The abstract downloaded as a 1 MB PDF of four pages. It contains summary
+tables and a map of plot locations drawn as a figure; no plot data, table of
+coordinates or link to a dataset. It names no data holder.
+
+## Kosovo coverage check
+
+::: {.callout-warning}
+## To be completed
+The inventory is national by design and covers Kosovo entirely, but its data
+are not accessible, so no check could be run. With plot data: count plots per
+Annex I forest type candidate (from species composition and altitude), set
+plot-level tree species against the EUNIS and CORINE screens, and map dead
+wood and damage by municipality. Plot positions must stay unpublished if the
+holder requires it.
+:::
+
+## What it adds for Natura 2000 in Kosovo
+
+Forest is almost half of Kosovo, and forest habitat types will be a large
+part of any Natura 2000 network. The NFI is the only systematic,
+plot-based sample of that forest, with repeat measurements since 2003. Plot
+data would ground-truth the land-cover screens, give a first estimate of the
+area of forest types, and provide structure and dead-wood indicators for the
+"structure and functions" parameter of habitat assessment. Summary figures
+serve the [national tier](../natura2000.qmd#q1); plot data, with species
+composition, could inform site selection.
+
+## Caveats and sensitivity
+
+- Only the abstract was seen; the method details and plot data were not.
+- Plot coordinates are commonly withheld to prevent plots being treated
+  differently from the forest around them.
+- The figures are from 2012; forest cover has changed since (see
+  [forest loss](forest-loss-hansen.qmd) and [burnt areas](effis-burnt-areas.qmd)).
+
+## Integration into the pipeline
+
+Medium effort if plot data arrive as a table with coordinates: a proposed
+`read_nfi_plots(path)` would keep them outside `data_exports/` and use them
+only for aggregated checks against the habitat screens. Nothing can be done
+before a request succeeds. `pipeline.R` is not changed.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+::: {.callout-warning}
+## To be completed
+The abstract gives no citation. Cite the full NFI report once found; until
+then: *The Second Kosovo National Forest Inventory: Resources Remain Stable*
+(abstract, Kosovo National Forest Inventory 2012), hosted by the Norwegian
+Forestry Group.
+:::

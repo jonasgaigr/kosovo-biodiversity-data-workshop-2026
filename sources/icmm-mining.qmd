@@ -1,0 +1,114 @@
+---
+title: "Independent Commission for Mines and Minerals: licences and GIS"
+subtitle: "Kosovo's mining regulator publishes licence applications and a GIS portal; the GIS sits behind a login."
+actions:
+  - kind: request
+    what: "Mining and exploration licence areas as GIS data (polygons with licence type, holder, status and dates), for use in a Natura 2000 overlay"
+    contact: "Independent Commission for Mines and Minerals (ICMM/KPMM), https://kosovo-mining.org/?lang=en"
+  - kind: check
+    what: "Terms of use of the GIS portal and whether an account is available to public bodies or researchers"
+    contact: "ICMM, through its website"
+todo:
+  doi: "No DOI; a regulator's register"
+  licence: "Terms of the GIS portal and data shop; not stated on the pages that could be read"
+  format: "Format of licence data behind the login; not seen"
+  access_method: "Login-only GIS portal; check whether a WMS/WFS is offered to account holders"
+  spatial_resolution: "Licence polygons; scale not known"
+  temporal_coverage: "Licence dates; read in the register"
+  latest_version: "Update date of the licence register"
+  kosovo_codes_seen: "Not applicable (national register)"
+  effort: "Low once licence polygons are obtained"
+  sensitivity: "Commercial information in licences; check what may be published"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+row <- source_row("icmm-mining")
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+The Independent Commission for Mines and Minerals (ICMM, KPMM in Albanian) is
+Kosovo's mining regulator. Its website offers application forms for
+exploration and mining licences, a "data portal", a GIS link and a "data
+shop" selling printed maps of Kosovo at 1:50,000, 1:100,000 and 1:200,000.
+Its home page also summarises reserves of the main mineral resources:
+lignite, lead and zinc, nickel, bauxite and magnesite.
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(
+  try_access("https://kosovo-mining.org/?lang=en"),
+  try_access("https://www.kosovo-mining.org/gdk/gis?lan=en")
+))
+```
+
+The home page answers, although the automated fetch tool could not verify
+the site's certificate chain. The GIS link redirects to a login page
+(`/gdk/Login`). Nothing behind the login was attempted, and no account was
+requested. A login is a decision by the data holder, and the right response
+is a request, listed below, not a way round it.
+
+## Kosovo coverage check
+
+::: {.callout-warning}
+## To be completed
+The register is national, so coverage is not in doubt, but no licence data
+could be read. With licence polygons: clip to Kosovo, count licences by type
+and status inside each NatDA site and within 1 km of it, and list the mineral
+types involved.
+:::
+
+## What it adds for Natura 2000 in Kosovo
+
+Mining is a pressure that a site proposal must face early, because a licence
+granted inside a candidate site constrains its designation and management.
+Knowing where exploration and mining licences lie, and how they overlap the
+existing protected areas and the habitat screen, is part of the pressure
+analysis for an SDF (section 4.3, threats and pressures) and for any
+appropriate assessment. Licence polygons would serve the
+[site tier](../natura2000.qmd#q1).
+
+## Caveats and sensitivity
+
+- A login is required; the terms of access are unknown.
+- Licence areas are not mine footprints; they mark where activity is
+  permitted.
+
+## Integration into the pipeline
+
+Low effort with data: a proposed `read_mining_licences(path)` would clip the
+polygons and report overlaps with `protected_areas`. `pipeline.R` is not
+changed.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+::: {.callout-warning}
+## To be completed
+No citation guidance was seen. Cite the ICMM licence register with its access
+date once the data are obtained.
+:::

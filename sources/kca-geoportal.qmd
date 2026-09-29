@@ -1,0 +1,117 @@
+---
+title: "Kosovo Cadastral Agency State Geoportal"
+subtitle: "The national geoportal of the Kosovo Cadastral Agency; open map services could not be found at the addresses tried."
+actions:
+  - kind: check
+    what: "Find the geoportal's documented WMS/WFS endpoints (orthophoto, cadastral parcels, topography) and whether any are open without an account"
+    contact: "Kosovo Cadastral Agency, https://akk.rks-gov.net/en; the geoportal's help or 'web services' pages"
+  - kind: request
+    what: "Access to orthophotos and cadastral parcels for the two pilot sites (Sharri National Park, Ligatina e Hencit/Radevës), for drawing boundaries at 1:10,000"
+    contact: "Kosovo Cadastral Agency"
+todo:
+  doi: "No DOI; a government geoportal"
+  licence: "Terms of use of geoportal data; read in the portal"
+  access: "Whether registration or payment is needed; the desk review reported registration"
+  format: "Formats offered (WMS, WFS, downloads); not established"
+  access_method: "Not established: the WMS paths tried returned HTML, not capabilities"
+  spatial_resolution: "Orthophoto resolution and cadastral scale; read in the portal"
+  temporal_coverage: "Orthophoto years; read in the portal"
+  latest_version: "Latest orthophoto and cadastre update"
+  kosovo_codes_seen: "Not applicable (national portal)"
+  effort: "Low if an open WMS exists; medium otherwise"
+  sensitivity: "Cadastral parcels carry ownership information; use parcel geometry only"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+row <- source_row("kca-geoportal")
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+The Kosovo Cadastral Agency's State Geoportal is, in the Agency's own words,
+a portal "which aims to provide complete geographic information, offering a
+wide range of geographical and textual tools to users", presenting
+geographic information from different sources in a unified form. It is the
+natural source of the orthophotos and cadastral parcels that the
+[Natura 2000 page](../natura2000.qmd#q2) says a site boundary should be
+snapped to, so that it can be found on the ground and in the land register.
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(
+  try_access("https://geoportal.rks-gov.net/en/per-gjeoportalin/-/asset_publisher/EO0MH4mgPwJp/content"),
+  try_access("https://geoportal.rks-gov.net/geoserver/ows?service=WMS&request=GetCapabilities"),
+  try_access("https://geoportal.rks-gov.net/management/authentication/login")
+))
+```
+
+The portal and its login page answer. The two service addresses guessed from
+common geoportal software returned an HTML page rather than an OGC
+capabilities document, so no open WMS or WFS was found. The portal's own
+pages are built in the browser, and an automated read returned their titles
+only. Nothing behind the login was attempted.
+
+## Kosovo coverage check
+
+::: {.callout-warning}
+## To be completed
+The geoportal is national, so coverage is not in doubt; what could not be
+checked is what it serves and on what terms. Find the documented service
+endpoints, request a GetCapabilities document, and list the layers with their
+scale and year. If an open WMS exists, add it as a basemap to the report's
+maps for boundary work.
+:::
+
+## What it adds for Natura 2000 in Kosovo
+
+Site boundaries drawn along cadastral parcels and features visible on the
+orthophoto are the ones that survive consultation and enforcement. The
+geoportal is also where a future Natura 2000 layer would be published under
+INSPIRE, so its service model is the one the national network should follow
+(see [question 5](../natura2000.qmd#q5)). It serves the
+[site tier](../natura2000.qmd#q1).
+
+## Caveats and sensitivity
+
+- Access terms are unknown.
+- Parcel attributes include ownership; only the geometry is needed for
+  boundary drawing.
+
+## Integration into the pipeline
+
+If an open WMS exists, low effort: add it to `add_basemaps()` in
+`R/functions.R`. Parcel data would belong to the site-report tool
+(`site_reports.R`), not to `pipeline.R`, which is not changed.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+::: {.callout-warning}
+## To be completed
+Cite the geoportal as the Kosovo Cadastral Agency requests, once its terms are
+read.
+:::

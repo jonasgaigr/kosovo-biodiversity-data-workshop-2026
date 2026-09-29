@@ -1,0 +1,21 @@
+# Settings for every page under sources/.
+#
+# `freeze: auto` here, although the site as a whole deliberately runs with
+# `freeze: false` (see _quarto.yml). The trade-off is different in this folder.
+# Several pages read European datasets over the network — the Article 17 grid,
+# the ecosystem-type raster, the climate layers — and a site render should not
+# repeat those reads for pages nobody has touched. The trap _quarto.yml warns
+# about still applies: freeze watches only the .qmd, so after editing
+# sources/registry.csv, sources/registry_evidence.csv or R/sources_helpers.R,
+# re-execute the section explicitly:
+#
+#     quarto render sources/
+#
+# An explicit render of a folder or a file always executes its code; only the
+# full-site render honours the freeze.
+execute:
+  freeze: auto
+
+# Each page is one dataset, read on its own; the site-wide previous/next links
+# would walk the reader through the section in file order, which means nothing.
+page-navigation: false

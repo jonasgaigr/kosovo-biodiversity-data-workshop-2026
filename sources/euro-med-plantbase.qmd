@@ -1,0 +1,120 @@
+---
+title: "Euro+Med PlantBase"
+subtitle: "The reference checklist of the vascular plants of Europe and the Mediterranean, which has treated Kosovo as its own area since 2019."
+actions:
+  - kind: check
+    what: "Read europlusmed.org in a browser (it served a bot-protection page to automated reads) and record the licence, the current version and how area data can be exported"
+    contact: "https://europlusmed.org/"
+  - kind: check
+    what: "For the Annex II and IV plants in the GBIF extract, check whether Euro+Med gives 'Ko' in their distribution, and flag those that are recorded in Kosovo by GBIF but not by Euro+Med (or the reverse)"
+    contact: "Euro+Med taxon pages; data/eu_directives_species.csv"
+todo:
+  doi: "The database has no DOI seen; its Notulae in Willdenowia do"
+  licence: "Terms of use of the Euro+Med data; the site could not be read automatically"
+  access: "Whether area data can be downloaded or only viewed per taxon"
+  format: "Export formats, if any"
+  access_method: "Web pages per taxon; check for an API or bulk export"
+  spatial_resolution: "Political and geographical areas (e.g. 'Ko'), not coordinates"
+  temporal_coverage: "Not applicable to a checklist; record the version date instead"
+  latest_version: "Version or date of the current online database; not readable automatically"
+  effort: "Medium: area codes per taxon need scraping unless an export exists"
+  sensitivity: "None: presence per country"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+row <- source_row("euro-med-plantbase")
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+Euro+Med PlantBase is the checklist of the vascular plants of Europe and the
+Mediterranean, recording for each accepted taxon the areas in which it occurs.
+The desk review asked whether it treats Kosovo as an area of its own or folds
+it into Serbia. The answer is in the Euro+Med-Checklist Notulae published in
+*Willdenowia* in 2019 (Raab-Straube & Raus, eds), where the Euro+Med PlantBase
+Secretariat announced that it would use "Ko" for the Republic of Kosovo and
+"Se" for the Republic of Serbia "instead of Sr (Serbia with Kosovo)", as
+already practised in *Atlas Florae Europaeae*.
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(
+  try_access("https://europlusmed.org/"),
+  try_access("https://europlusmed.org/explanations"),
+  try_access("https://doi.org/10.3372/wi.49.49312")
+))
+```
+
+The site answers HTTP 200 but returns a bot-protection page ("access denied")
+to automated reads, so its own explanation of area codes, its licence and its
+version could not be read. The Willdenowia note, published by the checklist's
+own editors, is the primary source used here.
+
+## Kosovo coverage check
+
+::: {.callout-warning}
+## To be completed
+The area scheme includes Kosovo ("Ko") since 2019, so Kosovo is covered in
+principle. How completely each taxon's Kosovo occurrence has been entered is
+another matter: records that predate the split may still sit under "Sr" or be
+missing from "Ko". Check a sample, starting with the Annex II and IV plants
+the GBIF extract finds in Kosovo, and record how many carry "Ko".
+:::
+
+## What it adds for Natura 2000 in Kosovo
+
+Whether a plant occurs in a country is a question an SDF, a sufficiency ledger
+and a reviewer all ask. Euro+Med is the reference answer for Europe's flora;
+a GBIF record of an annex plant in Kosovo that Euro+Med does not list for "Ko"
+is either a new national record, worth documenting, or a misidentification,
+worth a specialist's look. It serves the [national tier](../natura2000.qmd#q1).
+
+## Caveats and sensitivity
+
+- Area codes were changed in 2019; older content may lag behind.
+- Presence per area says nothing about where in Kosovo a plant occurs.
+- No sensitive content.
+
+## Integration into the pipeline
+
+Medium effort without an export. A proposed `euromed_areas(taxon_names)`
+would look up each directive-listed plant and record whether "Ko" is in its
+distribution, as a column in `data/eu_directives_species.csv`. `pipeline.R`
+is not changed.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+For the area codes: Raab-Straube, E. von & Raus, Th. (eds) (2019).
+Euro+Med-Checklist Notulae, 11. *Willdenowia* 49(3): 421–445.
+[doi:10.3372/wi.49.49312](https://doi.org/10.3372/wi.49.49312).
+
+::: {.callout-warning}
+## To be completed
+The citation Euro+Med requests for the database itself is on its site, which
+could not be read automatically.
+:::

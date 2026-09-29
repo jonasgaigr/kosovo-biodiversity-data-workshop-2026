@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-GB" xml:lang="en-GB"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Data sources – Biodiversity of Kosovo</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-261f789220898115d1f0b2d66d52cc9d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-23b1f38336478021fe086399294f3e9a.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Biodiversity of Kosovo</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../index.html"> 
+<span class="menu-text">Workshop</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../report.html"> 
+<span class="menu-text">Report</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../natura2000.html"> 
+<span class="menu-text">Natura 2000 questions</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link active" href="../sources/index.html" aria-current="page"> 
+<span class="menu-text">Data sources</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="https://www.gbif.org"> 
+<span class="menu-text">GBIF</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/jonasgaigr/kosovo-biodiversity-data-workshop-2026"> <i class="bi bi-github" role="img" aria-label="Source code on GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul class="collapse">
+  <li><a href="#status" id="toc-status" class="nav-link active" data-scroll-target="#status">Status</a></li>
+  <li><a href="#what-the-checks-found" id="toc-what-the-checks-found" class="nav-link" data-scroll-target="#what-the-checks-found">What the checks found</a></li>
+  <li><a href="#the-registry" id="toc-the-registry" class="nav-link" data-scroll-target="#the-registry">The registry</a></li>
+  <li><a href="#data-gaps" id="toc-data-gaps" class="nav-link" data-scroll-target="#data-gaps">Data gaps</a></li>
+  <li><a href="#data-requests" id="toc-data-requests" class="nav-link" data-scroll-target="#data-requests">Data requests</a></li>
+  <li><a href="#how-this-section-is-maintained" id="toc-how-this-section-is-maintained" class="nav-link" data-scroll-target="#how-this-section-is-maintained">How this section is maintained</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Data sources</h1>
+<p class="subtitle lead">Candidate datasets for identifying Natura 2000 sites in Kosovo, each checked against its custodian and, where the data could be reached, against Kosovo itself.</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>The <a href="../report.html">report</a> is built on one GBIF download, cleaned against an OpenStreetMap outline, and set against the EEA’s register of Kosovo’s protected areas, the EU annex lists, the global Red List and the Union list of invasive species. This section looks beyond them. Each page below takes one candidate dataset from a desk review of what else could inform Natura 2000 site identification in Kosovo<span class="designation-mark">*</span>, checks what its custodian actually publishes, and, where the data could be reached, runs a check against Kosovo’s territory. The pages are written so that each can be read, re-run and completed on its own.</p>
+<p>The rule throughout is that a value is shown only if it was verified. Every filled field in the registry has a row in <code>sources/registry_evidence.csv</code> naming the page it was checked against and the date; a field without one is blanked automatically and appears as “— to be completed”. A gap is not an error; a guess would be. The precision tiers named below (national screening, site-level delineation, Standard Data Form) are those defined on the <a href="../natura2000.html#q1">Natura 2000 page</a>.</p>
+<div class="designation-note">
+<p>* This designation is without prejudice to positions on status, and is in line with UNSCR 1244/1999 and the ICJ Opinion on the Kosovo declaration of independence.</p>
+</div>
+<section id="status" class="level2">
+<h2 class="anchored" data-anchor-id="status">Status</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Status</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="status-badge status-complete">Complete</span></td>
+<td>Every registry field verified, and the Kosovo check run.</td>
+</tr>
+<tr class="even">
+<td><span class="status-badge status-partial">Partial</span></td>
+<td>Some fields verified, or the Kosovo check only partly run.</td>
+</tr>
+<tr class="odd">
+<td><span class="status-badge status-documented-only">Documented only</span></td>
+<td>The dataset is described in a report or paper, but not published as data.</td>
+</tr>
+<tr class="even">
+<td><span class="status-badge status-awaiting-request">Awaiting request</span></td>
+<td>The data exist but are released on request or after registration only.</td>
+</tr>
+<tr class="odd">
+<td><span class="status-badge status-lead-not-verified">Lead, not verified</span></td>
+<td>Named in the desk review; no primary source confirmed yet.</td>
+</tr>
+<tr class="even">
+<td><span class="status-badge status-not-applicable-to-kosovo">Not applicable to Kosovo</span></td>
+<td>The product exists but leaves Kosovo out by design; the page is kept because the reason is itself evidence.</td>
+</tr>
+</tbody>
+</table>
+<p>The 47 datasets stand as follows: Complete: 9; Partial: 19; Documented only: 12; Awaiting request: 4; Lead, not verified: 3; Not applicable to Kosovo: 0. Across all of them, 60 per cent of the verifiable registry fields are filled.</p>
+</section>
+<section id="what-the-checks-found" class="level2">
+<h2 class="anchored" data-anchor-id="what-the-checks-found">What the checks found</h2>
+<p>Four findings cut across the pages and are worth knowing before reading any one of them.</p>
+<ul>
+<li><strong>Kosovo hides under other codes.</strong> The same territory appears as XK (GBIF), XKO (GADM and <code>geodata</code>), KS (EFFIS) and Ko (Euro+Med), and inside RS where European data were compiled with Serbia: Serbia’s candidate <a href="../sources/emerald-network.html">Emerald sites</a> cover about a fifth of Kosovo, <a href="../sources/iba-kba.html">BirdLife</a> holds Kosovo’s IBAs in its Serbia inventory, <a href="../sources/r-access-toolkit.html">GISCO</a> has no Kosovo feature at all, and <a href="../sources/effis-burnt-areas.html">EFFIS</a> files some Kosovo fires under RS. Any query by a single country code undercounts.</li>
+<li><strong>The EU’s own reporting stops about 50 km away.</strong> Kosovo’s four neighbours are outside the EU, so the nearest <a href="../sources/art17-2013-2018.html">Article 17</a> and <a href="../sources/art12-birds.html">Article 12</a> cells are in Bulgaria.</li>
+<li><strong>European habitat models do cover Kosovo.</strong> The <a href="../sources/eunis-habitat-maps.html">EUNIS level-3 maps</a> and the <a href="../sources/eea-ecosystem-types.html">ecosystem-type map</a> have no gaps inside the outline, which makes them the closest thing to the Annex I map Kosovo lacks.</li>
+<li><strong>Much of what Kosovo knows is in PDFs.</strong> The red books, the protected-area table and the park plans are published, but not as data; and the national <a href="../sources/kepa-protected-areas-2020.html">protected-area table</a> and the EEA register use different code prefixes, so they cannot be joined without translation.</li>
+</ul>
+</section>
+<section id="the-registry" class="level2">
+<h2 class="anchored" data-anchor-id="the-registry">The registry</h2>
+<p>Completeness is the share of the sixteen verifiable fields that are filled.</p>
+<section id="species-occurrence-data-not-yet-in-gbif" class="level3">
+<h3 class="anchored" data-anchor-id="species-occurrence-data-not-yet-in-gbif">1. Species occurrence data not yet in GBIF</h3>
+<div class="sources-table">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Dataset</th>
+<th style="text-align: left;">Custodian</th>
+<th style="text-align: left;">Status</th>
+<th style="text-align: left;">Kosovo coverage</th>
+<th style="text-align: left;">Tier</th>
+<th style="text-align: left;">Effort</th>
+<th style="text-align: left;">Complete</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><a href="../sources/ebba2.html">European Breeding Bird Atlas 2</a></td>
+<td style="text-align: left;">European Bird Census Council (EBCC)</td>
+<td style="text-align: left;"><span class="status-badge status-awaiting-request">Awaiting request</span></td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">national</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">50 %</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="../sources/emma2.html">Atlas of European Mammals, second edition</a></td>
+<td style="text-align: left;">EMMA2 project, european-mammals.org</td>
+<td style="text-align: left;"><span class="status-badge status-documented-only">Documented only</span></td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">25 %</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="../sources/red-book-fauna.html">Red Book of Fauna of the Republic of Kosovo</a></td>
+<td style="text-align: left;">Ministry of Environment and Spatial Planning; Kosovo Environmental Protection Agency; Kosovo Institute for Nature Protection</td>
+<td style="text-align: left;"><span class="status-badge status-documented-only">Documented only</span></td>
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">national</td>
+<td style="text-align: left;">medium</td>
+<td style="text-align: left;">88 %</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="../sources/kosovo-data-papers.html">Occurrence data papers from Kosovo (Biodiversity Data Journal)</a></td>
+<td style="text-align: left;">Pensoft Publishers (Biodiversity Data Journal) and the papers’ authors</td>
+<td style="text-align: left;"><span class="status-badge status-partial">Partial</span></td>
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">national</td>
+<td style="text-align: left;">low</td>
+<td style="text-align: left;">94 %</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="../sources/endemic-plants-hacquetia.html">Conservation assessment of the endemic plants from Kosovo (Hacquetia, 2017)</a></td>
+<td style="text-align: left;">Hacquetia (ZRC SAZU); authors Millaku, Krasniqi, Berisha and Rexhepi</td>
+<td style="text-align: left;"><span class="status-badge status-documented-only">Documented only</span></td>
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">national</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">75 %</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="../sources/european-taxon-atlases.html">European atlases of amphibians, reptiles, butterflies, dragonflies, bats and orchids</a></td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;"><span class="status-badge status-lead-not-verified">Lead, not verified</span></td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">0 %</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="../sources/museum-collections.html">Natural history collections holding Kosovo material</a></td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;"><span class="status-badge status-partial">Partial</span></td>
+<td style="text-align: left;">partial</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">12 %</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="../sources/ebird-observation-org.html">eBird and Observation.org records outside GBIF</a></td>
+<td style="text-align: left;">Cornell Lab of Ornithology (eBird); Observation.org</td>
+<td style="text-align: left;"><span class="status-badge status-partial">Partial</span></td>
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">56 %</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="national-and-regional-reference-lists" class="level3">
+<h3 class="anchored" data-anchor-id="national-and-regional-reference-lists">2. National and regional reference lists</h3>
+<div class="sources-table">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Dataset</th>
+<th style="text-align: left;">Custodian</th>
+<th style="text-align: left;">Status</th>
+<th style="text-align: left;">Kosovo coverage</th>
+<th style="text-align: left;">Tier</th>
+<th style="text-align: left;">Effort</th>
+<th style="text-align: left;">Complete</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><a href="../sources/red-book-flora.html">Red Book of Vascular Flora of the Republic of Kosovo</a></td>
+<td style="text-align: left;">Ministry of Environment and Spatial Planning; editor-in-chief Fadil Millaku</td>
+<td style="text-align: left;"><span class="status-badge status-documented-only">Documented only</span></td>
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">national</td>
+<td style="text-align: left;">medium</td>
+<td style="text-align: left;">81 %</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="../sources/protected-species-ai-18-2012.html">Protected and strictly protected wild species (AI 18/2012 and its successors)</a></td>
+<td style="text-align: left;">Ministry of Environment and Spatial Planning (issuing authority)</td>
+<td style="text-align: left;"><span class="status-badge status-partial">Partial</span></td>
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">national</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">56 %</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="../sources/kepa-protected-areas-2020.html">Table of protected areas in Kosovo, 2020</a></td>
+<td style="text-align: left;">Kosovo Environmental Protection Agency (KEPA/AMMK)</td>
+<td style="text-align: left;"><span class="status-badge status-partial">Partial</span></td>
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">national</td>
+<td style="text-align: left;">low</td>
+<td style="text-align: left;">75 %</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="../sources/biodiversity-of-kosovo-overview.html">Biodiversiteti i Kosovës</a></td>
+<td style="text-align: left;">KEPA / Kosovo Institute for Nature Protection (prepared by Qenan Maxhuni)</td>
+<td style="text-align: left;"><span class="status-badge status-documented-only">Documented only</span></td>
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">national</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">62 %</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="../sources/euro-med-plantbase.html">Euro+Med PlantBase</a></td>
+<td style="text-align: left;">Euro+Med PlantBase Secretariat</td>
+<td style="text-align: left;"><span class="status-badge status-partial">Partial</span></td>
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">national</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">38 %</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="../sources/fauna-europaea.html">Fauna Europaea</a></td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;"><span class="status-badge status-partial">Partial</span></td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">44 %</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="../sources/european-red-lists.html">European Red Lists</a></td>
+<td style="text-align: left;">European Commission DG Environment (dataset owner)</td>
+<td style="text-align: left;"><span class="status-badge status-partial">Partial</span></td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">national</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">50 %</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="habitats-and-ecosystems" class="level3">
+<h3 class="anchored" data-anchor-id="habitats-and-ecosystems">3. Habitats and ecosystems</h3>
+<div class="sources-table">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Dataset</th>
+<th style="text-align: left;">Custodian</th>
+<th style="text-align: left;">Status</th>
+<th style="text-align: left;">Kosovo coverage</th>
+<th style="text-align: left;">Tier</th>
+<th style="text-align: left;">Effort</th>
+<th style="text-align: left;">Complete</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><a href="../sources/eea-ecosystem-types.html">Ecosystem types of Europe 2012, version 3.1</a></td>
+<td style="text-align: left;">European Environment Agency (EEA), with ETC/BD and ETC/ULS</td>
+<td style="text-align: left;"><span class="status-badge status-complete">Complete</span></td>
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">national</td>
+<td style="text-align: left;">low</td>
+<td style="text-align: left;">100 %</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="../sources/eunis-habitat-maps.html">EUNIS habitat maps at level 3 (Si-Moussi et al.&nbsp;2025)</a></td>
+<td style="text-align: left;">Si-Moussi, Hennekens, Mücher, Thuiller and co-authors (Zenodo record)</td>
+<td style="text-align: left;"><span class="status-badge status-complete">Complete</span></td>
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">national</td>
+<td style="text-align: left;">medium</td>
+<td style="text-align: left;">100 %</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="../sources/kosovo-nfi-2012.html">Kosovo National Forest Inventory 2012</a></td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;"><span class="status-badge status-documented-only">Documented only</span></td>
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">national</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">62 %</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="../sources/fise-kosovo.html">Forest Information System for Europe: Kosovo</a></td>
+<td style="text-align: left;">European Environment Agency (Forest Information System for Europe)</td>
+<td style="text-align: left;"><span class="status-badge status-partial">Partial</span></td>
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">national</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">50 %</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="../sources/copernicus-land.html">Copernicus land monitoring: CORINE, High Resolution Layers, Riparian Zones</a></td>
+<td style="text-align: left;">Copernicus Land Monitoring Service (EEA)</td>
+<td style="text-align: left;"><span class="status-badge status-partial">Partial</span></td>
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">national</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">31 %</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="site-prioritisation-and-prior-natura-2000-work" class="level3">
+<h3 class="anchored" data-anchor-id="site-prioritisation-and-prior-natura-2000-work">4. Site prioritisation and prior Natura 2000 work</h3>
+<div class="sources-table">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Dataset</th>
+<th style="text-align: left;">Custodian</th>
+<th style="text-align: left;">Status</th>
+<th style="text-align: left;">Kosovo coverage</th>
+<th style="text-align: left;">Tier</th>
+<th style="text-align: left;">Effort</th>
+<th style="text-align: left;">Complete</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><a href="../sources/emerald-network.html">Emerald Network</a></td>
+<td style="text-align: left;">Council of Europe (Bern Convention); data processed and published by the EEA</td>
+<td style="text-align: left;"><span class="status-badge status-complete">Complete</span></td>
+<td style="text-align: left;">partial</td>
+<td style="text-align: left;">site</td>
+<td style="text-align: left;">low</td>
+<td style="text-align: left;">100 %</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="../sources/mustafa-2009-potential-n2k.html">Natura 2000 potential areas in Kosovo</a></td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;"><span class="status-badge status-documented-only">Documented only</span></td>
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">national</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">19 %</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="../sources/nbsap-2016-2020.html">Biodiversity Strategy and Action Plan 2016–2020</a></td>
+<td style="text-align: left;">Ministry of Environment and Spatial Planning (MESP)</td>
+<td style="text-align: left;"><span class="status-badge status-documented-only">Documented only</span></td>
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">national</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">69 %</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="../sources/iba-kba.html">Important Bird and Biodiversity Areas and Key Biodiversity Areas</a></td>
+<td style="text-align: left;">BirdLife International (IBAs); KBA Partnership (World Database of KBAs)</td>
+<td style="text-align: left;"><span class="status-badge status-awaiting-request">Awaiting request</span></td>
+<td style="text-align: left;">partial</td>
+<td style="text-align: left;">national</td>
+<td style="text-align: left;">low</td>
+<td style="text-align: left;">50 %</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="../sources/important-plant-areas.html">Important Plant Areas</a></td>
+<td style="text-align: left;">Plantlife (Global IPA Database)</td>
+<td style="text-align: left;"><span class="status-badge status-lead-not-verified">Lead, not verified</span></td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">12 %</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="../sources/eea-biogeographical-regions.html">Biogeographical regions of Europe</a></td>
+<td style="text-align: left;">European Environment Agency (EEA)</td>
+<td style="text-align: left;"><span class="status-badge status-complete">Complete</span></td>
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">national</td>
+<td style="text-align: left;">low</td>
+<td style="text-align: left;">100 %</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="../sources/ec-kosovo-report-2025.html">European Commission Kosovo Report 2025</a></td>
+<td style="text-align: left;">European Commission (DG Enlargement)</td>
+<td style="text-align: left;"><span class="status-badge status-documented-only">Documented only</span></td>
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">national</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">62 %</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="cross-border-context" class="level3">
+<h3 class="anchored" data-anchor-id="cross-border-context">5. Cross-border context</h3>
+<div class="sources-table">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Dataset</th>
+<th style="text-align: left;">Custodian</th>
+<th style="text-align: left;">Status</th>
+<th style="text-align: left;">Kosovo coverage</th>
+<th style="text-align: left;">Tier</th>
+<th style="text-align: left;">Effort</th>
+<th style="text-align: left;">Complete</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><a href="../sources/art17-2013-2018.html">Article 17 reporting under the Habitats Directive, 2013–2018</a></td>
+<td style="text-align: left;">European Environment Agency (EEA) and European Commission DG Environment</td>
+<td style="text-align: left;"><span class="status-badge status-complete">Complete</span></td>
+<td style="text-align: left;">no</td>
+<td style="text-align: left;">national</td>
+<td style="text-align: left;">low</td>
+<td style="text-align: left;">100 %</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="../sources/art12-birds.html">Article 12 reporting under the Birds Directive, 2013–2018</a></td>
+<td style="text-align: left;">European Environment Agency (EEA) and European Commission DG Environment</td>
+<td style="text-align: left;"><span class="status-badge status-complete">Complete</span></td>
+<td style="text-align: left;">no</td>
+<td style="text-align: left;">national</td>
+<td style="text-align: left;">low</td>
+<td style="text-align: left;">100 %</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="../sources/serbia-eu-for-natura2000.html">EU for Natura 2000 in Serbia</a></td>
+<td style="text-align: left;">Ministry of Environmental Protection of Serbia, with the Institute for Nature Conservation of Serbia</td>
+<td style="text-align: left;"><span class="status-badge status-documented-only">Documented only</span></td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">38 %</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="../sources/montenegro-n2k.html">Natura 2000 research in Montenegro: species reports</a></td>
+<td style="text-align: left;">Environmental Protection Agency of Montenegro (EPA)</td>
+<td style="text-align: left;"><span class="status-badge status-documented-only">Documented only</span></td>
+<td style="text-align: left;">no</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">31 %</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="../sources/albania-natural.html">NaturAL project, Albania: small terrestrial mammals</a></td>
+<td style="text-align: left;">Bego et al.&nbsp;(ZooKeys 2018), for the NaturAL project</td>
+<td style="text-align: left;"><span class="status-badge status-partial">Partial</span></td>
+<td style="text-align: left;">no</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">62 %</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="../sources/neighbour-emerald-sufficiency.html">Emerald Network sufficiency in neighbouring countries</a></td>
+<td style="text-align: left;">Council of Europe (Bern Convention Standing Committee)</td>
+<td style="text-align: left;"><span class="status-badge status-partial">Partial</span></td>
+<td style="text-align: left;">no</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">19 %</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="environmental-covariates" class="level3">
+<h3 class="anchored" data-anchor-id="environmental-covariates">6. Environmental covariates</h3>
+<div class="sources-table">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Dataset</th>
+<th style="text-align: left;">Custodian</th>
+<th style="text-align: left;">Status</th>
+<th style="text-align: left;">Kosovo coverage</th>
+<th style="text-align: left;">Tier</th>
+<th style="text-align: left;">Effort</th>
+<th style="text-align: left;">Complete</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><a href="../sources/copernicus-dem.html">Copernicus Digital Elevation Model</a></td>
+<td style="text-align: left;">Copernicus Programme (source COP-DEM GLO-90-DGED); AWS open-data copy</td>
+<td style="text-align: left;"><span class="status-badge status-partial">Partial</span></td>
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">national</td>
+<td style="text-align: left;">low</td>
+<td style="text-align: left;">81 %</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="../sources/chelsa.html">CHELSA climatologies</a></td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;"><span class="status-badge status-partial">Partial</span></td>
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">national</td>
+<td style="text-align: left;">low</td>
+<td style="text-align: left;">81 %</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="../sources/worldclim.html">WorldClim</a></td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;"><span class="status-badge status-partial">Partial</span></td>
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">national</td>
+<td style="text-align: left;">low</td>
+<td style="text-align: left;">75 %</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="../sources/eu-hydro.html">EU-Hydro</a></td>
+<td style="text-align: left;">Copernicus Land Monitoring Service, coordinated by the EEA</td>
+<td style="text-align: left;"><span class="status-badge status-complete">Complete</span></td>
+<td style="text-align: left;">partial</td>
+<td style="text-align: left;">national</td>
+<td style="text-align: left;">low</td>
+<td style="text-align: left;">100 %</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="../sources/hydrosheds.html">HydroSHEDS</a></td>
+<td style="text-align: left;">HydroSHEDS (Lehner and Grill)</td>
+<td style="text-align: left;"><span class="status-badge status-complete">Complete</span></td>
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">national</td>
+<td style="text-align: left;">low</td>
+<td style="text-align: left;">100 %</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="../sources/soils-geology.html">Soil and geology layers (SoilGrids and others)</a></td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;"><span class="status-badge status-partial">Partial</span></td>
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">national</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">56 %</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="pressures-and-threats" class="level3">
+<h3 class="anchored" data-anchor-id="pressures-and-threats">7. Pressures and threats</h3>
+<div class="sources-table">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Dataset</th>
+<th style="text-align: left;">Custodian</th>
+<th style="text-align: left;">Status</th>
+<th style="text-align: left;">Kosovo coverage</th>
+<th style="text-align: left;">Tier</th>
+<th style="text-align: left;">Effort</th>
+<th style="text-align: left;">Complete</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><a href="../sources/balkan-hydropower.html">Hydropower projects on Balkan rivers</a></td>
+<td style="text-align: left;">RiverWatch and EuroNatur (data compiled by Fluvius, Vienna)</td>
+<td style="text-align: left;"><span class="status-badge status-awaiting-request">Awaiting request</span></td>
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">national</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">56 %</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="../sources/icmm-mining.html">Independent Commission for Mines and Minerals: licences and GIS</a></td>
+<td style="text-align: left;">Independent Commission for Mines and Minerals (ICMM/KPMM)</td>
+<td style="text-align: left;"><span class="status-badge status-awaiting-request">Awaiting request</span></td>
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">national</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">38 %</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="../sources/kca-geoportal.html">Kosovo Cadastral Agency State Geoportal</a></td>
+<td style="text-align: left;">Kosovo Cadastral Agency</td>
+<td style="text-align: left;"><span class="status-badge status-partial">Partial</span></td>
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">site</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">31 %</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="../sources/np-spatial-plans.html">National park spatial plans</a></td>
+<td style="text-align: left;">Ministry of Environment, Spatial Planning and Infrastructure (Institute for Spatial Planning)</td>
+<td style="text-align: left;"><span class="status-badge status-documented-only">Documented only</span></td>
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">site</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">62 %</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="../sources/river-basin-programme.html">River basin management work programme 2025–2027</a></td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;"><span class="status-badge status-lead-not-verified">Lead, not verified</span></td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">0 %</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="../sources/forest-loss-hansen.html">Global Forest Change (Hansen et al.)</a></td>
+<td style="text-align: left;">University of Maryland GLAD (Hansen et al.)</td>
+<td style="text-align: left;"><span class="status-badge status-complete">Complete</span></td>
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">national</td>
+<td style="text-align: left;">low</td>
+<td style="text-align: left;">100 %</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="../sources/effis-burnt-areas.html">EFFIS burnt areas</a></td>
+<td style="text-align: left;">European Forest Fire Information System (EFFIS), Copernicus Emergency Management Service</td>
+<td style="text-align: left;"><span class="status-badge status-partial">Partial</span></td>
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">national</td>
+<td style="text-align: left;">low</td>
+<td style="text-align: left;">69 %</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="teaching-resources" class="level3">
+<h3 class="anchored" data-anchor-id="teaching-resources">8. Teaching resources</h3>
+<div class="sources-table">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Dataset</th>
+<th style="text-align: left;">Custodian</th>
+<th style="text-align: left;">Status</th>
+<th style="text-align: left;">Kosovo coverage</th>
+<th style="text-align: left;">Tier</th>
+<th style="text-align: left;">Effort</th>
+<th style="text-align: left;">Complete</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><a href="../sources/r-access-toolkit.html">R packages for reaching these sources</a></td>
+<td style="text-align: left;">CRAN (package maintainers)</td>
+<td style="text-align: left;"><span class="status-badge status-partial">Partial</span></td>
+<td style="text-align: left;">partial</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">low</td>
+<td style="text-align: left;">50 %</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+<section id="data-gaps" class="level2">
+<h2 class="anchored" data-anchor-id="data-gaps">Data gaps</h2>
+<p>Some of what a Natura 2000 proposal needs does not exist in any of the sources above. Each gap is stated with why it matters for the Standard Data Form (SDF) and who could close it.</p>
+<section id="no-annex-i-habitat-map-or-inventory" class="level3">
+<h3 class="anchored" data-anchor-id="no-annex-i-habitat-map-or-inventory">1. No Annex I habitat map or inventory</h3>
+<p><strong>Missing:</strong> a map of Annex I habitat types for Kosovo. The <a href="../sources/eunis-habitat-maps.html">EUNIS model</a> and the report’s CORINE screen say where to look, not what is there. <strong>For the SDF:</strong> section 3.1 needs each habitat’s cover, representativity and conservation, which only mapped polygons provide (<a href="../natura2000.html#q3">question 3</a>). <strong>Who:</strong> the Kosovo Institute for Nature Protection with University of Prishtina botanists, by field mapping at 1:10,000, starting in the pilot sites.</p>
+</section>
+<section id="no-official-or-draft-natura-2000-or-emerald-site-list-with-boundaries" class="level3">
+<h3 class="anchored" data-anchor-id="no-official-or-draft-natura-2000-or-emerald-site-list-with-boundaries">2. No official or draft Natura 2000 or Emerald site list with boundaries</h3>
+<p><strong>Missing:</strong> any candidate site list for Kosovo. The 2008 identification (<a href="../sources/mustafa-2009-potential-n2k.html">Mustafa</a>) is known only from citations, and Kosovo is not a Bern Convention Party, so it has no Emerald list of its own. <strong>For the SDF:</strong> there is nothing yet to fill one for. <strong>Who:</strong> the Ministry and KINP, which the NBSAP makes responsible for the ecological network.</p>
+</section>
+<section id="no-confirmed-iba-or-kba-boundaries" class="level3">
+<h3 class="anchored" data-anchor-id="no-confirmed-iba-or-kba-boundaries">3. No confirmed IBA or KBA boundaries</h3>
+<p><strong>Missing:</strong> the digital boundaries of the four <a href="../sources/iba-kba.html">IBAs</a> that concern Kosovo; only centroids are public. <strong>For the SDF:</strong> SPA proposals start from the IBA inventory, and how much of each IBA lies in Kosovo is unknown. <strong>Who:</strong> a request to the World Database of KBAs, whose terms come with the request form.</p>
+</section>
+<section id="no-published-national-species-monitoring-data" class="level3">
+<h3 class="anchored" data-anchor-id="no-published-national-species-monitoring-data">4. No published national species monitoring data</h3>
+<p><strong>Missing:</strong> surveillance data with method and effort. The red books of <a href="../sources/red-book-fauna.html">fauna</a> and <a href="../sources/red-book-flora.html">flora</a> assess species but do not release their localities as data. <strong>For the SDF:</strong> section 3.2’s population and data-quality fields need surveyed records, not casual ones. <strong>Who:</strong> KEPA and KINP, with the red-book authors; a data-use agreement could release localities at a generalised resolution.</p>
+</section>
+<section id="no-population-size-data-for-sdf-section-3.2" class="level3">
+<h3 class="anchored" data-anchor-id="no-population-size-data-for-sdf-section-3.2">5. No population-size data for SDF section 3.2</h3>
+<p><strong>Missing:</strong> population estimates with units (pairs, individuals, localities) for Annex II species and Annex I birds. The IBA factsheets give a few, several from 2008–2013 or earlier. <strong>For the SDF:</strong> section 3.2 requires minimum and maximum population with a unit and a data-quality code. <strong>Who:</strong> standardised counts in the pilot sites (<a href="../natura2000.html#q6">question 6</a>); the <a href="../sources/ebird-observation-org.html">eBird Basic Dataset</a> for effort-based bird data.</p>
+</section>
+<section id="no-wetland-peatland-cave-or-grassland-inventories" class="level3">
+<h3 class="anchored" data-anchor-id="no-wetland-peatland-cave-or-grassland-inventories">6. No wetland, peatland, cave or grassland inventories</h3>
+<p><strong>Missing:</strong> national inventories of the habitat groups most likely to hold priority Annex I types: wetlands and mires, caves, dry and mountain grasslands. <strong>For the SDF:</strong> these are small or scattered habitats that land-cover data miss at a 25 ha minimum unit. <strong>Who:</strong> KINP with specialists; the natural monuments in the <a href="../sources/kepa-protected-areas-2020.html">national table</a>, many of them springs and caves, are a starting list.</p>
+</section>
+<section id="no-article-17-style-range-assessments-and-no-delineation-of-biogeographical-regions-within-kosovo" class="level3">
+<h3 class="anchored" data-anchor-id="no-article-17-style-range-assessments-and-no-delineation-of-biogeographical-regions-within-kosovo">7. No Article 17-style range assessments, and no delineation of biogeographical regions within Kosovo</h3>
+<p><strong>Missing:</strong> national range and distribution maps on the 10 km grid, as EU countries report under <a href="../sources/art17-2013-2018.html">Article 17</a>, and a Kosovo delineation of the <a href="../sources/eea-biogeographical-regions.html">biogeographical regions</a> finer than the European 1:1,000,000 line. <strong>For the SDF:</strong> a site’s contribution is judged against the national population and range in its region. <strong>Who:</strong> KINP, as the NBSAP foresees; the European layer is the starting point.</p>
+</section>
+<section id="scattered-evidence-for-annex-ii-invertebrates-and-freshwater-fish" class="level3">
+<h3 class="anchored" data-anchor-id="scattered-evidence-for-annex-ii-invertebrates-and-freshwater-fish">8. Scattered evidence for Annex II invertebrates and freshwater fish</h3>
+<p><strong>Missing:</strong> systematic data for the Annex II groups least covered by casual recording. The <a href="../sources/kosovo-data-papers.html">data papers</a> add caddisflies and plants but no Annex II list; the <a href="../sources/european-taxon-atlases.html">taxon atlases</a> are unverified. <strong>For the SDF:</strong> without them, sites cannot be proposed for these species at all. <strong>Who:</strong> university specialists, with targeted surveys in the rivers the <a href="../sources/balkan-hydropower.html">hydropower inventory</a> shows under pressure.</p>
+</section>
+</section>
+<section id="data-requests" class="level2">
+<h2 class="anchored" data-anchor-id="data-requests">Data requests</h2>
+<p>Every request listed on the dataset pages, in one place. Each is also on its own page, under “To be completed”.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Dataset</th>
+<th style="text-align: left;">Request</th>
+<th style="text-align: left;">Route</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><a href="../sources/ebba2.html">European Breeding Bird Atlas 2</a></td>
+<td style="text-align: left;">EBBA2 data for the 50 km squares covering Kosovo (breeding evidence and abundance class per species) and the 10 km modelled probability of occurrence for the same area</td>
+<td style="text-align: left;">EBBA2 data request form, https://www.ebba2.info/data-req-form/</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="../sources/emma2.html">Atlas of European Mammals, second edition</a></td>
+<td style="text-align: left;">EMMA2 grid records for the squares covering Kosovo, if the database is not published</td>
+<td style="text-align: left;">EMMA2 project, https://www.european-mammals.org/</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="../sources/red-book-fauna.html">Red Book of Fauna of the Republic of Kosovo</a></td>
+<td style="text-align: left;">The species list with national IUCN categories as a table, and permission to use the localities behind the maps at no finer than 10 km for threatened species</td>
+<td style="text-align: left;">Kosovo Institute for Nature Protection (KEPA/AMMK), and the Ministry of Environment, Spatial Planning and Infrastructure, which holds the rights</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="../sources/museum-collections.html">Natural history collections holding Kosovo material</a></td>
+<td style="text-align: left;">A list of Kosovo specimens (taxon, locality, date, collector) held by the natural history museums in Tirana, Belgrade, Skopje, Vienna and Budapest, and whether they would digitise and publish them to GBIF</td>
+<td style="text-align: left;">Each museum’s collection manager; start with those that already publish Kosovo specimens to GBIF, such as the Natural History Museum, Vienna</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="../sources/ebird-observation-org.html">eBird and Observation.org records outside GBIF</a></td>
+<td style="text-align: left;">The eBird Basic Dataset (EBD) and its Sampling Event Data for Kosovo, which carry protocol, duration, distance and whether each checklist is complete</td>
+<td style="text-align: left;">Cornell Lab of Ornithology, eBird data request at https://science.ebird.org (the site’s bot protection blocked automated reading)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="../sources/red-book-flora.html">Red Book of Vascular Flora of the Republic of Kosovo</a></td>
+<td style="text-align: left;">The full species list with national categories as a table (the English summary has none), and the field coordinates recorded for each assessed taxon, at no finer than 10 km for collected species</td>
+<td style="text-align: left;">Ministry of Environment, Spatial Planning and Infrastructure; the book’s editors (the summary says the herbarium samples are kept at the University of Prishtina, Faculty of Natural and Mathematical Sciences)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="../sources/kepa-protected-areas-2020.html">Table of protected areas in Kosovo, 2020</a></td>
+<td style="text-align: left;">The national register in machine-readable form (table and boundaries), with the date of its last update</td>
+<td style="text-align: left;">KEPA/AMMK, https://www.ammk-rks.net/</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="../sources/kosovo-nfi-2012.html">Kosovo National Forest Inventory 2012</a></td>
+<td style="text-align: left;">Plot-level data of the 2012 inventory (and 2003): plot coordinates, tree species, stand structure, dead wood and damage codes, under a data-use agreement</td>
+<td style="text-align: left;">Kosovo Forest Agency (Ministry of Agriculture, Forestry and Rural Development); the Norwegian Forestry Group, which hosts the abstract, can say who holds the data</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="../sources/mustafa-2009-potential-n2k.html">Natura 2000 potential areas in Kosovo</a></td>
+<td style="text-align: left;">A copy of the report ‘Natura 2000 potential areas in Kosovo’ (Mustafa 2009) and any maps or site list it contains</td>
+<td style="text-align: left;">Kosovo Institute for Nature Protection, which the NBSAP names as responsible for the ecological network; and the author, Behxhet Mustafa</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="../sources/iba-kba.html">Important Bird and Biodiversity Areas and Key Biodiversity Areas</a></td>
+<td style="text-align: left;">Digital boundaries of IBAs RS022 Kopaonik, RS023 Prokletije, RS024 Sara mountain and RS062 Mokra Gora, and of any KBA touching Kosovo, for non-commercial use</td>
+<td style="text-align: left;">World Database of Key Biodiversity Areas, request form at https://www.keybiodiversityareas.org/request-gis-data</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="../sources/serbia-eu-for-natura2000.html">EU for Natura 2000 in Serbia</a></td>
+<td style="text-align: left;">Draft boundaries of the 277 pSCIs and 85 SPAs, at least those within 20 km of Kosovo, with their Standard Data Forms</td>
+<td style="text-align: left;">Ministry of Environmental Protection of Serbia, through the Natura 2000 portal https://natura2000.gov.rs/en/; or the Institute for Nature Conservation of Serbia</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="../sources/montenegro-n2k.html">Natura 2000 research in Montenegro: species reports</a></td>
+<td style="text-align: left;">The final species reports of the Natura 2000 research project, and the draft site proposal for areas bordering Kosovo (Prokletije, Hajla, Mokra Gora)</td>
+<td style="text-align: left;">Environmental Protection Agency of Montenegro, https://epa.org.me/</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="../sources/balkan-hydropower.html">Hydropower projects on Balkan rivers</a></td>
+<td style="text-align: left;">Point data of hydropower plants in Kosovo (status, capacity, river), 2024 update, under stated terms of use</td>
+<td style="text-align: left;">RiverWatch: ulrich.eichelmann@riverwatch.eu or cornelia.wieser@riverwatch.eu (as given on the 2024 news page)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="../sources/icmm-mining.html">Independent Commission for Mines and Minerals: licences and GIS</a></td>
+<td style="text-align: left;">Mining and exploration licence areas as GIS data (polygons with licence type, holder, status and dates), for use in a Natura 2000 overlay</td>
+<td style="text-align: left;">Independent Commission for Mines and Minerals (ICMM/KPMM), https://kosovo-mining.org/?lang=en</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="../sources/kca-geoportal.html">Kosovo Cadastral Agency State Geoportal</a></td>
+<td style="text-align: left;">Access to orthophotos and cadastral parcels for the two pilot sites (Sharri National Park, Ligatina e Hencit/Radevës), for drawing boundaries at 1:10,000</td>
+<td style="text-align: left;">Kosovo Cadastral Agency</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="../sources/np-spatial-plans.html">National park spatial plans</a></td>
+<td style="text-align: left;">The zoning of both national parks (protection zones, special zones, planned development) as GIS layers</td>
+<td style="text-align: left;">Institute for Spatial Planning, Ministry of Environment, Spatial Planning and Infrastructure</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="../sources/effis-burnt-areas.html">EFFIS burnt areas</a></td>
+<td style="text-align: left;">Historical burnt-area perimeters before the years the web service exposes, if needed for a longer fire history</td>
+<td style="text-align: left;">EFFIS data request form, https://effis.jrc.ec.europa.eu/apps/data.request.form</td>
+</tr>
+</tbody>
+</table>
+<p>17 requests on 17 pages; the pages list a further 94 checks that need no one’s permission.</p>
+</section>
+<section id="how-this-section-is-maintained" class="level2">
+<h2 class="anchored" data-anchor-id="how-this-section-is-maintained">How this section is maintained</h2>
+<ul>
+<li><code>sources/registry.csv</code> holds one row per dataset; <code>sources/registry_evidence.csv</code> one row per verified value. Edit both together.</li>
+<li><code>R/sources_helpers.R</code> reads them, blanks unverified values, and draws the tables, badges and checklists.</li>
+<li>Pages cache what they download under <code>data/sources/&lt;slug&gt;/</code>. Small open extracts are committed; PDFs and anything over 50 MB are not.</li>
+<li>This folder renders with <code>freeze: auto</code>. After editing the registry or the helpers, run <code>quarto render sources/</code> so every page picks up the change.</li>
+</ul>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/jonasgaigr\.github\.io\/kosovo-biodiversity-data-workshop-2026\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Occurrence data provided by the Global Biodiversity Information Facility (GBIF) and its publishing institutions.</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+<p>Built with <a href="https://quarto.org">Quarto</a> · Analysis code on <a href="https://github.com/jonasgaigr/kosovo-biodiversity-data-workshop-2026">GitHub</a></p>
+</div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

@@ -1,0 +1,259 @@
+---
+title: "Article 12 reporting under the Birds Directive, 2013–2018"
+subtitle: "The EU Member States' 10 km bird distribution maps for 2013–2018, read here for the breeding and wintering birds reported near Kosovo."
+actions:
+  - kind: check
+    what: "Whether the EEA has published the 2019–2024 Article 12 spatial dataset; the datahub lists only 2013–2018 and 2008–2012"
+    contact: "EEA datahub, https://www.eea.europa.eu/en/datahub/datahubitem-view/96e1b9b1-ee94-4547-ad61-8059df7240bf"
+  - kind: check
+    what: "Set the border-zone species against the IBA qualifying species and the Annex I birds in the GBIF extract, to see which neighbours' breeding species Kosovo has no record of"
+    contact: "data/kosovo_iba_species.csv and data_exports/kosovo_birds_annex_I.csv in this repository"
+todo:
+  doi: "The catalogue record shows no DOI and DataCite returns none for its identifier; ask the EEA helpdesk"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+suppressPackageStartupMessages({
+  library(sf)
+  library(leaflet)
+})
+row <- source_row("art12-birds")
+cache <- file.path(cache_dir("art12-birds"), "art12_border_cells.gpkg")
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+Article 12 of the Birds Directive asks every EU Member State to report, every
+six years, on the size, trend and distribution of its bird populations. The
+EEA publishes the 2013–2018 round as a tabular dataset (population sizes and
+short- and long-term trends, breeding and wintering) and a spatial dataset of
+10 km grid cells in which each country mapped where each species occurs. The
+public spatial version dates from April 2021 and was published on the EEA
+datahub on 1 March 2022, under CC-BY 4.0.
+
+The EEA's README describes the spatial file as gridded distribution data "as
+reported by EU Member States", aggregated by species and country, and states
+that it is the public version without sensitive species.
+
+## Access
+
+Open, with no account. The distribution GeoPackage is read remotely, as on the
+[Article 17 page](art17-2013-2018.qmd): GDAL fetches only the part of the file
+covering a box around Kosovo, and the 10 km cells within 100 km of the border
+are cached here.
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+landing <- "https://www.eea.europa.eu/en/datahub/datahubitem-view/96e1b9b1-ee94-4547-ad61-8059df7240bf"
+share   <- "https://sdi.eea.europa.eu/datashare/s/wcpT9ak6BnyY8kL/download?path=%2FArt12-2013-2018_GPKG&files=ART12_3035_distribution_data_without_sensitive.gpkg"
+access_table(list(try_access(landing), try_access(share)))
+```
+
+The share token changes when the EEA republishes. The stable address is
+`https://sdi.eea.europa.eu/data/e2face16-f352-4aff-9e4f-0ad1306f89b5`.
+
+```{r}
+#| label: build
+#| echo: true
+#| code-fold: true
+#| code-summary: "Show how the border-zone extract is built"
+build_error <- NULL
+if (!file.exists(cache)) {
+  build_error <- tryCatch({
+    Sys.setenv(GDAL_DISABLE_READDIR_ON_OPEN = "EMPTY_DIR",
+               CPL_VSIL_CURL_CHUNK_SIZE = "1048576",
+               CPL_VSIL_CURL_CACHE_SIZE = "524288000")
+    src  <- paste0("/vsicurl/", share)
+    ko   <- st_transform(st_union(kosovo_outline()), 3035)
+    zone <- st_buffer(ko, 100000)
+    birds <- st_read(src,
+      layer = "EU_ART12_birds_distribution_2013_2018_without_sensitive_species",
+      wkt_filter = st_as_text(st_as_sfc(st_bbox(zone))), quiet = TRUE)
+
+    # Rebuild the EEA 10 km grid, whose corners sit on round 10 km multiples
+    # of EPSG:3035, and test each cell's centre against the dissolved ranges.
+    bb <- st_bbox(zone)
+    bb[c("xmin", "ymin")] <- floor(bb[c("xmin", "ymin")] / 1e4) * 1e4
+    bb[c("xmax", "ymax")] <- ceiling(bb[c("xmax", "ymax")] / 1e4) * 1e4
+    grid <- st_sf(geometry = st_make_grid(st_as_sfc(bb), cellsize = 1e4))
+    grid <- grid[lengths(st_intersects(grid, zone)) > 0, ]
+    xy <- st_coordinates(st_centroid(grid))
+    grid$cell_id <- sprintf("10kmE%dN%d", floor(xy[, 1] / 1e4), floor(xy[, 2] / 1e4))
+    grid$dist_km <- round(as.numeric(st_distance(grid, ko)) / 1000, 1)
+
+    hit <- st_intersects(st_centroid(st_geometry(grid)), birds)
+    a <- st_drop_geometry(birds)
+    long <- do.call(rbind, lapply(seq_along(hit), function(i) {
+      if (!length(hit[[i]])) return(NULL)
+      f <- a[hit[[i]], ]
+      data.frame(cell_id = grid$cell_id[i], code = f$speciescodeEU,
+                 name = f$speciesnameEU, season = f$season,
+                 country = f$country, trend = f$population_trend)
+    }))
+    grid <- grid[grid$cell_id %in% long$cell_id, ]
+    st_write(grid, cache, layer = "cells", delete_dsn = TRUE, quiet = TRUE)
+    st_write(long, cache, layer = "features", append = FALSE, quiet = TRUE)
+    NULL
+  }, error = function(e) conditionMessage(e))
+}
+have_cache <- file.exists(cache)
+```
+
+```{r}
+#| label: build-outcome
+#| output: asis
+if (have_cache) {
+  fp <- file_fingerprint(cache)
+  cat(sprintf("The extract `%s` (%s, SHA-256 `%s`) was written on %s and is committed with the site.\n",
+              fp$file, fp$size, substr(fp$sha256, 1, 16), fp$downloaded))
+} else {
+  cat("::: {.callout-warning}\n## To be completed\nThe remote read of the EEA GeoPackage failed at render time (",
+      build_error %||% "no message", "). Re-render when sdi.eea.europa.eu answers.\n:::\n", sep = "")
+}
+```
+
+## Kosovo coverage check
+
+Kosovo did not report under the Directive, so no cell lies inside it. What
+the file can say is which birds the nearest Member States report within 50 km
+and 100 km of the border, by season. For an SPA case that is the regional
+context a reviewer would ask for.
+
+```{r}
+#| label: check
+#| eval: !expr have_cache
+cells <- st_read(cache, layer = "cells", quiet = TRUE)
+feat  <- st_read(cache, layer = "features", quiet = TRUE)
+feat$near <- cells$dist_km[match(feat$cell_id, cells$cell_id)] <= 50
+zone_row <- function(f, label) data.frame(
+  Zone = label, Cells = length(unique(f$cell_id)),
+  Countries = paste(sort(unique(f$country)), collapse = ", "),
+  `Breeding species` = length(unique(f$code[f$season == "breeding"])),
+  `Wintering species` = length(unique(f$code[f$season == "wintering"])),
+  check.names = FALSE)
+knitr::kable(rbind(zone_row(feat[feat$near, ], "Within 50 km"),
+                   zone_row(feat, "Within 100 km")),
+             align = "lrlrr", row.names = FALSE)
+```
+
+```{r}
+#| label: check-text
+#| eval: !expr have_cache
+#| output: asis
+source("../R/functions.R", local = TRUE)
+annex <- read.csv("../data/eu_directives_species.csv", encoding = "UTF-8")
+annex_i <- unique(annex$scientific_name[annex$directive == "Birds" & annex$annex == "I"])
+codes <- unique(feat[, c("code", "name")])
+codes <- codes[!duplicated(codes$code), ]
+cat(sprintf(paste(
+  "The nearest reported cell lies %s km from Kosovo. Within 100 km the",
+  "neighbouring Member States report %d bird species codes, %d of them",
+  "matching a name on Annex I of the Birds Directive exactly. The extract",
+  "holds %s maps only."),
+  format(min(cells$dist_km)), nrow(codes), sum(codes$name %in% annex_i),
+  paste(sort(unique(feat$season)), collapse = " and ")))
+```
+
+```{r}
+#| label: map
+#| eval: !expr have_cache
+ko <- kosovo_outline()
+cells$species <- as.integer(tapply(feat$code, feat$cell_id,
+                                   function(x) length(unique(x)))[cells$cell_id])
+rings <- st_transform(st_sf(ring = c("50 km", "100 km"),
+  geometry = st_buffer(st_transform(st_union(ko), 3035), c(50000, 100000))), 4326)
+pal <- colorBin(map_palette$density, cells$species, bins = 5)
+leaflet(st_transform(cells, 4326)) |>
+  add_basemaps() |>
+  addPolygons(fillColor = ~pal(species), fillOpacity = 0.75, weight = 0.5,
+              color = "#666666",
+              label = ~sprintf("%s: %d species, %s km from Kosovo",
+                               cell_id, species, dist_km)) |>
+  addPolylines(data = rings, color = "#175CA1", weight = 1.5,
+               dashArray = "4 4", label = ~ring) |>
+  add_boundary_outline(ko) |>
+  addLegend(pal = pal, values = ~species, title = "Bird species<br>per 10 km cell") |>
+  addLayersControl(baseGroups = basemap_groups,
+                   options = layersControlOptions(collapsed = TRUE))
+```
+
+::: {.callout-note collapse="true"}
+## Every species reported within 100 km
+
+```{r}
+#| label: lists
+#| eval: !expr have_cache
+lst <- aggregate(cell_id ~ name + season, data = feat,
+                 FUN = function(x) length(unique(x)))
+lst$annex_i <- ifelse(lst$name %in% annex_i, "yes", "")
+lst <- lst[order(lst$season, -lst$cell_id), ]
+knitr::kable(data.frame(Species = paste0("*", lst$name, "*"), Season = lst$season,
+                        `Annex I` = lst$annex_i, Cells = lst$cell_id,
+                        check.names = FALSE),
+             align = "llcr", row.names = FALSE)
+```
+
+:::
+
+## What it adds for Natura 2000 in Kosovo
+
+The report already has Kosovo's own bird records from GBIF and the IBA
+qualifying species on the [Natura 2000 page](../natura2000.qmd#q6). This file
+adds the regional frame around them: the Annex I species that the nearest EU
+countries hold as breeding populations, and their reported trends. A species
+breeding 60 km away that has no Kosovo record is a survey question; one
+reported declining there raises the stakes of a Kosovo population. At 10 km
+the data serve the [national screening tier](../natura2000.qmd#q1).
+
+## Caveats and sensitivity
+
+- The public version leaves out sensitive species entirely, as the EEA says.
+  Raptors, grouse and other persecuted birds may therefore be absent here
+  although reported to the Commission.
+- The nearest data lie in Bulgaria, because Kosovo's four neighbours are not
+  EU members; the Montenegrin, Albanian, Macedonian and Serbian mountains that
+  share Kosovo's bird fauna are blank.
+- Near Kosovo the file holds breeding distributions only; no wintering map
+  reaches this far, and passage is never mapped. The lists therefore say
+  nothing about the migrants that give Ligatina e Hencit/Radevës its value.
+- Annex I is matched by exact name, so a taxon the EEA names differently
+  (for example with "s. str." or "all others") is not flagged even when it is
+  listed.
+
+## Integration into the pipeline
+
+Low effort, and the same function as for Article 17 with a different layer:
+a proposed `art12_border_species(boundary, radius_km = c(50, 100))` in
+`R/functions.R`, run beside the IBA step, whose output a report section on the
+SPA route could read. `pipeline.R` is not changed by this page.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+Neither the catalogue record nor the README gives a citation string. Under
+the CC-BY 4.0 licence the attribution goes to the copyright holders named
+there, DG Environment and the EEA: *Population trend of bird species: datasets
+from Article 12, Birds Directive 2009/147/EC reporting (2013–2018), public
+version, April 2021.* Catalogue record e2face16-f352-4aff-9e4f-0ad1306f89b5.

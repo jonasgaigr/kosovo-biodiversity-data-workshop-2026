@@ -1,0 +1,129 @@
+---
+title: "Natura 2000 potential areas in Kosovo"
+subtitle: "The first attempt to identify Natura 2000 sites in Kosovo, drafted in 2008–2009 under an EU forestry project and known today only from citations."
+actions:
+  - kind: request
+    what: "A copy of the report 'Natura 2000 potential areas in Kosovo' (Mustafa 2009) and any maps or site list it contains"
+    contact: "Kosovo Institute for Nature Protection, which the NBSAP names as responsible for the ecological network; and the author, Behxhet Mustafa"
+  - kind: check
+    what: "If the report contains maps of the potential areas, record their scale and whether digitising them is worthwhile; do not digitise them without the author's agreement"
+    contact: "The report, once obtained"
+  - kind: check
+    what: "Find Administrative Instruction No. 03/156 (2013) on the proclamation of the ecological network, which the NBSAP cites, and whether it maps the network"
+    contact: "Official Gazette, https://gzk.rks-gov.net/"
+todo:
+  custodian: "Holder of the report; the NBSAP says it was drafted within the Sustainable Forest Management project"
+  url: "No online copy found; the report is known from citations only"
+  doi: "No DOI expected for a project report"
+  licence: "Terms of the report; ask the holder"
+  access: "Not established: no copy found"
+  format: "Report, possibly with maps; not seen"
+  access_method: "Unknown until a copy is found"
+  spatial_resolution: "Scale of any maps in the report"
+  temporal_coverage: "Drafted 2008 (NBSAP) or 2009 (as cited); data years unknown"
+  latest_version: "2009 as cited in Veselaj & Mustafa (2015)"
+  kosovo_codes_seen: "Not applicable (national report)"
+  effort: "Depends on whether maps exist and in what form"
+  sensitivity: "Unknown until seen"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+row <- source_row("mustafa-2009-potential-n2k")
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+Two sources, one of them governmental, confirm that a first identification of
+potential Natura 2000 sites in Kosovo was made more than fifteen years ago.
+Kosovo's Action Plan for Biodiversity 2016–2020 records that "already in 2008,
+a report of preliminary sites in Kosovo has been drafted within the 'Project
+of Sustainable Forest Management'". Veselaj and Mustafa's overview of nature
+protection progress in Kosovo (*Landscape Online*, 2015) cites the work as
+Mustafa, B. (2009), *Natura 2000 Potential Areas in Kosovo*. Neither source
+says how many areas were identified or where, and no copy of the report was
+found online.
+
+The same action plan cites an Administrative Instruction No. 03/156 of 2013
+on the proclamation of a national ecological network. It gives the Kosovo
+Institute for Nature Protection responsibility for that network, and so for
+Natura 2000 preparation.
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(
+  try_access("https://landscape-online.org/index.php/lo/article/view/LO.201545"),
+  try_access("https://kryeministri.rks-gov.net/wp-content/uploads/2022/08/Eng-SAPB-2016-2020.pdf")
+))
+```
+
+A web search for the title found only citations. The 2015 article is open
+(CC BY 4.0) and cites the report in its references without describing it.
+
+## Kosovo coverage check
+
+::: {.callout-warning}
+## To be completed
+The report is about Kosovo, but its content is unknown: no site list, map or
+area figure was found. Once a copy is obtained: list the potential areas,
+compare them with today's protected-area register and with the report's
+habitat screen, and note which have since been designated. If the areas exist
+only as a map figure, digitising it is an open action for the author's
+agreement, not something this page does.
+:::
+
+## What it adds for Natura 2000 in Kosovo
+
+A starting list. Whatever its method, a set of areas that Kosovo's own
+experts judged to be of Natura 2000 interest in 2008–2009 is the obvious
+first test for today's data: are those areas still where the evidence is, and
+what did they miss? It also matters for the record, since the European
+Commission's 2025 report calls the identification of potential sites "at a
+very early stage". The [tier](../natura2000.qmd#q1) depends on the map scale.
+
+## Caveats and sensitivity
+
+- Documented only: known from two citations, not seen.
+- The two sources give different years (2008 drafted, 2009 cited); probably
+  the same work, not confirmed.
+
+## Integration into the pipeline
+
+None until a copy exists. If the report includes digital boundaries, a
+proposed `read_candidate_areas(path)` would load them beside the protected
+areas for comparison. `pipeline.R` is not changed.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+As cited in Veselaj & Mustafa (2015): Mustafa, B. (2009). *Natura 2000
+Potential Areas in Kosovo.*
+
+::: {.callout-warning}
+## To be completed
+Publisher, place and full author list were not verified; complete from the
+report itself.
+:::

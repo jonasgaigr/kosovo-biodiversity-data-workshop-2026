@@ -1,0 +1,171 @@
+---
+title: "Important Bird and Biodiversity Areas and Key Biodiversity Areas"
+subtitle: "BirdLife's inventory lists four IBAs that concern Kosovo, held under Serbia; their boundaries are released only on request."
+actions:
+  - kind: request
+    what: "Digital boundaries of IBAs RS022 Kopaonik, RS023 Prokletije, RS024 Sara mountain and RS062 Mokra Gora, and of any KBA touching Kosovo, for non-commercial use"
+    contact: "World Database of Key Biodiversity Areas, request form at https://www.keybiodiversityareas.org/request-gis-data"
+  - kind: check
+    what: "Once boundaries arrive, measure how much of each site lies inside Kosovo; the report now uses centroids only"
+    contact: "R/fetch_iba.R and natura2000.qmd, question 6"
+todo:
+  doi: "No DOI for the IBA inventory; cite the factsheets as BirdLife gives them"
+  licence: "Terms come with the KBA data request (non-commercial use free, per the report's Natura 2000 page); read them on the request form"
+  format: "Boundaries are supplied as GIS files on request; the format is set by the request"
+  access_method: "Attributes via BirdLife's DataZone API; boundaries by request"
+  spatial_resolution: "Scale of the IBA boundaries; stated with the delivered data"
+  temporal_coverage: "Year of last assessment per site (2019 for all four in data/kosovo_ibas.csv)"
+  latest_version: "Date of the World Database of KBAs release used"
+  sensitivity: "IBA factsheets name qualifying species with population sizes; boundaries are not sensitive"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+suppressPackageStartupMessages({
+  library(sf)
+  library(leaflet)
+})
+row <- source_row("iba-kba")
+api <- "https://bli-prod-fd-dz-eu-bgf5eqfcf2bmgtdn.a02.azurefd.net"
+cache <- file.path(cache_dir("iba-kba"), "birdlife_country_check.csv")
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+Important Bird and Biodiversity Areas (IBAs) are sites that BirdLife
+International and its partners identify by standard criteria for their
+importance to bird populations. Key Biodiversity Areas (KBAs) extend the idea
+to all biodiversity, and IBAs are part of the World Database of KBAs. The
+report already uses the public IBA factsheets: `R/fetch_iba.R` builds
+`data/kosovo_ibas.csv` and `data/kosovo_iba_species.csv`, and the
+[Natura 2000 page](../natura2000.qmd#q6) discusses the four sites. The
+boundaries, which a site proposal needs, are released only through a request
+form with terms of use.
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(
+  try_access("https://datazone.birdlife.org/site/factsheet/3126-sara-mountain"),
+  try_access(paste0(api, "/country/271/sites?pageSize=5")),
+  try_access("https://www.keybiodiversityareas.org/request-gis-data")
+))
+```
+
+The factsheets and BirdLife's DataZone API are open; boundaries were not
+requested, and the pipeline deliberately does not take them from the map
+server behind DataZone, since that would skip the request and its terms.
+
+## Kosovo coverage check
+
+The check, re-run on each render, asks BirdLife's API for a Kosovo country
+record and lists the sites concerning Kosovo from the Serbia inventory.
+
+```{r}
+#| label: build
+#| echo: true
+#| code-fold: true
+#| code-summary: "Show the API check"
+if (!file.exists(cache)) {
+  res <- tryCatch({
+    k <- curl::curl_fetch_memory(paste0(api, "/country/slug?country=kosovo"))
+    s <- jsonlite::fromJSON(paste0(api, "/site/3126"))
+    data.frame(check = c("Kosovo country record (country/slug?country=kosovo)",
+                         "Country that holds Sara mountain (site 3126)",
+                         "ISO2 of that country"),
+               result = c(sprintf("HTTP %d, %d bytes", k$status_code, length(k$content)),
+                          s$country$birdLifeName, s$country$iso2))
+  }, error = function(e) NULL)
+  if (!is.null(res)) write.csv(res, cache, row.names = FALSE)
+}
+if (file.exists(cache)) knitr::kable(read.csv(cache), col.names = c("Check", "Result"))
+```
+
+```{r}
+#| label: check
+ibas <- read.csv(file.path(sources_root(), "data", "kosovo_ibas.csv"), encoding = "UTF-8")
+knitr::kable(data.frame(Code = ibas$code, Site = ibas$name, `Where it lies` = ibas$relation,
+                        `Area (km²)` = ibas$area_km2, `IBA criteria` = ibas$ibaCriteria,
+                        `KBA` = ibas$kbaClassification, check.names = FALSE),
+             align = "lllrll", row.names = FALSE,
+             caption = sprintf("From data/kosovo_ibas.csv, built by R/fetch_iba.R on %s",
+                               ibas$accessed[1]))
+```
+
+BirdLife holds no country record for Kosovo: the request returns an empty
+answer, and the four sites sit in the inventory compiled for Serbia, with
+codes RS022, RS023, RS024 and RS062. That is where the inventory was compiled,
+not a statement about status, but it means that any count of IBAs by country
+files these sites under Serbia. Whether a KBA other than these IBAs touches
+Kosovo was not checked.
+
+```{r}
+#| label: map
+source("../R/functions.R", local = TRUE)
+leaflet(ibas) |>
+  add_basemaps() |>
+  addCircleMarkers(~lon, ~lat, radius = ~sqrt(area_km2) / 3, color = "#175CA1",
+                   weight = 1.5, fillOpacity = 0.25,
+                   label = ~sprintf("%s (%s): %s km², %s", name, code, area_km2, relation)) |>
+  add_boundary_outline(kosovo_outline()) |>
+  addLayersControl(baseGroups = basemap_groups,
+                   options = layersControlOptions(collapsed = TRUE))
+```
+
+Circles mark the published centroids, sized by site area; they are not
+boundaries.
+
+## What it adds for Natura 2000 in Kosovo
+
+The IBA inventory is the starting reference for SPAs; the Court of Justice
+has treated it as the best available scientific evidence for judging whether
+enough SPAs are classified (see [question 6](../natura2000.qmd#q6)). With
+boundaries, the report could say how much of Šar and Prokletije's IBAs lie in
+Kosovo, and draw candidate SPAs against them. Boundaries serve the
+[site tier](../natura2000.qmd#q1) as a first outline; the attributes serve
+national screening.
+
+## Caveats and sensitivity
+
+- Centroids say where a site is, not how much of it lies on either side of a
+  border.
+- The qualifying populations date from 1998 to 2017 (see the report's table),
+  several of them old.
+- Boundaries are released under terms that come with the request; they
+  must not be scraped from the map server.
+
+## Integration into the pipeline
+
+Low effort. `R/fetch_iba.R` already builds the attribute tables. A proposed
+`read_iba_boundaries(path)` would add the requested polygons once they
+arrive, and compute each site's share inside Kosovo. `pipeline.R` is not
+changed.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+As the report cites them: BirdLife International (2026). Important Bird Area
+factsheets: *Sara mountain*, *Prokletije*, *Kopaonik*, *Mokra Gora*. DataZone,
+datazone.birdlife.org.

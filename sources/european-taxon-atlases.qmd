@@ -1,0 +1,121 @@
+---
+title: "European atlases of amphibians, reptiles, butterflies, dragonflies, bats and orchids"
+actions:
+  - kind: check
+    what: "Amphibians and reptiles: identify the current European atlas and its data (the desk review named none), and whether Kosovo's squares are filled"
+    contact: "Societas Europaea Herpetologica"
+  - kind: check
+    what: "Butterflies: identify the European butterfly distribution atlas or database and whether Kosovo is covered"
+    contact: "Butterfly Conservation Europe"
+  - kind: check
+    what: "Dragonflies: identify the European atlas of dragonflies and damselflies and its database, and Kosovo's coverage"
+    contact: "The atlas's publisher or the European dragonfly society"
+  - kind: check
+    what: "Bats and orchids: identify European distribution atlases or databases, and whether Kosovo is a mapped unit or folded into Serbia"
+    contact: "EUROBATS for bats; a European orchid mapping project, if any, for orchids"
+  - kind: check
+    what: "For each atlas found, check whether its data are on GBIF (and in this project's download) before requesting them"
+    contact: "https://www.gbif.org/dataset/search"
+todo:
+  custodian: "One custodian per atlas; identify each (see actions)"
+  url: "One primary URL per atlas; none was confirmed by the desk review"
+  doi: "Record the DOI of each atlas or its dataset once identified"
+  licence: "Terms of each atlas database"
+  access: "Open, request or paid, per atlas"
+  format: "Per atlas"
+  access_method: "Per atlas"
+  spatial_resolution: "Grid of each atlas (often 50 km UTM or 10 km)"
+  temporal_coverage: "Recording period of each atlas"
+  latest_version: "Edition or year of each atlas"
+  kosovo_coverage: "Whether each atlas maps Kosovo's squares"
+  kosovo_codes_seen: "Whether each atlas files Kosovo separately or under Serbia"
+  tier: "National at atlas-grid resolution, once confirmed"
+  n2k_question: "Distribution of Annex II and IV amphibians, reptiles, butterflies, dragonflies and bats, and of orchid-rich grassland indicators (6210*), once content is confirmed"
+  effort: "Per atlas, once formats are known"
+  sensitivity: "Orchid and reptile locations attract collectors; atlas grids protect them only if kept at native resolution"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+row <- source_row("european-taxon-atlases")
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+::: {.callout-warning}
+## To be completed
+The desk review grouped five kinds of European distribution atlas under one
+lead, and confirmed no URL for any of them. Nothing on this page has yet been
+verified. Each atlas should be identified at its publisher, then either given
+its own page in this section or recorded here as absent for Kosovo.
+:::
+
+Taxon atlases matter because they are the one systematic record for groups
+that casual recording covers badly. For Kosovo, where GBIF data are dominated
+by birds and by a few well-visited sites, an atlas grid would show presence
+across the country for groups that carry many Annex II and IV species:
+amphibians and reptiles, butterflies, dragonflies and bats. Orchids are the
+indicator the Habitats Directive itself uses to mark priority dry grassland
+(6210\*, "important orchid sites").
+
+## Access
+
+No access was attempted: no URL was available to try, and none was guessed.
+
+## Kosovo coverage check
+
+::: {.callout-warning}
+## To be completed
+For each atlas, once identified: does it map Kosovo, at which grid, and under
+which name or code? Several pan-European atlases were compiled before 2008
+and may show Kosovo within Serbia (look for "Serbia and Montenegro", RS/SRB or
+YU). Then check GBIF for the atlas's dataset and compare with the report's
+download, as the [EBBA2 page](ebba2.qmd) does for the first bird atlas.
+:::
+
+## What it adds for Natura 2000 in Kosovo
+
+Potentially a great deal for the Habitats Directive side: presence grids for
+the invertebrates and herptiles on Annex II, for which the report's GBIF data
+are thinnest. That is one of the data gaps listed on the
+[hub page](index.qmd#data-gaps). The [tier](../natura2000.qmd#q1) would be
+national screening at atlas-grid resolution.
+
+## Caveats and sensitivity
+
+- Unverified lead: nothing here is established.
+- Atlas grids are coarse by design and must be shown at their native
+  resolution.
+
+## Integration into the pipeline
+
+Unknown until the atlases are identified. If they are on GBIF, a new download
+brings them in; otherwise the grid-table reader proposed on the
+[EBBA2 page](ebba2.qmd) applies. `pipeline.R` is not changed.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+::: {.callout-warning}
+## To be completed
+Cite each atlas as its publisher requests, once identified.
+:::

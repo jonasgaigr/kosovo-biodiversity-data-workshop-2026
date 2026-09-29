@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-GB" xml:lang="en-GB"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>R packages for reaching these sources – Biodiversity of Kosovo</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-261f789220898115d1f0b2d66d52cc9d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-23b1f38336478021fe086399294f3e9a.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Biodiversity of Kosovo</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../index.html"> 
+<span class="menu-text">Workshop</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../report.html"> 
+<span class="menu-text">Report</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../natura2000.html"> 
+<span class="menu-text">Natura 2000 questions</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../sources/index.html"> 
+<span class="menu-text">Data sources</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="https://www.gbif.org"> 
+<span class="menu-text">GBIF</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/jonasgaigr/kosovo-biodiversity-data-workshop-2026"> <i class="bi bi-github" role="img" aria-label="Source code on GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#at-a-glance" id="toc-at-a-glance" class="nav-link active" data-scroll-target="#at-a-glance">At a glance</a></li>
+  <li><a href="#what-it-is" id="toc-what-it-is" class="nav-link" data-scroll-target="#what-it-is">What it is</a></li>
+  <li><a href="#access" id="toc-access" class="nav-link" data-scroll-target="#access">Access</a></li>
+  <li><a href="#kosovo-coverage-check" id="toc-kosovo-coverage-check" class="nav-link" data-scroll-target="#kosovo-coverage-check">Kosovo coverage check</a></li>
+  <li><a href="#what-it-adds-for-natura-2000-in-kosovo" id="toc-what-it-adds-for-natura-2000-in-kosovo" class="nav-link" data-scroll-target="#what-it-adds-for-natura-2000-in-kosovo">What it adds for Natura 2000 in Kosovo</a></li>
+  <li><a href="#caveats-and-sensitivity" id="toc-caveats-and-sensitivity" class="nav-link" data-scroll-target="#caveats-and-sensitivity">Caveats and sensitivity</a></li>
+  <li><a href="#integration-into-the-pipeline" id="toc-integration-into-the-pipeline" class="nav-link" data-scroll-target="#integration-into-the-pipeline">Integration into the pipeline</a></li>
+  <li><a href="#to-be-completed" id="toc-to-be-completed" class="nav-link" data-scroll-target="#to-be-completed">To be completed</a></li>
+  <li><a href="#citation" id="toc-citation" class="nav-link" data-scroll-target="#citation">Citation</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title">R packages for reaching these sources</h1><button type="button" class="btn code-tools-button dropdown-toggle" id="quarto-code-tools-menu" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi"></i> Code</button><ul class="dropdown-menu dropdown-menu-end" aria-labelelledby="quarto-code-tools-menu"><li><a id="quarto-show-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Show All Code</a></li><li><a id="quarto-hide-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Hide All Code</a></li><li><hr class="dropdown-divider"></li><li><a id="quarto-view-source" class="dropdown-item" href="javascript:void(0)" role="button">View Source</a></li></ul></div></div>
+<p class="subtitle lead">The R packages the pages in this section use, their current CRAN versions, what each reaches, and how each handles Kosovo.</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="source-status">
+<p><span class="status-badge status-partial">Partial</span> · Last checked: 29 September 2026</p>
+</div>
+<section id="at-a-glance" class="level2">
+<h2 class="anchored" data-anchor-id="at-a-glance">At a glance</h2>
+<div class="cell">
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Field</th>
+<th style="text-align: left;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Custodian</td>
+<td style="text-align: left;">CRAN (package maintainers)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Primary URL</td>
+<td style="text-align: left;"><a href="https://cloud.r-project.org/" class="uri">https://cloud.r-project.org/</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">DOI</td>
+<td style="text-align: left;">— to be completed</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Licence</td>
+<td style="text-align: left;">— to be completed</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Access</td>
+<td style="text-align: left;">open</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Format</td>
+<td style="text-align: left;">R packages</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Access method</td>
+<td style="text-align: left;">R package</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Spatial resolution</td>
+<td style="text-align: left;">— to be completed</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Temporal coverage</td>
+<td style="text-align: left;">— to be completed</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Latest version</td>
+<td style="text-align: left;">— to be completed</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Kosovo coverage</td>
+<td style="text-align: left;">partial</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Kosovo codes seen</td>
+<td style="text-align: left;">geodata XKO/XK; GISCO none (Kosovo inside RS/SRB); EFFIS KS; GBIF XK and GADM XKO</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Precision tier</td>
+<td style="text-align: left;">— to be completed</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Natura 2000 question</td>
+<td style="text-align: left;">— to be completed</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Integration effort</td>
+<td style="text-align: left;">low</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Sensitivity</td>
+<td style="text-align: left;">— to be completed</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="what-it-is" class="level2">
+<h2 class="anchored" data-anchor-id="what-it-is">What it is</h2>
+<p>Every page in this section reaches its data from R, with a handful of packages. This page lists them with the version CRAN offered on the day of the check and the version installed where the site was rendered, what each reaches, and, because it decides whether a Kosovo query returns anything, how each identifies Kosovo. <code>rgbif</code> and <code>CoordinateCleaner</code> are already used by <code>pipeline.R</code> and are listed for completeness.</p>
+</section>
+<section id="access" class="level2">
+<h2 class="anchored" data-anchor-id="access">Access</h2>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">access_table</span>(<span class="fu">list</span>(<span class="fu">try_access</span>(<span class="st">"https://cloud.r-project.org/src/contrib/PACKAGES"</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Address</th>
+<th style="text-align: left;">Request</th>
+<th style="text-align: left;">Outcome</th>
+<th style="text-align: left;">Type</th>
+<th style="text-align: left;">Size</th>
+<th style="text-align: left;">Checked</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><a href="https://cloud.r-project.org/src/contrib/PACKAGES" class="uri">https://cloud.r-project.org/src/contrib/PACKAGES</a></td>
+<td style="text-align: left;">HEAD</td>
+<td style="text-align: left;">HTTP 200</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">7.0 MB</td>
+<td style="text-align: left;">2026-09-29 16:46 CEST</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Show how the versions are read</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>pk <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"rgbif"</span>, <span class="st">"CoordinateCleaner"</span>, <span class="st">"sf"</span>, <span class="st">"terra"</span>, <span class="st">"geodata"</span>, <span class="st">"giscoR"</span>,</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>        <span class="st">"eurostat"</span>, <span class="st">"rredlist"</span>, <span class="st">"ows4R"</span>, <span class="st">"leaflet"</span>, <span class="st">"curl"</span>, <span class="st">"pdftools"</span>,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>        <span class="st">"eunis.habitats"</span>, <span class="st">"rnaturalearth"</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">file.exists</span>(cache)) {</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  ap <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>(<span class="fu">available.packages</span>(<span class="at">repos =</span> <span class="st">"https://cloud.r-project.org"</span>),</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>                 <span class="at">error =</span> <span class="cf">function</span>(e) <span class="cn">NULL</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.null</span>(ap)) {</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    ip <span class="ot">&lt;-</span> <span class="fu">installed.packages</span>()</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">write.csv</span>(<span class="fu">data.frame</span>(</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">package =</span> pk, <span class="at">cran =</span> ap[pk, <span class="st">"Version"</span>],</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>      <span class="at">installed =</span> <span class="fu">ifelse</span>(pk <span class="sc">%in%</span> <span class="fu">rownames</span>(ip), ip[<span class="fu">pmatch</span>(pk, <span class="fu">rownames</span>(ip)), <span class="st">"Version"</span>], <span class="st">"not installed"</span>),</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>      <span class="at">checked =</span> <span class="fu">format</span>(<span class="fu">Sys.Date</span>())), cache, <span class="at">row.names =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>have_cache <span class="ot">&lt;-</span> <span class="fu">file.exists</span>(cache)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>CRAN versions read on 2026-09-29</caption>
+<colgroup>
+<col style="width: 9%">
+<col style="width: 3%">
+<col style="width: 7%">
+<col style="width: 30%">
+<col style="width: 47%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Package</th>
+<th style="text-align: left;">CRAN</th>
+<th style="text-align: left;">Installed</th>
+<th style="text-align: left;">Reaches</th>
+<th style="text-align: left;">How it identifies Kosovo</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">rgbif</td>
+<td style="text-align: left;">3.8.5</td>
+<td style="text-align: left;">3.8.5</td>
+<td style="text-align: left;">GBIF occurrence downloads and APIs (the report’s data)</td>
+<td style="text-align: left;">Country code XK; GADM GID XKO for geometry filters</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CoordinateCleaner</td>
+<td style="text-align: left;">3.0.1</td>
+<td style="text-align: left;">3.0.1</td>
+<td style="text-align: left;">Automated coordinate tests (the pipeline’s cleaning)</td>
+<td style="text-align: left;">No usable Kosovo code in its default reference; the pipeline supplies its own polygon</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sf</td>
+<td style="text-align: left;">1.1-3</td>
+<td style="text-align: left;">1.1-2</td>
+<td style="text-align: left;">Vector data; GDAL, including /vsicurl/ remote reads</td>
+<td style="text-align: left;">None: geometry only</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">terra</td>
+<td style="text-align: left;">1.9-50</td>
+<td style="text-align: left;">1.9-46</td>
+<td style="text-align: left;">Raster data; remote crops of COGs and tiled GeoTIFFs</td>
+<td style="text-align: left;">None: geometry only</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">geodata</td>
+<td style="text-align: left;">0.6-9</td>
+<td style="text-align: left;">0.6-9</td>
+<td style="text-align: left;">Per-country climate, elevation and boundary downloads</td>
+<td style="text-align: left;">XKO (ISO3) and XK (ISO2), as GADM</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">giscoR</td>
+<td style="text-align: left;">1.2.0</td>
+<td style="text-align: left;">1.2.0</td>
+<td style="text-align: left;">Eurostat GISCO boundaries</td>
+<td style="text-align: left;">No Kosovo feature in the 2024 countries layer: Kosovo lies inside Serbia (RS/SRB)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">eurostat</td>
+<td style="text-align: left;">4.1.1</td>
+<td style="text-align: left;">not installed</td>
+<td style="text-align: left;">Eurostat statistics</td>
+<td style="text-align: left;">Not checked</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">rredlist</td>
+<td style="text-align: left;">1.1.1</td>
+<td style="text-align: left;">not installed</td>
+<td style="text-align: left;">IUCN Red List API (token needed)</td>
+<td style="text-align: left;">Not checked</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ows4R</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">not installed</td>
+<td style="text-align: left;">OGC web services (WMS, WFS, CSW) from R</td>
+<td style="text-align: left;">None: depends on the service</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">leaflet</td>
+<td style="text-align: left;">2.2.3</td>
+<td style="text-align: left;">2.2.3</td>
+<td style="text-align: left;">The interactive maps on these pages</td>
+<td style="text-align: left;">None</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">curl</td>
+<td style="text-align: left;">8.0.0</td>
+<td style="text-align: left;">7.1.0</td>
+<td style="text-align: left;">HTTP requests behind try_access()</td>
+<td style="text-align: left;">None</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">pdftools</td>
+<td style="text-align: left;">3.9.1</td>
+<td style="text-align: left;">3.9.0</td>
+<td style="text-align: left;">Text from PDF reports and tables</td>
+<td style="text-align: left;">None</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">eunis.habitats</td>
+<td style="text-align: left;">0.1.0</td>
+<td style="text-align: left;">0.1.0</td>
+<td style="text-align: left;">EUNIS codes and crosswalks, including to Annex I</td>
+<td style="text-align: left;">None: habitat codes only</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">rnaturalearth</td>
+<td style="text-align: left;">1.2.0</td>
+<td style="text-align: left;">1.2.0</td>
+<td style="text-align: left;">Natural Earth boundaries (the pipeline’s last fallback)</td>
+<td style="text-align: left;">adm0_a3 ‘KOS’; iso_a3 ‘-99’ (no ISO code), per R/functions.R</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="kosovo-coverage-check" class="level2">
+<h2 class="anchored" data-anchor-id="kosovo-coverage-check">Kosovo coverage check</h2>
+<p>The question for a toolkit is how each package names Kosovo, and three of the answers were tested in this session rather than taken from documentation.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>cc <span class="ot">&lt;-</span> geodata<span class="sc">::</span><span class="fu">country_codes</span>()</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>cc[cc<span class="sc">$</span>NAME <span class="sc">==</span> <span class="st">"Kosovo"</span>, <span class="fu">c</span>(<span class="st">"NAME"</span>, <span class="st">"ISO3"</span>, <span class="st">"ISO2"</span>)]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>      NAME ISO3 ISO2
+120 Kosovo  XKO   XK</code></pre>
+</div>
+</div>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Show the code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>g <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>(giscoR<span class="sc">::</span><span class="fu">gisco_get_countries</span>(<span class="at">resolution =</span> <span class="st">"20"</span>, <span class="at">year =</span> <span class="st">"2024"</span>),</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>              <span class="at">error =</span> <span class="cf">function</span>(e) <span class="cn">NULL</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.null</span>(g)) {</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>(g[g<span class="sc">$</span>CNTR_ID <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"XK"</span>, <span class="st">"RS"</span>), <span class="fu">c</span>(<span class="st">"CNTR_ID"</span>, <span class="st">"ISO3_CODE"</span>, <span class="st">"NAME_ENGL"</span>)]))</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(sf<span class="sc">::</span><span class="fu">st_bbox</span>(g[g<span class="sc">$</span>CNTR_ID <span class="sc">==</span> <span class="st">"RS"</span>, ]))</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>    CNTR_ID ISO3_CODE NAME_ENGL
+142      RS       SRB    Serbia
+    xmin     ymin     xmax     ymax 
+18.87271 41.86428 23.00621 46.18793 </code></pre>
+</div>
+</div>
+<p>GISCO’s 2024 country layer has no feature for Kosovo, and Serbia’s polygon reaches south to about 41.86° N: Kosovo is inside it. The pipeline already knows this (<code>R/functions.R</code> compares its border against GISCO’s international boundary only), but anyone who clips data to “Serbia” from GISCO is clipping Kosovo in with it.</p>
+<p>Across this section, Kosovo turned up under at least six different identifiers: <strong>XK</strong> (GBIF, EU country code), <strong>XKO</strong> (GADM, geodata), <strong>XKX</strong> (the pipeline’s own ISO3-style code), <strong>KS</strong> (EFFIS), <strong>RS</strong> (Emerald candidate sites, BirdLife’s inventory and GISCO, where it is merged into Serbia), and <strong>Ko</strong> (Euro+Med). A script that filters any of these sources by one code will silently miss what the others file under another.</p>
+</section>
+<section id="what-it-adds-for-natura-2000-in-kosovo" class="level2">
+<h2 class="anchored" data-anchor-id="what-it-adds-for-natura-2000-in-kosovo">What it adds for Natura 2000 in Kosovo</h2>
+<p>Reproducibility. Every figure on these pages can be recomputed with free software from the sources’ own servers, and each check is shown as code a participant can run and change. Tier: not applicable.</p>
+</section>
+<section id="caveats-and-sensitivity" class="level2">
+<h2 class="anchored" data-anchor-id="caveats-and-sensitivity">Caveats and sensitivity</h2>
+<ul>
+<li><code>rredlist</code>, <code>eurostat</code> and <code>ows4R</code> are on CRAN but were not installed where the site was rendered, so their Kosovo behaviour is not tested here.</li>
+<li>Versions move; the table records the day of the check.</li>
+</ul>
+</section>
+<section id="integration-into-the-pipeline" class="level2">
+<h2 class="anchored" data-anchor-id="integration-into-the-pipeline">Integration into the pipeline</h2>
+<p><code>pipeline.R</code> already loads <code>rgbif</code>, <code>sf</code>, <code>CoordinateCleaner</code> and friends. The pages here would add <code>terra</code> (rasters) and <code>eunis.habitats</code> (crosswalk) if their proposed functions are adopted. <code>pipeline.R</code> is not changed.</p>
+</section>
+<section id="to-be-completed" class="level2">
+<h2 class="anchored" data-anchor-id="to-be-completed">To be completed</h2>
+<ul class="task-list">
+<li><label><input type="checkbox"><strong>DOI</strong>: CRAN packages carry DOIs of the form 10.32614/CRAN.package.<name>; record them per package if cited.</name></label></li>
+<li><label><input type="checkbox"><strong>Licence</strong>: Each package’s licence is on its CRAN page.</label></li>
+<li><label><input type="checkbox"><strong>Spatial resolution</strong>: Not applicable: software.</label></li>
+<li><label><input type="checkbox"><strong>Temporal coverage</strong>: Not applicable: software.</label></li>
+<li><label><input type="checkbox"><strong>Latest version</strong>: Per package, in the table below (CRAN, 29 September 2026).</label></li>
+<li><label><input type="checkbox"><strong>Precision tier</strong>: Not applicable: software.</label></li>
+<li><label><input type="checkbox"><strong>Natura 2000 question</strong>: Not applicable: this page supports every other page.</label></li>
+<li><label><input type="checkbox"><strong>Sensitivity</strong>: None.</label></li>
+<li><label><input type="checkbox"><strong>Check</strong>: Install rredlist, eurostat and ows4R on the machine that renders the site (they are on CRAN but not installed there) and run their Kosovo examples. <em>Route:</em> install.packages(c(‘rredlist’, ‘eurostat’, ‘ows4R’)).</label></li>
+<li><label><input type="checkbox"><strong>Check</strong>: How rredlist (IUCN API) and eurostat code Kosovo in their results. <em>Route:</em> Package documentation; the IUCN API needs a token.</label></li>
+</ul>
+</section>
+<section id="citation" class="level2">
+<h2 class="anchored" data-anchor-id="citation">Citation</h2>
+<p>Cite each package with <code>citation("&lt;package&gt;")</code>; for example <code>citation("eunis.habitats")</code> gives Magno, Monteiro &amp; Bentes (2023), doi:10.32614/CRAN.package.eunis.habitats.</p>
+
+
+<!-- -->
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+    const viewSource = window.document.getElementById('quarto-view-source') ||
+                       window.document.getElementById('quarto-code-tools-source');
+    if (viewSource) {
+      const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+      viewSource.addEventListener("click", function(e) {
+        if (sourceUrl) {
+          // rstudio viewer pane
+          if (/\bcapabilities=\b/.test(window.location)) {
+            window.open(sourceUrl);
+          } else {
+            window.location.href = sourceUrl;
+          }
+        } else {
+          const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+          modal.show();
+        }
+        return false;
+      });
+    }
+    function toggleCodeHandler(show) {
+      return function(e) {
+        const cellDetails = window.document.querySelectorAll(".cell details.code-fold");
+        for (let i=0; i<cellDetails.length; i++) {
+          const details = cellDetails[i];
+          if (show) {
+            details.open = true;
+          } else {
+            details.removeAttribute("open");
+          }
+        }
+        const cellCodeDivs = window.document.querySelectorAll(".cell div.sourceCode.cell-code");
+        const fromCls = show ? "hidden" : "unhidden";
+        const toCls = show ? "unhidden" : "hidden";
+        for (let i=0; i<cellCodeDivs.length; i++) {
+          const codeDiv = cellCodeDivs[i];
+          if (codeDiv.classList.contains(fromCls)) {
+            codeDiv.classList.remove(fromCls);
+            codeDiv.classList.add(toCls);
+          } 
+        }
+        return false;
+      }
+    }
+    const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+    if (hideAllCode) {
+      hideAllCode.addEventListener("click", toggleCodeHandler(false));
+    }
+    const showAllCode = window.document.getElementById("quarto-show-all-code");
+    if (showAllCode) {
+      showAllCode.addEventListener("click", toggleCodeHandler(true));
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/jonasgaigr\.github\.io\/kosovo-biodiversity-data-workshop-2026\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "R packages for reaching these sources"</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="an">subtitle:</span><span class="co"> "The R packages the pages in this section use, their current CRAN versions, what each reaches, and how each handles Kosovo."</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="an">actions:</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co">  - kind: check</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co">    what: "Install rredlist, eurostat and ows4R on the machine that renders the site (they are on CRAN but not installed there) and run their Kosovo examples"</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co">    contact: "install.packages(c('rredlist', 'eurostat', 'ows4R'))"</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co">  - kind: check</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="co">    what: "How rredlist (IUCN API) and eurostat code Kosovo in their results"</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="co">    contact: "Package documentation; the IUCN API needs a token"</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="an">todo:</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="co">  doi: "CRAN packages carry DOIs of the form 10.32614/CRAN.package.&lt;name&gt;; record them per package if cited"</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="co">  licence: "Each package's licence is on its CRAN page"</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="co">  spatial_resolution: "Not applicable: software"</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="co">  temporal_coverage: "Not applicable: software"</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="co">  latest_version: "Per package, in the table below (CRAN, 29 September 2026)"</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="co">  tier: "Not applicable: software"</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="co">  n2k_question: "Not applicable: this page supports every other page"</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="co">  sensitivity: "None"</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: setup</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"../R/sources_helpers.R"</span>)</span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>row <span class="ot">&lt;-</span> <span class="fu">source_row</span>(<span class="st">"r-access-toolkit"</span>)</span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>cache <span class="ot">&lt;-</span> <span class="fu">file.path</span>(<span class="fu">cache_dir</span>(<span class="st">"r-access-toolkit"</span>), <span class="st">"cran_versions.csv"</span>)</span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>::: {.source-status}</span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a><span class="in">`r status_line(row)`</span></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a><span class="fu">## At a glance</span></span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: glance</span></span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a><span class="fu">metadata_table</span>(row)</span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a><span class="fu">## What it is</span></span>
+<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a>Every page in this section reaches its data from R, with a handful of</span>
+<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a>packages. This page lists them with the version CRAN offered on the day of</span>
+<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a>the check and the version installed where the site was rendered, what each</span>
+<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a>reaches, and, because it decides whether a Kosovo query returns anything, how</span>
+<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a>each identifies Kosovo. <span class="in">`rgbif`</span> and <span class="in">`CoordinateCleaner`</span> are already used by</span>
+<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a><span class="in">`pipeline.R`</span> and are listed for completeness.</span>
+<span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a><span class="fu">## Access</span></span>
+<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-57"><a href="#cb7-57" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb7-58"><a href="#cb7-58" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: access</span></span>
+<span id="cb7-59"><a href="#cb7-59" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: true</span></span>
+<span id="cb7-60"><a href="#cb7-60" aria-hidden="true" tabindex="-1"></a><span class="co">#| code-fold: show</span></span>
+<span id="cb7-61"><a href="#cb7-61" aria-hidden="true" tabindex="-1"></a><span class="fu">access_table</span>(<span class="fu">list</span>(<span class="fu">try_access</span>(<span class="st">"https://cloud.r-project.org/src/contrib/PACKAGES"</span>)))</span>
+<span id="cb7-62"><a href="#cb7-62" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-63"><a href="#cb7-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-66"><a href="#cb7-66" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb7-67"><a href="#cb7-67" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: build</span></span>
+<span id="cb7-68"><a href="#cb7-68" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: true</span></span>
+<span id="cb7-69"><a href="#cb7-69" aria-hidden="true" tabindex="-1"></a><span class="co">#| code-fold: true</span></span>
+<span id="cb7-70"><a href="#cb7-70" aria-hidden="true" tabindex="-1"></a><span class="co">#| code-summary: "Show how the versions are read"</span></span>
+<span id="cb7-71"><a href="#cb7-71" aria-hidden="true" tabindex="-1"></a>pk <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"rgbif"</span>, <span class="st">"CoordinateCleaner"</span>, <span class="st">"sf"</span>, <span class="st">"terra"</span>, <span class="st">"geodata"</span>, <span class="st">"giscoR"</span>,</span>
+<span id="cb7-72"><a href="#cb7-72" aria-hidden="true" tabindex="-1"></a>        <span class="st">"eurostat"</span>, <span class="st">"rredlist"</span>, <span class="st">"ows4R"</span>, <span class="st">"leaflet"</span>, <span class="st">"curl"</span>, <span class="st">"pdftools"</span>,</span>
+<span id="cb7-73"><a href="#cb7-73" aria-hidden="true" tabindex="-1"></a>        <span class="st">"eunis.habitats"</span>, <span class="st">"rnaturalearth"</span>)</span>
+<span id="cb7-74"><a href="#cb7-74" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">file.exists</span>(cache)) {</span>
+<span id="cb7-75"><a href="#cb7-75" aria-hidden="true" tabindex="-1"></a>  ap <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>(<span class="fu">available.packages</span>(<span class="at">repos =</span> <span class="st">"https://cloud.r-project.org"</span>),</span>
+<span id="cb7-76"><a href="#cb7-76" aria-hidden="true" tabindex="-1"></a>                 <span class="at">error =</span> <span class="cf">function</span>(e) <span class="cn">NULL</span>)</span>
+<span id="cb7-77"><a href="#cb7-77" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.null</span>(ap)) {</span>
+<span id="cb7-78"><a href="#cb7-78" aria-hidden="true" tabindex="-1"></a>    ip <span class="ot">&lt;-</span> <span class="fu">installed.packages</span>()</span>
+<span id="cb7-79"><a href="#cb7-79" aria-hidden="true" tabindex="-1"></a>    <span class="fu">write.csv</span>(<span class="fu">data.frame</span>(</span>
+<span id="cb7-80"><a href="#cb7-80" aria-hidden="true" tabindex="-1"></a>      <span class="at">package =</span> pk, <span class="at">cran =</span> ap[pk, <span class="st">"Version"</span>],</span>
+<span id="cb7-81"><a href="#cb7-81" aria-hidden="true" tabindex="-1"></a>      <span class="at">installed =</span> <span class="fu">ifelse</span>(pk <span class="sc">%in%</span> <span class="fu">rownames</span>(ip), ip[<span class="fu">pmatch</span>(pk, <span class="fu">rownames</span>(ip)), <span class="st">"Version"</span>], <span class="st">"not installed"</span>),</span>
+<span id="cb7-82"><a href="#cb7-82" aria-hidden="true" tabindex="-1"></a>      <span class="at">checked =</span> <span class="fu">format</span>(<span class="fu">Sys.Date</span>())), cache, <span class="at">row.names =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb7-83"><a href="#cb7-83" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb7-84"><a href="#cb7-84" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-85"><a href="#cb7-85" aria-hidden="true" tabindex="-1"></a>have_cache <span class="ot">&lt;-</span> <span class="fu">file.exists</span>(cache)</span>
+<span id="cb7-86"><a href="#cb7-86" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-87"><a href="#cb7-87" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-90"><a href="#cb7-90" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb7-91"><a href="#cb7-91" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: table</span></span>
+<span id="cb7-92"><a href="#cb7-92" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: !expr have_cache</span></span>
+<span id="cb7-93"><a href="#cb7-93" aria-hidden="true" tabindex="-1"></a>v <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(cache)</span>
+<span id="cb7-94"><a href="#cb7-94" aria-hidden="true" tabindex="-1"></a>reach <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb7-95"><a href="#cb7-95" aria-hidden="true" tabindex="-1"></a>  <span class="at">rgbif =</span> <span class="st">"GBIF occurrence downloads and APIs (the report's data)"</span>,</span>
+<span id="cb7-96"><a href="#cb7-96" aria-hidden="true" tabindex="-1"></a>  <span class="at">CoordinateCleaner =</span> <span class="st">"Automated coordinate tests (the pipeline's cleaning)"</span>,</span>
+<span id="cb7-97"><a href="#cb7-97" aria-hidden="true" tabindex="-1"></a>  <span class="at">sf =</span> <span class="st">"Vector data; GDAL, including /vsicurl/ remote reads"</span>,</span>
+<span id="cb7-98"><a href="#cb7-98" aria-hidden="true" tabindex="-1"></a>  <span class="at">terra =</span> <span class="st">"Raster data; remote crops of COGs and tiled GeoTIFFs"</span>,</span>
+<span id="cb7-99"><a href="#cb7-99" aria-hidden="true" tabindex="-1"></a>  <span class="at">geodata =</span> <span class="st">"Per-country climate, elevation and boundary downloads"</span>,</span>
+<span id="cb7-100"><a href="#cb7-100" aria-hidden="true" tabindex="-1"></a>  <span class="at">giscoR =</span> <span class="st">"Eurostat GISCO boundaries"</span>,</span>
+<span id="cb7-101"><a href="#cb7-101" aria-hidden="true" tabindex="-1"></a>  <span class="at">eurostat =</span> <span class="st">"Eurostat statistics"</span>,</span>
+<span id="cb7-102"><a href="#cb7-102" aria-hidden="true" tabindex="-1"></a>  <span class="at">rredlist =</span> <span class="st">"IUCN Red List API (token needed)"</span>,</span>
+<span id="cb7-103"><a href="#cb7-103" aria-hidden="true" tabindex="-1"></a>  <span class="at">ows4R =</span> <span class="st">"OGC web services (WMS, WFS, CSW) from R"</span>,</span>
+<span id="cb7-104"><a href="#cb7-104" aria-hidden="true" tabindex="-1"></a>  <span class="at">leaflet =</span> <span class="st">"The interactive maps on these pages"</span>,</span>
+<span id="cb7-105"><a href="#cb7-105" aria-hidden="true" tabindex="-1"></a>  <span class="at">curl =</span> <span class="st">"HTTP requests behind try_access()"</span>,</span>
+<span id="cb7-106"><a href="#cb7-106" aria-hidden="true" tabindex="-1"></a>  <span class="at">pdftools =</span> <span class="st">"Text from PDF reports and tables"</span>,</span>
+<span id="cb7-107"><a href="#cb7-107" aria-hidden="true" tabindex="-1"></a>  <span class="at">eunis.habitats =</span> <span class="st">"EUNIS codes and crosswalks, including to Annex I"</span>,</span>
+<span id="cb7-108"><a href="#cb7-108" aria-hidden="true" tabindex="-1"></a>  <span class="at">rnaturalearth =</span> <span class="st">"Natural Earth boundaries (the pipeline's last fallback)"</span>)</span>
+<span id="cb7-109"><a href="#cb7-109" aria-hidden="true" tabindex="-1"></a>kosovo <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb7-110"><a href="#cb7-110" aria-hidden="true" tabindex="-1"></a>  <span class="at">rgbif =</span> <span class="st">"Country code XK; GADM GID XKO for geometry filters"</span>,</span>
+<span id="cb7-111"><a href="#cb7-111" aria-hidden="true" tabindex="-1"></a>  <span class="at">CoordinateCleaner =</span> <span class="st">"No usable Kosovo code in its default reference; the pipeline supplies its own polygon"</span>,</span>
+<span id="cb7-112"><a href="#cb7-112" aria-hidden="true" tabindex="-1"></a>  <span class="at">sf =</span> <span class="st">"None: geometry only"</span>,</span>
+<span id="cb7-113"><a href="#cb7-113" aria-hidden="true" tabindex="-1"></a>  <span class="at">terra =</span> <span class="st">"None: geometry only"</span>,</span>
+<span id="cb7-114"><a href="#cb7-114" aria-hidden="true" tabindex="-1"></a>  <span class="at">geodata =</span> <span class="st">"XKO (ISO3) and XK (ISO2), as GADM"</span>,</span>
+<span id="cb7-115"><a href="#cb7-115" aria-hidden="true" tabindex="-1"></a>  <span class="at">giscoR =</span> <span class="st">"No Kosovo feature in the 2024 countries layer: Kosovo lies inside Serbia (RS/SRB)"</span>,</span>
+<span id="cb7-116"><a href="#cb7-116" aria-hidden="true" tabindex="-1"></a>  <span class="at">eurostat =</span> <span class="st">"Not checked"</span>,</span>
+<span id="cb7-117"><a href="#cb7-117" aria-hidden="true" tabindex="-1"></a>  <span class="at">rredlist =</span> <span class="st">"Not checked"</span>,</span>
+<span id="cb7-118"><a href="#cb7-118" aria-hidden="true" tabindex="-1"></a>  <span class="at">ows4R =</span> <span class="st">"None: depends on the service"</span>,</span>
+<span id="cb7-119"><a href="#cb7-119" aria-hidden="true" tabindex="-1"></a>  <span class="at">leaflet =</span> <span class="st">"None"</span>,</span>
+<span id="cb7-120"><a href="#cb7-120" aria-hidden="true" tabindex="-1"></a>  <span class="at">curl =</span> <span class="st">"None"</span>,</span>
+<span id="cb7-121"><a href="#cb7-121" aria-hidden="true" tabindex="-1"></a>  <span class="at">pdftools =</span> <span class="st">"None"</span>,</span>
+<span id="cb7-122"><a href="#cb7-122" aria-hidden="true" tabindex="-1"></a>  <span class="at">eunis.habitats =</span> <span class="st">"None: habitat codes only"</span>,</span>
+<span id="cb7-123"><a href="#cb7-123" aria-hidden="true" tabindex="-1"></a>  <span class="at">rnaturalearth =</span> <span class="st">"adm0_a3 'KOS'; iso_a3 '-99' (no ISO code), per R/functions.R"</span>)</span>
+<span id="cb7-124"><a href="#cb7-124" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">data.frame</span>(<span class="at">Package =</span> v<span class="sc">$</span>package, <span class="at">CRAN =</span> v<span class="sc">$</span>cran, <span class="at">Installed =</span> v<span class="sc">$</span>installed,</span>
+<span id="cb7-125"><a href="#cb7-125" aria-hidden="true" tabindex="-1"></a>                        <span class="at">Reaches =</span> reach[v<span class="sc">$</span>package], <span class="st">`</span><span class="at">How it identifies Kosovo</span><span class="st">`</span> <span class="ot">=</span> kosovo[v<span class="sc">$</span>package],</span>
+<span id="cb7-126"><a href="#cb7-126" aria-hidden="true" tabindex="-1"></a>                        <span class="at">check.names =</span> <span class="cn">FALSE</span>), <span class="at">align =</span> <span class="st">"lllll"</span>, <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb7-127"><a href="#cb7-127" aria-hidden="true" tabindex="-1"></a>             <span class="at">caption =</span> <span class="fu">sprintf</span>(<span class="st">"CRAN versions read on %s"</span>, v<span class="sc">$</span>checked[<span class="dv">1</span>]))</span>
+<span id="cb7-128"><a href="#cb7-128" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-129"><a href="#cb7-129" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-130"><a href="#cb7-130" aria-hidden="true" tabindex="-1"></a><span class="fu">## Kosovo coverage check</span></span>
+<span id="cb7-131"><a href="#cb7-131" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-132"><a href="#cb7-132" aria-hidden="true" tabindex="-1"></a>The question for a toolkit is how each package names Kosovo, and three of the</span>
+<span id="cb7-133"><a href="#cb7-133" aria-hidden="true" tabindex="-1"></a>answers were tested in this session rather than taken from documentation.</span>
+<span id="cb7-134"><a href="#cb7-134" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-137"><a href="#cb7-137" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb7-138"><a href="#cb7-138" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: check-geodata</span></span>
+<span id="cb7-139"><a href="#cb7-139" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: true</span></span>
+<span id="cb7-140"><a href="#cb7-140" aria-hidden="true" tabindex="-1"></a><span class="co">#| code-fold: show</span></span>
+<span id="cb7-141"><a href="#cb7-141" aria-hidden="true" tabindex="-1"></a>cc <span class="ot">&lt;-</span> geodata<span class="sc">::</span><span class="fu">country_codes</span>()</span>
+<span id="cb7-142"><a href="#cb7-142" aria-hidden="true" tabindex="-1"></a>cc[cc<span class="sc">$</span>NAME <span class="sc">==</span> <span class="st">"Kosovo"</span>, <span class="fu">c</span>(<span class="st">"NAME"</span>, <span class="st">"ISO3"</span>, <span class="st">"ISO2"</span>)]</span>
+<span id="cb7-143"><a href="#cb7-143" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-144"><a href="#cb7-144" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-147"><a href="#cb7-147" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb7-148"><a href="#cb7-148" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: check-gisco</span></span>
+<span id="cb7-149"><a href="#cb7-149" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: true</span></span>
+<span id="cb7-150"><a href="#cb7-150" aria-hidden="true" tabindex="-1"></a><span class="co">#| code-fold: show</span></span>
+<span id="cb7-151"><a href="#cb7-151" aria-hidden="true" tabindex="-1"></a>g <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>(giscoR<span class="sc">::</span><span class="fu">gisco_get_countries</span>(<span class="at">resolution =</span> <span class="st">"20"</span>, <span class="at">year =</span> <span class="st">"2024"</span>),</span>
+<span id="cb7-152"><a href="#cb7-152" aria-hidden="true" tabindex="-1"></a>              <span class="at">error =</span> <span class="cf">function</span>(e) <span class="cn">NULL</span>)</span>
+<span id="cb7-153"><a href="#cb7-153" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.null</span>(g)) {</span>
+<span id="cb7-154"><a href="#cb7-154" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>(g[g<span class="sc">$</span>CNTR_ID <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"XK"</span>, <span class="st">"RS"</span>), <span class="fu">c</span>(<span class="st">"CNTR_ID"</span>, <span class="st">"ISO3_CODE"</span>, <span class="st">"NAME_ENGL"</span>)]))</span>
+<span id="cb7-155"><a href="#cb7-155" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(sf<span class="sc">::</span><span class="fu">st_bbox</span>(g[g<span class="sc">$</span>CNTR_ID <span class="sc">==</span> <span class="st">"RS"</span>, ]))</span>
+<span id="cb7-156"><a href="#cb7-156" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-157"><a href="#cb7-157" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-158"><a href="#cb7-158" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-159"><a href="#cb7-159" aria-hidden="true" tabindex="-1"></a>GISCO's 2024 country layer has no feature for Kosovo, and Serbia's polygon</span>
+<span id="cb7-160"><a href="#cb7-160" aria-hidden="true" tabindex="-1"></a>reaches south to about 41.86° N: Kosovo is inside it. The pipeline already</span>
+<span id="cb7-161"><a href="#cb7-161" aria-hidden="true" tabindex="-1"></a>knows this (<span class="in">`R/functions.R`</span> compares its border against GISCO's</span>
+<span id="cb7-162"><a href="#cb7-162" aria-hidden="true" tabindex="-1"></a>international boundary only), but anyone who clips data to "Serbia" from</span>
+<span id="cb7-163"><a href="#cb7-163" aria-hidden="true" tabindex="-1"></a>GISCO is clipping Kosovo in with it.</span>
+<span id="cb7-164"><a href="#cb7-164" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-165"><a href="#cb7-165" aria-hidden="true" tabindex="-1"></a>Across this section, Kosovo turned up under at least six different</span>
+<span id="cb7-166"><a href="#cb7-166" aria-hidden="true" tabindex="-1"></a>identifiers: **XK** (GBIF, EU country code), **XKO** (GADM, geodata), **XKX**</span>
+<span id="cb7-167"><a href="#cb7-167" aria-hidden="true" tabindex="-1"></a>(the pipeline's own ISO3-style code), **KS** (EFFIS), **RS** (Emerald</span>
+<span id="cb7-168"><a href="#cb7-168" aria-hidden="true" tabindex="-1"></a>candidate sites, BirdLife's inventory and GISCO, where it is merged into</span>
+<span id="cb7-169"><a href="#cb7-169" aria-hidden="true" tabindex="-1"></a>Serbia), and **Ko** (Euro+Med). A script that filters any of these sources</span>
+<span id="cb7-170"><a href="#cb7-170" aria-hidden="true" tabindex="-1"></a>by one code will silently miss what the others file under another.</span>
+<span id="cb7-171"><a href="#cb7-171" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-172"><a href="#cb7-172" aria-hidden="true" tabindex="-1"></a><span class="fu">## What it adds for Natura 2000 in Kosovo</span></span>
+<span id="cb7-173"><a href="#cb7-173" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-174"><a href="#cb7-174" aria-hidden="true" tabindex="-1"></a>Reproducibility. Every figure on these pages can be recomputed with free</span>
+<span id="cb7-175"><a href="#cb7-175" aria-hidden="true" tabindex="-1"></a>software from the sources' own servers, and each check is shown as code a</span>
+<span id="cb7-176"><a href="#cb7-176" aria-hidden="true" tabindex="-1"></a>participant can run and change. Tier: not applicable.</span>
+<span id="cb7-177"><a href="#cb7-177" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-178"><a href="#cb7-178" aria-hidden="true" tabindex="-1"></a><span class="fu">## Caveats and sensitivity</span></span>
+<span id="cb7-179"><a href="#cb7-179" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-180"><a href="#cb7-180" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`rredlist`</span>, <span class="in">`eurostat`</span> and <span class="in">`ows4R`</span> are on CRAN but were not installed where</span>
+<span id="cb7-181"><a href="#cb7-181" aria-hidden="true" tabindex="-1"></a>  the site was rendered, so their Kosovo behaviour is not tested here.</span>
+<span id="cb7-182"><a href="#cb7-182" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Versions move; the table records the day of the check.</span>
+<span id="cb7-183"><a href="#cb7-183" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-184"><a href="#cb7-184" aria-hidden="true" tabindex="-1"></a><span class="fu">## Integration into the pipeline</span></span>
+<span id="cb7-185"><a href="#cb7-185" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-186"><a href="#cb7-186" aria-hidden="true" tabindex="-1"></a><span class="in">`pipeline.R`</span> already loads <span class="in">`rgbif`</span>, <span class="in">`sf`</span>, <span class="in">`CoordinateCleaner`</span> and friends.</span>
+<span id="cb7-187"><a href="#cb7-187" aria-hidden="true" tabindex="-1"></a>The pages here would add <span class="in">`terra`</span> (rasters) and <span class="in">`eunis.habitats`</span> (crosswalk)</span>
+<span id="cb7-188"><a href="#cb7-188" aria-hidden="true" tabindex="-1"></a>if their proposed functions are adopted. <span class="in">`pipeline.R`</span> is not changed.</span>
+<span id="cb7-189"><a href="#cb7-189" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-190"><a href="#cb7-190" aria-hidden="true" tabindex="-1"></a><span class="fu">## To be completed</span></span>
+<span id="cb7-191"><a href="#cb7-191" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-194"><a href="#cb7-194" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb7-195"><a href="#cb7-195" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: todo</span></span>
+<span id="cb7-196"><a href="#cb7-196" aria-hidden="true" tabindex="-1"></a><span class="co">#| output: asis</span></span>
+<span id="cb7-197"><a href="#cb7-197" aria-hidden="true" tabindex="-1"></a><span class="fu">todo_list</span>(row)</span>
+<span id="cb7-198"><a href="#cb7-198" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-199"><a href="#cb7-199" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-200"><a href="#cb7-200" aria-hidden="true" tabindex="-1"></a><span class="fu">## Citation</span></span>
+<span id="cb7-201"><a href="#cb7-201" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-202"><a href="#cb7-202" aria-hidden="true" tabindex="-1"></a>Cite each package with <span class="in">`citation("&lt;package&gt;")`</span>; for example</span>
+<span id="cb7-203"><a href="#cb7-203" aria-hidden="true" tabindex="-1"></a><span class="in">`citation("eunis.habitats")`</span> gives Magno, Monteiro &amp; Bentes (2023),</span>
+<span id="cb7-204"><a href="#cb7-204" aria-hidden="true" tabindex="-1"></a>doi:10.32614/CRAN.package.eunis.habitats.</span>
+</code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Occurrence data provided by the Global Biodiversity Information Facility (GBIF) and its publishing institutions.</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+<p>Built with <a href="https://quarto.org">Quarto</a> · Analysis code on <a href="https://github.com/jonasgaigr/kosovo-biodiversity-data-workshop-2026">GitHub</a></p>
+</div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

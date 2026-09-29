@@ -1,0 +1,126 @@
+---
+title: "River basin management work programme 2025–2027"
+actions:
+  - kind: check
+    what: "Find the current location of 'Programi i Punës dhe Kalendari i Aktiviteteve (2025–2027)'; the starting URL returned HTTP 404 on 29 September 2026 although search engines still index it"
+    contact: "Ministry of Environment, Spatial Planning and Infrastructure, https://mmphi.rks-gov.net/ (water department pages)"
+  - kind: check
+    what: "Whether the river basin management plans it prepares (for the 2028–2033 period, according to a search-engine summary that was not verified) will include protected-area registers under the Water Framework Directive"
+    contact: "MMPHI water department"
+todo:
+  custodian: "The ministry's water department, if the document is found at MMPHI"
+  url: "The document's current address; the starting URL is dead"
+  doi: "No DOI expected"
+  licence: "Terms of the document"
+  access: "Not established while the file is missing"
+  format: "PDF, per the dead link's file name"
+  access_method: "Unknown until found"
+  spatial_resolution: "Not spatial: a work programme"
+  temporal_coverage: "2025–2027 per its title (not verified)"
+  latest_version: "Unknown until found"
+  kosovo_coverage: "National by its title; not verified"
+  kosovo_codes_seen: "Not applicable"
+  tier: "Not applicable to a work programme; relevant for the river basin plans it prepares"
+  n2k_question: "When river basin plans will map water-dependent protected areas, which Natura 2000 freshwater sites would join"
+  effort: "Low: a document to cite"
+  sensitivity: "None"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+row <- source_row("river-basin-programme")
+dead <- "https://mmphi.rks-gov.net/MMPHIFolder/OtherDocuments/1.%20Programi%20i%20Punes%20per%20PMPL.pdf"
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+::: {.callout-warning}
+## To be completed
+The document could not be opened, so nothing about its content is verified.
+The desk review describes it as the ministry's work programme for river basin
+management, 2025–2027. A search engine's summary of the dead link describes
+a work programme and timetable for preparing river basin management plans
+for the "White Drin, Ibër, Morava, Binça and Lepen" rivers for 2028–2033;
+that summary is secondary and unverified.
+:::
+
+River basin management plans matter for Natura 2000 because the Water
+Framework Directive requires a register of protected areas that includes
+water-dependent Natura 2000 sites, and because the plans' programmes of
+measures decide what happens to the rivers that freshwater habitats and fish
+depend on.
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(
+  try_access(dead),
+  try_access("https://mmphi.rks-gov.net/")
+))
+```
+
+The starting URL returned HTTP 404 with both capitalisations of its folder
+name; the ministry's home page answers. The document is listed as moved or
+removed; its new location is an open action.
+
+A dead link is a small thing with a large consequence for evidence. When a
+ministry's document moves without a redirect, every report that cited its
+address stops being checkable, and a search engine that still indexes the old
+address makes the document look available when it is not. That is why this
+page records the attempt and its date, and why the section as a whole keeps
+an evidence row for every value: a reader can see not only what was found but
+what could no longer be found.
+
+## Kosovo coverage check
+
+::: {.callout-warning}
+## To be completed
+Not applicable until the document is found. Once found: record which river
+basins it covers, whether it plans a protected-area register, and the
+timetable for the first plans.
+:::
+
+## What it adds for Natura 2000 in Kosovo
+
+Timing and coordination. If the first river basin plans are being prepared
+now, the Natura 2000 work on freshwater habitats (3260, 91E0, 92A0) and
+Annex II fish should feed their protected-area register, rather than follow
+it by six years.
+
+## Caveats and sensitivity
+
+- Lead, not verified: the link is dead and the content unknown.
+
+## Integration into the pipeline
+
+None; a document to cite. `pipeline.R` is not changed.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+::: {.callout-warning}
+## To be completed
+Cite once the document is found.
+:::

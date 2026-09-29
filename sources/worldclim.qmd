@@ -1,0 +1,173 @@
+---
+title: "WorldClim"
+subtitle: "Global climate layers, reached for Kosovo in one line of R with the geodata package, which files Kosovo under XKO."
+actions:
+  - kind: check
+    what: "Read WorldClim's licence and requested citation on worldclim.org, and record the custodian"
+    contact: "https://www.worldclim.org/"
+todo:
+  custodian: "Maintainers of WorldClim; read on worldclim.org"
+  doi: "WorldClim 2.1 data paper DOI; read on worldclim.org"
+  licence: "WorldClim's terms of use; read on worldclim.org"
+  temporal_coverage: "Reference period of the WorldClim 2.1 climatology; read on worldclim.org"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+suppressPackageStartupMessages({
+  library(sf)
+  library(terra)
+  library(leaflet)
+})
+row <- source_row("worldclim")
+dir <- cache_dir("worldclim")
+cache <- file.path(dir, "climate", "wc2.1_country", "XKO_wc2.1_30s_tavg.tif")
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+WorldClim provides global gridded climate, such as monthly mean
+temperature, at resolutions down to 30 arc-seconds (about 1 km). This page uses it mainly to show how the R package
+`geodata` reaches such layers: `geodata` serves per-country tiles of
+WorldClim 2.1 from `geodata.ucdavis.edu`, and it identifies Kosovo by the
+ISO3-style code **XKO** (ISO2 **XK**), the same code as GADM, which the GBIF
+download also filters on.
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(
+  try_access("https://www.worldclim.org/"),
+  try_access("https://geodata.ucdavis.edu/climate/worldclim/2_1/tiles/iso/XKO_wc2.1_30s_tavg.tif")
+))
+```
+
+```{r}
+#| label: build
+#| echo: true
+#| code-fold: show
+# One line of R: monthly mean temperature for Kosovo at 30 arc-seconds.
+build_error <- NULL
+if (!file.exists(cache)) {
+  build_error <- tryCatch({
+    geodata::worldclim_country("XKO", var = "tavg", res = 0.5, path = dir)
+    NULL
+  }, error = function(e) conditionMessage(e))
+}
+have_cache <- file.exists(cache)
+```
+
+```{r}
+#| label: build-failed
+#| eval: !expr "!have_cache"
+#| output: asis
+cat("::: {.callout-warning}\n## To be completed\nThe geodata download failed at render time (",
+    build_error %||% "no message", "). Re-render when geodata.ucdavis.edu answers.\n:::\n", sep = "")
+```
+
+## Kosovo coverage check
+
+```{r}
+#| label: codes
+cc <- geodata::country_codes()
+knitr::kable(cc[cc$NAME == "Kosovo", c("NAME", "ISO3", "ISO2", "NAME_LOCAL")],
+             row.names = FALSE, caption = "How geodata names Kosovo")
+```
+
+```{r}
+#| label: check
+#| eval: !expr have_cache
+#| output: asis
+w <- rast(cache)
+ko <- vect(kosovo_outline())
+annual <- mask(crop(mean(w), ko, snap = "out"), ko)
+inside <- !is.na(values(rasterize(ko, annual), mat = FALSE))
+v <- values(annual, mat = FALSE)[inside]
+cat(sprintf(paste0("The country tile covers %.1f–%.1f° E and %.1f–%.1f° N, ",
+                   "wider than Kosovo. Inside the outline: %s cells, %d no-data; ",
+                   "annual mean of the monthly means %.1f to %.1f °C (mean %.1f °C)."),
+            xmin(w), xmax(w), ymin(w), ymax(w), fmt_int(length(v)), sum(is.na(v)),
+            min(v, na.rm = TRUE), max(v, na.rm = TRUE), mean(v, na.rm = TRUE)))
+```
+
+The tile is cut to a rectangle around Kosovo, not to its border: `geodata`
+leaves the clipping to the user, which is why the outline from the pipeline
+is applied here.
+
+The code matters more than it looks. `geodata` finds Kosovo because it uses
+GADM's list of countries, where Kosovo is XKO. Both wrong guesses were
+tried while writing this page. Asking for "XKX", the code the pipeline stamps
+on its own records, stops with "unknown country: XKX". Asking for "SRB", in
+the hope of catching Kosovo inside Serbia, returns Serbia's tile, a rectangle
+from 42° to 46.5° N that takes in most of Kosovo by accident and stops short
+of its southern mountains. The same lookup, `geodata::country_codes()`, is worth running before
+any per-country download from this package, and its answer recorded, as the
+table above does. `geodata` also caches what it downloads under the `path`
+it is given, so a second render reads the local file rather than the server;
+here that cache sits under `data/sources/worldclim/`.
+
+```{r}
+#| label: map
+#| eval: !expr have_cache
+source("../R/functions.R", local = TRUE)
+pal <- colorNumeric(grDevices::hcl.colors(9, "RdYlBu", rev = TRUE),
+                    values(annual), na.color = NA)
+leaflet() |>
+  add_basemaps() |>
+  addRasterImage(annual, colors = pal, opacity = 0.75) |>
+  add_boundary_outline(kosovo_outline()) |>
+  addLegend(pal = pal, values = values(annual), title = "Mean temperature (°C)") |>
+  addLayersControl(baseGroups = basemap_groups,
+                   options = layersControlOptions(collapsed = TRUE))
+```
+
+## What it adds for Natura 2000 in Kosovo
+
+The same kind of covariates as [CHELSA](chelsa.qmd), with the advantage that
+`geodata` makes them one line of code, which suits teaching.
+Two climatologies from different methods also give a cheap check on each
+other in Kosovo's mountains. National screening only
+([tier](../natura2000.qmd#q1)).
+
+## Caveats and sensitivity
+
+- Interpolated climate; mountain gradients are smoothed at 1 km.
+- The country tile is a rectangle; clip it before computing national figures.
+- No sensitive content.
+
+## Integration into the pipeline
+
+Low effort; the package does the work. A proposed
+`kosovo_climate(boundary, source = "worldclim")` beside the CHELSA variant.
+`pipeline.R` is not changed.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+::: {.callout-warning}
+## To be completed
+Use the citation WorldClim requests on worldclim.org, and cite `geodata`
+with `citation("geodata")`.
+:::

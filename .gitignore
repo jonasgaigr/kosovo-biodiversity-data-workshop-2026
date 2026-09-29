@@ -119,3 +119,26 @@ CLC20*_*.zip
 # working directory because the decks are written against it; not tracked.
 # ------------------------------------------------------------------------------
 /Agenda_*.docx
+
+# ------------------------------------------------------------------------------
+# Data sources section (sources/)
+#
+# Each page caches what it downloads under data/sources/<slug>/. Small open
+# extracts are tracked so the pages render from a fresh clone. Documents are
+# not: PDFs fetched from government sites carry no licence, or an explicit
+# ban on reproduction (the Red Book of Fauna), and are read in place, with
+# their size and SHA-256 recorded on the page. Anything over 50 MB is never
+# tracked either; the pages read large European files remotely instead.
+# ------------------------------------------------------------------------------
+/data/sources/**/*.pdf
+/data/sources/**/*.zip
+/data/sources/**/*.part
+# Extracts whose licence terms were not read in the check are not
+# redistributed either; their pages rebuild them from the source in seconds.
+# Extracts of CC-BY and Copernicus-open data are tracked.
+/data/sources/chelsa/
+/data/sources/worldclim/
+/data/sources/soils-geology/
+/data/sources/copernicus-dem/
+/data/sources/effis-burnt-areas/
+/data/sources/hydrosheds/

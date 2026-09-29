@@ -1,0 +1,137 @@
+---
+title: "EU for Natura 2000 in Serbia"
+subtitle: "An EU-funded project that identified Serbia's first list of potential Natura 2000 sites; the sites along Kosovo's border are the transboundary half of any Kosovo proposal."
+actions:
+  - kind: request
+    what: "Draft boundaries of the 277 pSCIs and 85 SPAs, at least those within 20 km of Kosovo, with their Standard Data Forms"
+    contact: "Ministry of Environmental Protection of Serbia, through the Natura 2000 portal https://natura2000.gov.rs/en/; or the Institute for Nature Conservation of Serbia"
+  - kind: check
+    what: "Whether the Serbian list places any pSCI or SPA inside Kosovo, as Serbia's candidate Emerald sites do (see the Emerald Network page)"
+    contact: "The site list, once obtained"
+  - kind: check
+    what: "Whether natura2000.gov.rs publishes a map service behind its viewer page; the root page returned HTTP 500 on 29 September 2026"
+    contact: "https://natura2000.gov.rs/en/natura-2000-viewer/"
+todo:
+  doi: "No DOI; the results are announced on web pages, not published as a dataset"
+  licence: "No terms stated for the site list; ask the Ministry when requesting the boundaries"
+  access_method: "Unknown until the Ministry says how boundaries would be supplied"
+  spatial_resolution: "Scale of the draft boundaries; state it once they are obtained"
+  temporal_coverage: "Fieldwork years; the project summary PDF on eptisasee.com was not opened in this check"
+  kosovo_coverage: "Unknown: the pages opened do not say whether any proposed site lies in Kosovo"
+  kosovo_codes_seen: "Record which code the Serbian list uses for sites in or near Kosovo once the list is obtained"
+  tier: "Depends on the boundary scale; a pSCI boundary would normally serve the site tier"
+  effort: "Estimate once the delivery format is known"
+  sensitivity: "Ask whether the SDFs carry species locations that Serbia treats as sensitive"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+row <- source_row("serbia-eu-for-natura2000")
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+"EU for Natura 2000 in Serbia" was an EU-funded technical-assistance project
+that ended on 30 November 2021. Serbia's Natura 2000 portal, run for the
+Ministry of Environmental Protection, reports that in about two and a half
+years a team of national and international experts identified 277 potential
+Sites of Community Interest (pSCIs) and 85 Special Protection Areas (SPAs)
+under the Habitats and Birds Directives. The Ministry, the Institute for Nature
+Conservation of Serbia, the Institute for Nature Conservation of Vojvodina
+Province and the Serbian Environmental Protection Agency took part.
+
+The project's own site describes its purpose as establishing the first list of
+potential Natura 2000 sites, "together with the development of an information
+system, database and GIS". The list itself, its boundaries and its forms are
+not published on either site.
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(
+  try_access("https://natura2000.gov.rs/"),
+  try_access("https://natura2000.gov.rs/en/natura-2000-in-serbia-achievements-and-next-steps/"),
+  try_access("https://natura2000.gov.rs/en/natura-2000-viewer/"),
+  try_access("https://natura-2000.euzatebe.rs/en/downloads")
+))
+```
+
+On 29 September 2026 the portal's root address returned HTTP 500 while its
+English pages answered. The project's downloads page offers two newsletters
+and a paper of legislative recommendations; no site list, map or GIS file. The
+portal's "Natura 2000 viewer" page links to the EEA's viewer of the EU
+network, which holds no Serbian sites, since Serbia is not a Member State.
+The desk review named `natura2000.gov.rs` without an exact page; the
+pages above are the ones found there.
+
+## Kosovo coverage check
+
+::: {.callout-warning}
+## To be completed
+The draft site boundaries are not published, so no overlay with Kosovo's
+border could be run. The pages opened say nothing about sites in or next to
+Kosovo. Once the boundaries are obtained: list every pSCI and SPA within 20 km
+of the border, measure how much of each lies inside Kosovo, and record the
+country code on each site. Serbia's candidate *Emerald* sites already extend
+into Kosovo under code RS (see [Emerald Network](emerald-network.qmd)), so the
+same must be checked for the Natura 2000 list.
+:::
+
+## What it adds for Natura 2000 in Kosovo
+
+Sites on Šar, Prokletije and Kopaonik stop at a border the species do not
+recognise. A Kosovo proposal that ends where a Serbian or Macedonian one
+begins, with the same habitat on both sides, is easier to defend in the
+biogeographical process than one drawn without looking across. The Serbian
+list would also show which features a neighbour with a comparable fauna and
+flora judged to need sites, which is a check on Kosovo's own
+[sufficiency ledger](../natura2000.qmd#q4). The tier depends on the boundary
+scale, which is not yet known.
+
+## Caveats and sensitivity
+
+- A potential site list is a technical proposal, not a designation, and may
+  change before Serbia submits it.
+- Only the project's summary numbers were verified; nothing about individual
+  sites was.
+- Any site list that includes Kosovo's territory under Serbian codes needs to
+  be read as a data question, not a statement on status.
+
+## Integration into the pipeline
+
+Low effort once the boundaries exist as a GeoPackage or shapefile: a proposed
+`neighbour_candidate_sites(boundary, path, buffer_km = 20)` in
+`R/functions.R`, read beside `kosovo_protected_areas()`, would give the report
+a transboundary layer. Until then there is nothing to integrate. `pipeline.R`
+is not changed.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+::: {.callout-warning}
+## To be completed
+No citation guidance was found on either site. Cite the Ministry's list in the
+form it gives when the boundaries are supplied.
+:::

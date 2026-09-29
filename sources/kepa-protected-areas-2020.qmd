@@ -1,0 +1,196 @@
+---
+title: "Table of protected areas in Kosovo, 2020"
+subtitle: "KEPA's national table of protected areas, with site codes that match the national identifiers Kosovo reports to the EEA."
+actions:
+  - kind: check
+    what: "Resolve every code that appears in one list but not the other (see the check), with KEPA/KINP"
+    contact: "Kosovo Institute for Nature Protection, KEPA"
+  - kind: request
+    what: "The national register in machine-readable form (table and boundaries), with the date of its last update"
+    contact: "KEPA/AMMK, https://www.ammk-rks.net/"
+  - kind: check
+    what: "Whether a table newer than 2020 exists; the State of Nature report 2018–2021 is listed on the same KEPA page"
+    contact: "https://www.ammk-rks.net/al/drejtorite/38/raporte-studime-publikime"
+todo:
+  doi: "No DOI; a national table"
+  licence: "No terms stated in the PDF; ask KEPA before redistributing the table"
+  temporal_coverage: "Range of designation years; read from the table's year column"
+  sensitivity: "None expected for a register of sites"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+suppressPackageStartupMessages(library(sf))
+row <- source_row("kepa-protected-areas-2020")
+url <- "https://www.ammk-rks.net/assets/cms/uploads/files/Biodiversiteti/Zonat_e_Mbrojtura_2020.pdf"
+dir <- cache_dir("kepa-protected-areas-2020")
+pdf <- file.path(dir, "Zonat_e_Mbrojtura_2020.pdf")   # git-ignored: no licence stated
+codes_csv <- file.path(dir, "codes_in_table.csv")
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+*Tabela e zonave të mbrojtura në Kosovë* is the Kosovo Environmental
+Protection Agency's table of the country's protected areas, dated 2020 (the
+PDF was produced in November 2021). It runs to 17 pages in Albanian and lists
+each area by category (strict nature reserve, national park, natural
+monument and so on) with a code, a name, the municipality or park it lies in,
+its area in hectares, its IUCN management category, the year of protection
+and a short description of its values. Codes take the form `RN_001` for
+strict nature reserves and `NP_001` for national parks.
+
+The report already uses the EEA's Nationally designated areas (NatDA v24),
+which is how Kosovo reports its sites to Europe: 237 sites, 48 with a mapped
+boundary. The desk review asked for a cross-check between the two.
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(try_access(url), try_access(url, ssl_verify = FALSE)))
+```
+
+The server's TLS certificate had expired, so the file is fetched without
+certificate verification, and its SHA-256 is recorded below. It states no
+licence, so it is cached locally but not committed; only the list of codes
+extracted from it is.
+
+```{r}
+#| label: build
+#| echo: true
+#| code-fold: true
+#| code-summary: "Show how the codes are extracted"
+if (!file.exists(codes_csv)) {
+  if (!file.exists(pdf)) try_access(url, pdf, ssl_verify = FALSE)
+  if (file.exists(pdf)) {
+    txt <- paste(pdftools::pdf_text(pdf), collapse = "\n")
+    codes <- sort(unique(regmatches(txt, gregexpr("\\b[A-Z]{2,4}_[0-9]{3}\\b", txt))[[1]]))
+    write.csv(data.frame(code = codes), codes_csv, row.names = FALSE)
+  }
+}
+have_cache <- file.exists(codes_csv)
+```
+
+```{r}
+#| label: fingerprint
+#| eval: !expr file.exists(pdf)
+#| output: asis
+fp <- file_fingerprint(pdf)
+cat(sprintf("Local copy: `%s`, %s, SHA-256 `%s`, downloaded %s (not committed).\n",
+            fp$file, fp$size, fp$sha256, fp$downloaded))
+```
+
+## Kosovo coverage check
+
+The table is Kosovo's own, so coverage is complete by definition. The check
+is whether it and NatDA describe the same set of sites.
+
+```{r}
+#| label: check
+#| eval: !expr have_cache
+table_codes <- read.csv(codes_csv)$code
+natda <- rbind(
+  st_drop_geometry(st_read(file.path(sources_root(), "data", "kosovo_protected_areas.gpkg"),
+                           layer = "protected_area_polygons", quiet = TRUE))[, c("national_id", "site_name", "designated_area_type")],
+  st_drop_geometry(st_read(file.path(sources_root(), "data", "kosovo_protected_areas.gpkg"),
+                           layer = "protected_area_points", quiet = TRUE))[, c("national_id", "site_name", "designated_area_type")])
+natda_codes <- unique(natda$national_id)
+prefix <- function(x) sub("_.*", "", x)
+cmp <- data.frame(
+  Prefix = sort(unique(c(prefix(table_codes), prefix(natda_codes)))))
+cmp$`In KEPA table` <- vapply(cmp$Prefix, function(p) sum(prefix(table_codes) == p), 0L)
+cmp$`In NatDA v24` <- vapply(cmp$Prefix, function(p) sum(prefix(natda_codes) == p), 0L)
+cmp$`In both` <- vapply(cmp$Prefix, function(p)
+  length(intersect(table_codes[prefix(table_codes) == p], natda_codes)), 0L)
+knitr::kable(cmp, align = "lrrr", row.names = FALSE)
+```
+
+```{r}
+#| label: check-text
+#| eval: !expr have_cache
+#| output: asis
+# The KEPA table abbreviates categories in Albanian (Rezervat Natyror, Park
+# Kombëtar, Peizazh i Mbrojtur, Monument Natyror); NatDA mostly does not.
+# Natural monuments appear in NatDA under both MN and NM, so both are tried.
+num <- sub(".*_", "", table_codes)
+cand <- lapply(seq_along(table_codes), function(i) switch(prefix(table_codes[i]),
+  RN = paste0("NR_", num[i]), PK = paste0("NP_", num[i]),
+  PM = paste0("PL_", num[i]), MN = paste0(c("MN_", "NM_"), num[i]),
+  table_codes[i]))
+hit_literal <- table_codes %in% natda_codes
+hit_translated <- vapply(cand, function(x) any(x %in% natda_codes), TRUE)
+cat(sprintf(paste(
+  "The KEPA table carries %d distinct codes and NatDA %d. Taken literally,",
+  "only %d codes appear in both, because the two lists abbreviate the",
+  "categories differently: strict reserves are RN in the table and NR in",
+  "NatDA, national parks PK and NP, protected landscapes PM and PL. Translating",
+  "the table's prefixes to NatDA's (and trying both MN and NM for natural",
+  "monuments) matches %d of the table's %d codes. Still unmatched in the",
+  "table: %s."),
+  length(table_codes), length(natda_codes), sum(hit_literal),
+  sum(hit_translated), length(table_codes),
+  paste(head(table_codes[!hit_translated], 20), collapse = ", ")))
+```
+
+A code with no counterpart is not necessarily an error: text extraction from
+a PDF table can split or merge cells, and NatDA may hold sites designated
+after 2020. But the prefix mismatch itself is a finding. A join on the site
+code between the national table and the EEA reporting fails silently for all
+but a few natural monuments, so any tool that links them must translate the
+prefixes first, and the translation above is an inference to be confirmed by
+KEPA.
+
+## What it adds for Natura 2000 in Kosovo
+
+A Natura 2000 proposal starts from the existing national sites, and the
+report's figures on how much is protected rest on NatDA. If the national table
+and NatDA disagree, the report's coverage figures inherit the disagreement.
+The table also carries the IUCN category and short descriptions of each
+site's values, a useful first pointer to what each site was protected for. It
+serves the [national tier](../natura2000.qmd#q1); boundaries come from NatDA.
+
+## Caveats and sensitivity
+
+- Codes were extracted automatically from a PDF, and the extraction is only
+  as good as the PDF's text layer.
+- The table has no boundaries; any area comparison must use NatDA.
+- No sensitive content.
+
+## Integration into the pipeline
+
+Low effort. The codes already match NatDA's `national_id`, so a proposed
+`check_register_against_natda(table_codes, protected_areas)` could run after
+`kosovo_protected_areas()` in `pipeline.R` and report mismatches in the run
+log. A machine-readable table from KEPA would make the PDF step unnecessary.
+`pipeline.R` is not changed here.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+::: {.callout-warning}
+## To be completed
+The PDF gives no citation. Cite as KEPA (2020), *Tabela e zonave të mbrojtura
+në Kosovë*, Agjencia për Mbrojtjen e Mjedisit të Kosovës, and confirm the
+preferred form with KEPA.
+:::

@@ -1,0 +1,234 @@
+---
+title: "Emerald Network"
+subtitle: "The Bern Convention's network of Areas of Special Conservation Interest; Kosovo has none of its own, but Serbia's candidate sites extend into it."
+actions:
+  - kind: check
+    what: "What status, if any, the Bern Convention gives the Serbian candidate sites that lie in Kosovo (Mirusha, Gërmia, and the Kosovo parts of Prokletije and Šar); coe.int returned HTTP 403 to every request from this network"
+    contact: "Bern Convention Secretariat, Council of Europe, https://www.coe.int/en/web/bern-convention/emerald-network-reference-portal"
+  - kind: check
+    what: "Why the 2025 catalogue record lists Kosovo (UNSCR 1244/99) among the areas covered when no site carries a Kosovo code"
+    contact: "EEA catalogue record a2a18206-633a-4166-8850-0552661ef25f; ask the EEA helpdesk or the Bern Secretariat"
+  - kind: check
+    what: "Read the Emerald Standard Data Form explanatory notes, whose field guidance the desk review flagged as useful for Kosovo's own SDFs"
+    contact: "Emerald Network reference portal on coe.int (blocked from this network; try another connection)"
+todo:
+  sensitivity: "Check whether the Emerald SDF tables withhold sensitive species; the vector file carries none"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+suppressPackageStartupMessages({
+  library(sf)
+  library(leaflet)
+})
+row <- source_row("emerald-network")
+cache <- file.path(cache_dir("emerald-network"), "emerald_near_kosovo.gpkg")
+service <- "https://bio.discomap.eea.europa.eu/arcgis/rest/services/ProtectedSites/EmeraldSites/MapServer/3"
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+The Emerald Network is the Bern Convention's counterpart of Natura 2000: a
+network of Areas of Special Conservation Interest (ASCIs) that the
+Convention's non-EU Parties propose, have assessed, and adopt. The data are
+owned by the Council of Europe and processed and published by the EEA. The
+2025 version, published on 19 May 2026 under CC-BY 4.0, reflects the
+submissions the Standing Committee adopted in December 2025.
+
+Kosovo is not a Party. Its own biodiversity action plan says so plainly:
+"Kosovo is not a Party to the Bern Convention, meaning that the Emerald
+Network has not been developed in the country" (MESP, Action Plan for
+Biodiversity 2016–2020). The desk review therefore expected this page to be
+"Not applicable to Kosovo". The check below shows why that is not quite
+right.
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(
+  try_access("https://www.eea.europa.eu/en/datahub/datahubitem-view/4c4c8086-c940-400b-9064-29063143b2de"),
+  try_access("https://doi.org/10.2909/a2a18206-633a-4166-8850-0552661ef25f"),
+  try_access(paste0(service, "?f=json")),
+  try_access("https://www.coe.int/en/web/bern-convention/emerald-network-reference-portal"),
+  try_access("https://www.coe.int/en/web/bern-convention/emerald-viewer")
+))
+```
+
+The EEA copy is open, with a DOI and a map service. The Council of Europe's
+own reference portal and viewer returned HTTP 403 to every request from this
+network, so the Convention's documents could not be read. The check uses the
+EEA's map service, layer "All sites", in the same way the pipeline reads
+CORINE Land Cover.
+
+```{r}
+#| label: build
+#| echo: true
+#| code-fold: true
+#| code-summary: "Show how the sites around Kosovo are fetched"
+build_error <- NULL
+if (!file.exists(cache)) {
+  build_error <- tryCatch({
+    source("../R/functions.R", local = TRUE)
+    ko   <- st_transform(st_union(kosovo_outline()), 3035)
+    zone <- st_buffer(ko, 50000)
+    sites <- arcgis_query_sf(service, st_bbox(st_transform(zone, 4326)),
+                             fields = "SITECODE,SITENAME,COUNTRY_CODE,SITESTATUS,AREAHA,DATE_PROP_ASCI",
+                             verbose = FALSE)
+    sites <- st_make_valid(sites)
+    sites <- sites[lengths(st_intersects(sites, zone)) > 0, ]
+    sites$site_ha <- as.numeric(st_area(sites)) / 1e4
+    sites$ha_in_kosovo <- as.numeric(vapply(seq_len(nrow(sites)), function(i)
+      sum(as.numeric(st_area(st_intersection(st_geometry(sites)[i], ko)))), 0)) / 1e4
+    sites$km_to_kosovo <- round(as.numeric(st_distance(sites, ko)) / 1000, 1)
+    sites$proposed <- format(as.POSIXct(sites$DATE_PROP_ASCI / 1000,
+                                        origin = "1970-01-01", tz = "UTC"), "%Y")
+    st_write(st_intersection(sites, zone), cache, delete_dsn = TRUE, quiet = TRUE)
+    NULL
+  }, error = function(e) conditionMessage(e))
+}
+have_cache <- file.exists(cache)
+```
+
+```{r}
+#| label: build-outcome
+#| output: asis
+if (!have_cache) {
+  cat("::: {.callout-warning}\n## To be completed\nThe EEA map service did not answer at render time (",
+      build_error %||% "no message", "). Re-render when it does.\n:::\n", sep = "")
+} else {
+  fp <- file_fingerprint(cache)
+  cat(sprintf("The sites within 50 km of Kosovo, cut to that zone, are cached as `%s` (%s, SHA-256 `%s`, %s).\n",
+              fp$file, fp$size, substr(fp$sha256, 1, 16), fp$downloaded))
+}
+```
+
+## Kosovo coverage check
+
+The question is whether any Emerald site lies in Kosovo, under which code, and
+what lies within 50 km of the border.
+
+```{r}
+#| label: check
+#| eval: !expr have_cache
+s <- st_read(cache, quiet = TRUE)
+inside <- s[s$ha_in_kosovo > 1, ]
+knitr::kable(
+  data.frame(Site = inside$SITENAME, Code = inside$SITECODE,
+             `Country code` = inside$COUNTRY_CODE, Status = inside$SITESTATUS,
+             `Proposed` = inside$proposed,
+             `Mapped area (ha)` = fmt_int(round(inside$site_ha)),
+             `Inside Kosovo (ha)` = fmt_int(round(inside$ha_in_kosovo)),
+             `Share inside` = sprintf("%.0f %%", 100 * inside$ha_in_kosovo / inside$site_ha),
+             check.names = FALSE)[order(-inside$ha_in_kosovo), ],
+  align = "lllllrrr", row.names = FALSE)
+```
+
+```{r}
+#| label: check-text
+#| eval: !expr have_cache
+#| output: asis
+by_cc <- table(s$COUNTRY_CODE)
+rs_in <- inside[inside$COUNTRY_CODE == "RS", ]
+other <- inside[inside$COUNTRY_CODE != "RS", ]
+kosovo_ha <- as.numeric(st_area(st_transform(st_union(kosovo_outline()), 3035))) / 1e4
+cat(sprintf(paste(
+  "%d Emerald sites lie within 50 km of Kosovo (%s). %d Serbian candidate",
+  "sites, coded RS, reach inside Kosovo and cover %s ha of it, about %.0f per",
+  "cent of the country. Another %d sites of Montenegro, Albania and North",
+  "Macedonia overlap the border by %s ha in all; at a scale of 1:100,000 much",
+  "of that is the difference between the Emerald outlines and the",
+  "OpenStreetMap border. No site carries a Kosovo code (XK, XKX, KOS or KV)."),
+  nrow(s), paste(sprintf("%s %d", names(by_cc), as.integer(by_cc)), collapse = ", "),
+  nrow(rs_in), fmt_int(round(sum(rs_in$ha_in_kosovo))),
+  100 * sum(rs_in$ha_in_kosovo) / kosovo_ha,
+  nrow(other), fmt_int(round(sum(other$ha_in_kosovo)))))
+```
+
+The Serbian sites were proposed in 2006, before Kosovo's declaration of
+independence, and the Emerald data still file them under Serbia. Mirusha and
+Gërmia are named after places in Kosovo and lie inside it; the Kosovo parts
+of Prokletije and Šar Planina take in the western and southern mountains
+where both national parks lie. This is the "Kosovo merged into RS" pattern: a
+user who filters the Emerald data by country counts Kosovo ground as Serbian
+without knowing it, and any statistic computed per country, sufficiency
+included, may do the same.
+
+```{r}
+#| label: map
+#| eval: !expr have_cache
+source("../R/functions.R", local = TRUE)
+ko <- kosovo_outline()
+pal <- colorFactor(c("#175CA1", "#D55E00", "#009E73", "#CC79A7"),
+                   domain = sort(unique(s$COUNTRY_CODE)))
+leaflet(st_transform(s, 4326)) |>
+  add_basemaps() |>
+  addPolygons(fillColor = ~pal(COUNTRY_CODE), fillOpacity = 0.35, weight = 1,
+              color = ~pal(COUNTRY_CODE),
+              label = ~sprintf("%s (%s, %s): %s ha inside Kosovo", SITENAME,
+                               SITECODE, SITESTATUS, fmt_int(round(ha_in_kosovo)))) |>
+  add_boundary_outline(ko) |>
+  addLegend(pal = pal, values = ~COUNTRY_CODE, title = "Country code") |>
+  addLayersControl(baseGroups = basemap_groups,
+                   options = layersControlOptions(collapsed = TRUE))
+```
+
+## What it adds for Natura 2000 in Kosovo
+
+Two things. First, the neighbours' candidate sites along the border, which a
+Kosovo proposal should meet rather than stop short of. Second, a warning for
+every European dataset used in this section: Kosovo's territory can be
+present under another country's code, and a check by code alone would miss
+it. Emerald boundaries are drawn at 1:100,000, so they serve the site tier
+only as a first outline ([tiers](../natura2000.qmd#q1)). The Emerald
+Standard Data Form is structurally close to the Natura 2000 SDF, and its
+guidance is worth reading when Kosovo designs its own forms; that reading is
+an open action, since coe.int was blocked.
+
+## Caveats and sensitivity
+
+- Candidate status is the first of the Emerald stages; none of these border
+  sites is adopted.
+- The Serbian sites inside Kosovo date from 2006–2008 and describe data of
+  that time.
+- The status of those sites under the Convention could not be checked,
+  because coe.int was unreachable.
+
+## Integration into the pipeline
+
+Low effort. `arcgis_query_sf()` already exists in `R/functions.R`; a proposed
+`emerald_sites_near(boundary, radius_km = 50)` called after the
+protected-area step would add the layer, with `ha_in_kosovo` and
+`COUNTRY_CODE` kept so the report can say which sites are filed under
+another country. `pipeline.R` is not changed here.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+The catalogue record identifies the dataset as
+`coe_v_3035_100_k_emerald_p_2024-2025_v01_r00`, copyright Council of Europe,
+licence CC-BY 4.0. Cite it as: *Emerald Network data (vector) – the
+Pan-European network of protected sites, version 2025.* Council of Europe;
+published by the European Environment Agency, 2026.
+[doi:10.2909/a2a18206-633a-4166-8850-0552661ef25f](https://doi.org/10.2909/a2a18206-633a-4166-8850-0552661ef25f).

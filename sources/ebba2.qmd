@@ -1,0 +1,148 @@
+---
+title: "European Breeding Bird Atlas 2"
+subtitle: "The European Bird Census Council's atlas of breeding birds from fieldwork mostly in 2013–2017, at 50 km observed and 10 km modelled."
+actions:
+  - kind: request
+    what: "EBBA2 data for the 50 km squares covering Kosovo (breeding evidence and abundance class per species) and the 10 km modelled probability of occurrence for the same area"
+    contact: "EBBA2 data request form, https://www.ebba2.info/data-req-form/"
+  - kind: check
+    what: "Read the 'EBBA2 Data Access policy' document linked from the data-request page, and record which data are open (and under which licence) and which need EBCC approval"
+    contact: "https://ebba2.info/data-request/"
+  - kind: check
+    what: "Whether and by whom Kosovo was covered in EBBA2 fieldwork (national coordinator)"
+    contact: "EBBA2 map viewer https://mapviewer.ebba2.info/ or EBCC"
+todo:
+  doi: "No DOI found for the EBBA2 dataset; ask EBCC"
+  licence: "The desk review's claim that 50 km data are free under a Creative Commons licence is unconfirmed; the terms are in the 'EBBA2 Data Access policy' document"
+  format: "Delivery format of requested data; ask EBCC with the request"
+  access_method: "Request form; confirm whether any data are downloadable without approval"
+  kosovo_coverage: "Whether Kosovo's squares were surveyed in EBBA2; not stated on the pages opened"
+  kosovo_codes_seen: "Which country code or name EBBA2 uses for Kosovo's squares; check in the map viewer"
+  effort: "Low once a table of squares × species arrives; estimate after the request"
+  sensitivity: "EBBA2's own rules for sensitive species at 10 km; read in the data access policy"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+row <- source_row("ebba2")
+cache <- file.path(cache_dir("ebba2"), "gbif_ebcc_atlas_check.csv")
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+The second European Breeding Bird Atlas, published in 2020 by the European
+Bird Census Council (EBCC) with Lynx Edicions, maps the distribution,
+abundance and change of Europe's breeding birds from fieldwork carried out
+mostly between 2013 and 2017 by some 120,000 fieldworkers in 48 countries.
+It offers two kinds of map: observed abundance and breeding likelihood at 50
+× 50 km, and modelled probability of occurrence at 10 × 10 km. An online
+version followed in 2021.
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(
+  try_access("https://www.ebcc.info/what-we-do/ebba2/"),
+  try_access("https://ebba2.info/data-request/"),
+  try_access("https://www.ebba2.info/data-req-form/"),
+  try_access("https://mapviewer.ebba2.info/")
+))
+```
+
+The data-request page says that "some data are open access while some
+requests require the acceptance of the EBCC", and routes every request
+through one form. The detailed terms are in a Word document linked from that
+page, which was not opened. No request was submitted; it is listed as an open
+action below.
+
+## Kosovo coverage check
+
+The EBBA2 data could not be checked without a request. What can be checked is
+whether its predecessor is already in this project's data. The first EBCC
+atlas (1997, fieldwork 1972–1995) is published on GBIF.
+
+```{r}
+#| label: build
+#| echo: true
+#| code-fold: true
+#| code-summary: "Show the GBIF check"
+if (!file.exists(cache)) {
+  key <- "c779b049-28f3-4daf-bbf4-0a40830819b6"   # EBCC Atlas of European Breeding Birds
+  count <- function(q) tryCatch(
+    jsonlite::fromJSON(sprintf("https://api.gbif.org/v1/occurrence/search?datasetKey=%s&limit=0&%s",
+                               key, q))$count, error = function(e) NA)
+  reg <- read.csv(file.path(sources_root(), "data", "dataset_registry.csv"))
+  write.csv(data.frame(
+    check = c("Records coded XK", "Records inside GADM XKO", "In this project's GBIF download"),
+    value = c(fmt_int(count("country=XK")), fmt_int(count("gadmGid=XKO")),
+              ifelse(key %in% reg$datasetKey, "yes", "no"))),
+    cache, row.names = FALSE)
+}
+knitr::kable(read.csv(cache), col.names = c("Check (EBCC atlas 1997 on GBIF)", "Result"))
+```
+
+The 1997 atlas is already in the download behind the report, and GBIF codes
+its Kosovo squares XK. EBBA2 is not on GBIF, so the newer atlas adds records
+the report does not yet hold.
+
+::: {.callout-warning}
+## To be completed
+Once EBBA2 data arrive: list the 50 km squares that intersect
+`kosovo_outline()`, the species recorded in each with breeding evidence, and
+compare with the GBIF bird records. Show atlas data only at its native 50 km
+or 10 km grid.
+:::
+
+## What it adds for Natura 2000 in Kosovo
+
+Nine in ten of the 28,785 bird records in the report's GBIF extract come from
+eBird checklists, and they cluster where observers go. An atlas is a systematic survey with breeding evidence in
+every square, which is what an SPA case needs to separate breeding from
+passage birds (see [question 6](../natura2000.qmd#q6)). The 10 km modelled
+maps would also give a first, consistent distribution for Annex I species. At
+50 km and 10 km the data serve the [national screening
+tier](../natura2000.qmd#q1).
+
+## Caveats and sensitivity
+
+- Access terms are unconfirmed; the claim of freely licensed 50 km data from
+  the desk review could not be verified.
+- Modelled 10 km maps are predictions, not observations.
+- Atlas data must be shown at their native grid; finer locations for
+  sensitive species must not be derived from them.
+
+## Integration into the pipeline
+
+Low effort once a squares-by-species table arrives: a proposed
+`read_atlas_squares(path, grid_km = 50)` would join it to a grid clipped to
+Kosovo and add an atlas layer to the report's bird section. `pipeline.R` is
+not changed.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+As EBCC requests it: Keller, V., Herrando, S., Voříšek, P., et al. (2020).
+*European Breeding Bird Atlas 2: Distribution, Abundance and Change.*
+European Bird Census Council & Lynx Edicions, Barcelona.

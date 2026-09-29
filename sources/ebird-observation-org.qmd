@@ -1,0 +1,185 @@
+---
+title: "eBird and Observation.org records outside GBIF"
+subtitle: "Both platforms already publish to GBIF and are in the report's download; the open question is what their own databases hold beyond those copies."
+actions:
+  - kind: request
+    what: "The eBird Basic Dataset (EBD) and its Sampling Event Data for Kosovo, which carry protocol, duration, distance and whether each checklist is complete"
+    contact: "Cornell Lab of Ornithology, eBird data request at https://science.ebird.org (the site's bot protection blocked automated reading)"
+  - kind: check
+    what: "Read the EBD terms of use in a browser and record the licence and whether non-commercial use by a public body is covered"
+    contact: "https://science.ebird.org/en/use-ebird-data/download-ebird-data-products"
+  - kind: check
+    what: "Ask Observation.org whether records hidden from GBIF (sensitive species, unvalidated records) exist for Kosovo, and on what terms they could be shared"
+    contact: "Observation International, through https://observation.org"
+todo:
+  doi: "The GBIF copies have DOIs (eBird 10.15468/aomfnb; Observation.org 10.15468/5nilie); the full eBird database has none"
+  format: "File format of the EBD; read on the eBird site, which blocked automated access"
+  spatial_resolution: "Checklist location; precision depends on the protocol, and eBird states no coordinate uncertainty"
+  temporal_coverage: "Years of Kosovo records in each platform; read from the check below and from the EBD once obtained"
+  latest_version: "Release cycle and latest release of the EBD; read on the eBird site"
+  kosovo_codes_seen: "Read from the check below"
+  tier: "National for travelling checklists; delineation-grade only for stationary counts with precise locations"
+  effort: "Medium: the EBD is large and needs the auk R package or equivalent"
+  sensitivity: "Both platforms hide or generalise sensitive species in public views; ask what applies to Kosovo"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+row <- source_row("ebird-observation-org")
+cache <- file.path(cache_dir("ebird-observation-org"), "gbif_platform_check.csv")
+keys <- c(eBird = "4fa7b334-ce0d-4e88-aaae-2e0c138d049e",
+          `Observation.org` = "8a863029-f435-446a-821e-275f4f641165")
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+eBird, run by the Cornell Lab of Ornithology, and Observation.org are the two
+citizen-science platforms that contribute most to Kosovo's GBIF record. Both
+publish to GBIF: eBird as the "EOD – eBird Observation Dataset" under
+CC BY 4.0, Observation.org as "Observation.org, Nature data from around the
+World" under CC BY-NC 4.0. Both are already among the datasets in the report's
+download, and eBird alone supplies nine in ten of its bird records.
+
+The desk review asked about records *not* in GBIF. For eBird that means the
+eBird Basic Dataset (EBD). The site's [Natura 2000 page](../natura2000.qmd#q6)
+describes it as carrying what the GBIF copy leaves out: the effort fields and
+the flag that says a checklist reports every species detected, which turn a
+list of sightings into a survey with non-detections. eBird's own description
+could not be read to confirm this (see Access). For Observation.org it means
+records the platform does not pass to GBIF.
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(
+  try_access(paste0("https://api.gbif.org/v1/dataset/", keys[["eBird"]])),
+  try_access(paste0("https://api.gbif.org/v1/dataset/", keys[["Observation.org"]])),
+  try_access("https://science.ebird.org/en/use-ebird-data/download-ebird-data-products"),
+  try_access("https://observation.org/")
+))
+```
+
+The GBIF copies are open. eBird's data-products page returned an "access
+denied" page from bot-protection software to automated reads, so its terms
+could not be verified; the request for the EBD is listed as an open action.
+
+## Kosovo coverage check
+
+```{r}
+#| label: build
+#| echo: true
+#| code-fold: true
+#| code-summary: "Show the GBIF check"
+if (!file.exists(cache)) {
+  res <- tryCatch({
+    reg <- read.csv(file.path(sources_root(), "data", "dataset_registry.csv"))
+    do.call(rbind, lapply(names(keys), function(n) {
+      q <- function(extra) jsonlite::fromJSON(sprintf(
+        "https://api.gbif.org/v1/occurrence/search?datasetKey=%s&limit=0%s", keys[[n]], extra))
+      g <- q("&gadmGid=XKO&facet=country&facet=year&facetLimit=100")
+      cc <- g$facets$counts[[which(g$facets$field == "COUNTRY")]]
+      yr <- as.integer(g$facets$counts[[which(g$facets$field == "YEAR")]]$name)
+      data.frame(platform = n, records_in_gadm_xko = g$count,
+                 records_coded_xk = q("&country=XK")$count,
+                 codes_inside_gadm = paste(sprintf("%s %s", cc$name, cc$count), collapse = "; "),
+                 years = sprintf("%d–%d", min(yr), max(yr)),
+                 in_report_download = keys[[n]] %in% reg$datasetKey)
+    }))
+  }, error = function(e) NULL)
+  if (!is.null(res)) write.csv(res, cache, row.names = FALSE)
+}
+have_cache <- file.exists(cache)
+```
+
+```{r}
+#| label: build-failed
+#| eval: !expr "!have_cache"
+#| output: asis
+cat("::: {.callout-warning}\n## To be completed\nThe GBIF API did not answer at render time; re-render to run the check.\n:::\n")
+```
+
+```{r}
+#| label: check
+#| eval: !expr have_cache
+d <- read.csv(cache)
+knitr::kable(data.frame(Platform = d$platform,
+                        `Records inside GADM XKO` = fmt_int(d$records_in_gadm_xko),
+                        `Records coded XK` = fmt_int(d$records_coded_xk),
+                        `Country codes inside GADM XKO` = d$codes_inside_gadm,
+                        Years = d$years,
+                        `In the report's download` = ifelse(d$in_report_download, "yes", "no"),
+                        check.names = FALSE), align = "lrrlll", row.names = FALSE)
+```
+
+The live GBIF counts differ from the report's figures because GBIF keeps
+indexing new records after the report's dated download. Records inside the
+GADM outline that carry a neighbour's code are the border records the
+pipeline's country test removes.
+
+::: {.callout-warning}
+## To be completed
+What the platforms hold beyond GBIF could not be measured. For eBird, request
+the EBD and Sampling Event Data for Kosovo and compare checklist and species
+counts with the GBIF copy. For Observation.org, ask what is withheld from
+GBIF for Kosovo and why.
+:::
+
+## What it adds for Natura 2000 in Kosovo
+
+An SPA case needs counts with effort, not scattered presences ([question
+6](../natura2000.qmd#q6)). The EBD's effort fields and complete-checklist
+flag are what make eBird usable for that: they allow detection rates,
+seasonal occupancy and absences to be computed for Ligatina e Hencit/Radevës
+and the other bird sites. Stationary counts with precise locations can reach
+the [delineation tier](../natura2000.qmd#q1); travelling checklists stay at
+screening.
+
+## Caveats and sensitivity
+
+- The EBD terms could not be read; the licence of the full eBird database is
+  therefore not recorded.
+- Both platforms hide or generalise sensitive species in their public data;
+  what applies to Kosovo is unknown.
+- Observation.org's GBIF copy is CC BY-NC, which limits commercial reuse of
+  anything derived from it.
+
+## Integration into the pipeline
+
+Medium effort for the EBD: a proposed `read_ebd(path, boundary)` using the
+`auk` package would filter the file to Kosovo and keep checklist-level effort
+beside the GBIF records, linked by checklist identifier rather than merged.
+`pipeline.R` is not changed.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+Cite the GBIF copies as GBIF shows them (eBird:
+[doi:10.15468/aomfnb](https://doi.org/10.15468/aomfnb); Observation.org:
+[doi:10.15468/5nilie](https://doi.org/10.15468/5nilie)).
+
+::: {.callout-warning}
+## To be completed
+The EBD citation form is on eBird's site, which could not be read.
+:::

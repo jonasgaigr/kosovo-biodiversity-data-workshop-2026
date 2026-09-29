@@ -1,0 +1,249 @@
+---
+title: "EUNIS habitat maps at level 3 (Si-Moussi et al. 2025)"
+subtitle: "A machine-learning map of 260 EUNIS level-3 habitats at 100 m across the EEA39 countries, which name Kosovo in their study area."
+actions:
+  - kind: check
+    what: "Have a Kosovo botanist review the indicative Annex I crosswalk for the ten largest classes, and mark which Annex I types occur in Kosovo at all"
+    contact: "University of Prishtina, Department of Biology; Kosovo Institute for Nature Protection"
+  - kind: check
+    what: "Read the confidence layers (topk_habitats.zip, 1.4 GB) for Kosovo, so that low-confidence pixels can be shown as such"
+    contact: "https://zenodo.org/records/16985100"
+  - kind: check
+    what: "Compare with the European Vegetation Archive plots in or near Kosovo that trained the model; how many were there?"
+    contact: "The data paper's habitat plot records on Zenodo (reference 43 in the paper)"
+todo: {}
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+suppressPackageStartupMessages({
+  library(sf)
+  library(terra)
+  library(leaflet)
+})
+row <- source_row("eunis-habitat-maps")
+dir <- cache_dir("eunis-habitat-maps")
+cache  <- file.path(dir, "eunis_dominant_kosovo.tif")
+legend <- file.path(dir, "eunis_legend_detailed.csv")
+zen <- "https://zenodo.org/api/records/16985100/files/"
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+Si-Moussi and colleagues trained ensemble machine-learning models on
+vegetation plots from the European Vegetation Archive (1990–2021), satellite
+imagery and climatic, topographic and soil predictors, and predicted the
+most probable EUNIS habitat at level 3 for every 100 m cell of the EEA39
+countries. The data paper, in *Scientific Data* (11 December 2025), defines
+that study area explicitly to include Kosovo with the other Western Balkan
+countries. The maps are on Zenodo under CC-BY 4.0: a "wall-to-wall" map of the
+most likely current habitat, filtered by CORINE Land Cover 2018, plus
+probability and top-three maps per habitat group.
+
+## Access
+
+Open. The wall-to-wall map is a 234.7 MB zip on Zenodo. GDAL reads the
+GeoTIFF inside it over HTTP without unpacking the archive; the Kosovo crop
+takes a few minutes and is cached here as a small GeoTIFF with the legend.
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(
+  try_access("https://zenodo.org/records/16985100"),
+  try_access(paste0(zen, "wall_to_wall.zip/content")),
+  try_access(paste0(zen, "eunis_legend_detailed.csv/content"))
+))
+```
+
+```{r}
+#| label: build
+#| echo: true
+#| code-fold: true
+#| code-summary: "Show the remote crop"
+build_error <- NULL
+if (!file.exists(cache)) {
+  build_error <- tryCatch({
+    Sys.setenv(GDAL_DISABLE_READDIR_ON_OPEN = "EMPTY_DIR",
+               CPL_VSIL_CURL_CHUNK_SIZE = "1048576")
+    src <- sprintf("/vsizip/{/vsicurl/%swall_to_wall.zip/content}/wall_to_wall/eunis_dominant.tif", zen)
+    ko  <- vect(st_transform(kosovo_outline(), 3035))
+    k   <- mask(crop(rast(src), ko, snap = "out"), ko)
+    writeRaster(k, cache, overwrite = TRUE, datatype = "INT2U",
+                gdal = "COMPRESS=DEFLATE")
+    try_access(paste0(zen, "eunis_legend_detailed.csv/content"), legend)
+    NULL
+  }, error = function(e) conditionMessage(e))
+}
+have_cache <- file.exists(cache) && file.exists(legend)
+```
+
+```{r}
+#| label: build-failed
+#| eval: !expr "!have_cache"
+#| output: asis
+cat("::: {.callout-warning}\n## To be completed\nThe remote crop failed at render time (",
+    build_error %||% "no message", "). Re-render when Zenodo answers.\n:::\n", sep = "")
+```
+
+## Kosovo coverage check
+
+The first question is whether the model predicts anything at all for Kosovo,
+since a European product can leave non-EU countries as no-data. The second is
+which habitats it predicts.
+
+```{r}
+#| label: check
+#| eval: !expr have_cache
+k   <- rast(cache)
+leg <- read.csv(legend)
+ko  <- vect(st_transform(kosovo_outline(), 3035))
+inside <- !is.na(values(rasterize(ko, k), mat = FALSE))
+vals <- values(k, mat = FALSE)[inside]
+n_in <- length(vals)
+n_na <- sum(is.na(vals) | vals == 65535)
+f <- as.data.frame(table(code = vals[!is.na(vals) & vals != 65535]))
+f$code <- as.integer(as.character(f$code))
+f <- cbind(f, leg[match(f$code, leg$Code), c("EUNIS3", "Label")])
+f$km2 <- f$Freq / 100
+f <- f[order(-f$km2), ]
+top <- head(f, 20)
+knitr::kable(data.frame(Code = ifelse(nzchar(top$EUNIS3), top$EUNIS3, "—"),
+                        Habitat = top$Label,
+                        `Area (km²)` = format(round(top$km2, 1), big.mark = ","),
+                        Share = sprintf("%.1f %%", 100 * top$Freq / sum(f$Freq)),
+                        check.names = FALSE),
+             align = "llrr", row.names = FALSE,
+             caption = "The twenty largest classes predicted inside Kosovo")
+```
+
+```{r}
+#| label: check-text
+#| eval: !expr have_cache
+#| output: asis
+lvl3 <- f[nzchar(f$EUNIS3) & !is.na(f$EUNIS3), ]
+cat(sprintf(paste(
+  "Kosovo's outline covers %s cells of 100 m, of which %s (%.2f per cent) are",
+  "no-data: Kosovo is mapped. %d classes occur, %d of them EUNIS level-3",
+  "habitats; the rest are the map's non-habitat classes (urban, water,",
+  "arable). The raster has no country attribute, so no country code applies."),
+  fmt_int(n_in), fmt_int(n_na), 100 * n_na / n_in, nrow(f), nrow(lvl3)))
+```
+
+### An indicative crosswalk to Annex I
+
+::: {.callout-important}
+## Indicative only
+The EUNIS classification publishes crosswalks from its level-3 types to Annex
+I habitats, reproduced in the R package `eunis.habitats`. The relation is many
+to many and says only that a type *can* correspond to an Annex I habitat
+somewhere in Europe, not that it does in Kosovo. The table is a list of
+candidates for field verification, not a habitat inventory.
+:::
+
+```{r}
+#| label: crosswalk
+#| eval: !expr have_cache && requireNamespace("eunis.habitats", quietly = TRUE)
+source("../R/functions.R", local = TRUE)
+annex1 <- annex1_habitat_types("../data/eurlex/habitats_directive.html")
+top10 <- head(lvl3, 10)
+cw <- eunis.habitats::crosswalk(top10$EUNIS3, from = "EUNIS_T_2021",
+                                to = "Annex_I", unnest = TRUE)
+names(cw) <- c("eunis", "annex")
+cw <- cw[!is.na(cw$annex), ]
+cw$name <- annex1$name[match(cw$annex, annex1$code)]
+agg <- lapply(split(cw, cw$eunis), function(x)
+  paste(sprintf("%s %s", x$annex, ifelse(is.na(x$name), "", x$name)), collapse = "; "))
+knitr::kable(data.frame(
+  EUNIS = top10$EUNIS3, Habitat = top10$Label,
+  `Area (km²)` = format(round(top10$km2, 1), big.mark = ","),
+  `Candidate Annex I types (indicative)` = vapply(top10$EUNIS3, function(c)
+    agg[[c]] %||% "none listed", ""),
+  check.names = FALSE), align = "llrl", row.names = FALSE)
+```
+
+```{r}
+#| label: map
+#| eval: !expr have_cache
+k3  <- project(aggregate(k, 3, fun = "modal"), "EPSG:3857", method = "near")
+k3[k3 == 65535] <- NA
+lvl <- head(f$code, 12)
+k3[!(k3 %in% lvl)] <- NA
+pal <- colorFactor(grDevices::hcl.colors(length(lvl), "Dark 3"), domain = lvl, na.color = NA)
+leaflet() |>
+  add_basemaps() |>
+  addRasterImage(k3, colors = pal, opacity = 0.75, project = FALSE) |>
+  add_boundary_outline(kosovo_outline()) |>
+  addLegend(colors = pal(lvl), labels = leg$Label[match(lvl, leg$Code)],
+            title = "Twelve largest classes", opacity = 0.75) |>
+  addLayersControl(baseGroups = basemap_groups,
+                   options = layersControlOptions(collapsed = TRUE))
+```
+
+The map shows the twelve largest classes only, aggregated to 300 m.
+
+## What it adds for Natura 2000 in Kosovo
+
+Kosovo has no Annex I habitat map, and this is the closest thing to one
+that exists: a level-3 prediction that separates, for instance, beech
+forest from oak forest, and dry from mesic grassland. Through the crosswalk
+it gives a first, clearly provisional list of where to look for which Annex
+I types, which is exactly the input the [mapping standard in question
+3](../natura2000.qmd#q3) asks for before fieldwork. It complements the
+report's CORINE screen by predicting habitats from climate, terrain and soils
+as well as land cover. At 100 m and as a model it serves the
+[national screening tier](../natura2000.qmd#q1) only.
+
+## Caveats and sensitivity
+
+- It is a model. Its accuracy in the Balkans depends on how many training
+  plots lay there, which this page has not yet checked.
+- Only the most likely class is used; the confidence layers are not yet read.
+- Some classes are implausible at face value: "Large-scale ornamental garden
+  area" (V21) is predicted over about 13 per cent of Kosovo. That says more
+  about how the land-cover filter treats Kosovo's mixed farmland and
+  settlements than about gardens, and it is a reason to read the class list
+  critically rather than as an inventory.
+- The Annex I crosswalk is European, many-to-many and indicative. Several
+  candidate types it lists are not Balkan habitats at all.
+- No species locations; nothing sensitive.
+
+## Integration into the pipeline
+
+Medium effort. A proposed `kosovo_eunis_habitats(boundary)` in
+`R/functions.R` would do the crop above; the crosswalk would live in an
+editable CSV beside `data/crosswalk_clc_annex1.csv`, reviewed by a specialist,
+so the report could show where the CORINE and EUNIS screens agree. The
+package `eunis.habitats` would become a pipeline dependency. `pipeline.R` is
+not changed here.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+As the paper cites its data: Si-Moussi, S. et al. *EUNIS Habitat Maps:
+Enhancing Thematic and Spatial Resolution for Europe through Machine
+Learning.* Zenodo (2025),
+[doi:10.5281/zenodo.16985100](https://doi.org/10.5281/zenodo.16985100).
+The data paper: Si-Moussi, S. et al. (2025). EUNIS habitat maps: enhancing
+thematic and spatial resolution for Europe through machine learning.
+*Scientific Data*, published 11 December 2025.

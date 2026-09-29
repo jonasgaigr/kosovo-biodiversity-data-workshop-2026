@@ -1,0 +1,180 @@
+---
+title: "HydroSHEDS"
+subtitle: "A globally consistent river network and catchments; the Europe file of HydroRIVERS is downloaded once and cut to Kosovo."
+actions:
+  - kind: check
+    what: "Add HydroBASINS catchments (level 8 to 12) for Kosovo, to give the boundary workflow watershed lines"
+    contact: "HydroSHEDS products, https://www.hydrosheds.org/"
+todo:
+  doi: "HydroRIVERS itself has no DOI seen; the citation paper does (doi:10.1002/hyp.9740)"
+  temporal_coverage: "Not applicable: a static network derived from elevation data"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+suppressPackageStartupMessages({
+  library(sf)
+  library(leaflet)
+})
+row <- source_row("hydrosheds")
+dir <- cache_dir("hydrosheds")
+zip <- file.path(dir, "HydroRIVERS_v10_eu_shp.zip")     # 68 MB: git-ignored
+cache <- file.path(dir, "hydrorivers_kosovo.gpkg")
+url <- "https://data.hydrosheds.org/file/HydroRIVERS/HydroRIVERS_v10_eu_shp.zip"
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+HydroSHEDS is a suite of global hydrographic data derived from elevation
+data: flow directions, catchments (HydroBASINS) and rivers (HydroRIVERS).
+HydroRIVERS represents all rivers of the world as a vector network extracted
+from the HydroSHEDS grids at 15 arc-seconds, about 500 m, with attributes such
+as flow order and discharge. It is "freely available for scientific,
+educational and commercial use" under the HydroSHEDS licence, with
+attribution. Where [EU-Hydro](eu-hydro.qmd) is a photo-interpreted European
+network at 1:50,000, HydroRIVERS is coarser and modelled, but identical in
+method everywhere, including across all of Kosovo's borders.
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(try_access("https://www.hydrosheds.org/products/hydrorivers"),
+                  try_access(url)))
+```
+
+The Europe file is a 68 MB zipped shapefile. A shapefile has no spatial
+index GDAL can use over HTTP, so it is downloaded once, outside version
+control, and only the Kosovo extract is kept. The contrast with the
+GeoPackages read remotely on other pages ([Article 17](art17-2013-2018.qmd),
+the protected areas in the pipeline) is the teaching point: a format with an
+R-tree index can be queried in place, one without must be fetched whole. The
+archive's size, checksum and date are recorded below, since it is not
+committed.
+
+```{r}
+#| label: build
+#| echo: true
+#| code-fold: true
+#| code-summary: "Show the download and cut"
+build_error <- NULL
+if (!file.exists(cache)) {
+  build_error <- tryCatch({
+    if (!file.exists(zip)) {
+      got <- try_access(url, zip, timeout = 900)
+      if (!got$success) stop(got$error %||% paste("HTTP", got$http_code))
+    }
+    shp <- grep("\\.shp$", unzip(zip, list = TRUE)$Name, value = TRUE)
+    ko  <- st_union(kosovo_outline())
+    box <- st_as_text(st_as_sfc(st_bbox(ko)))
+    r   <- st_read(paste0("/vsizip/", zip, "/", shp), wkt_filter = box, quiet = TRUE)
+    r   <- suppressWarnings(st_intersection(st_make_valid(r), ko))
+    st_write(r, cache, delete_dsn = TRUE, quiet = TRUE)
+    NULL
+  }, error = function(e) conditionMessage(e))
+}
+have_cache <- file.exists(cache)
+```
+
+```{r}
+#| label: build-failed
+#| eval: !expr "!have_cache"
+#| output: asis
+cat("::: {.callout-warning}\n## To be completed\nThe download or cut failed at render time (",
+    build_error %||% "no message", "). Re-render when data.hydrosheds.org answers.\n:::\n", sep = "")
+```
+
+```{r}
+#| label: fingerprint
+#| eval: !expr file.exists(zip)
+#| output: asis
+fp <- file_fingerprint(zip)
+cat(sprintf("Downloaded archive: `%s`, %s, SHA-256 `%s`, %s (not committed).\n",
+            fp$file, fp$size, fp$sha256, fp$downloaded))
+```
+
+## Kosovo coverage check
+
+```{r}
+#| label: check
+#| eval: !expr have_cache
+r <- st_read(cache, quiet = TRUE)
+ord <- intersect(c("ORD_STRA", "ORD_CLAS", "ORD_FLOW"), names(r))[1]
+len <- tapply(as.numeric(st_length(st_transform(r, 3035))) / 1000, r[[ord]], sum)
+knitr::kable(data.frame(Order = names(len), `Length inside Kosovo (km)` = fmt_int(len),
+                        check.names = FALSE), align = "rr", row.names = FALSE,
+             caption = sprintf("HydroRIVERS segments inside Kosovo by %s", ord))
+```
+
+```{r}
+#| label: check-text
+#| eval: !expr have_cache
+#| output: asis
+cat(sprintf(paste(
+  "%s river segments, %s km in all, lie inside Kosovo. The network is",
+  "continuous across the border by construction. It carries no country",
+  "attribute, so no country code applies."),
+  fmt_int(nrow(r)), fmt_int(sum(len))))
+```
+
+```{r}
+#| label: map
+#| eval: !expr have_cache
+source("../R/functions.R", local = TRUE)
+leaflet(r) |>
+  add_basemaps() |>
+  addPolylines(color = "#0072B2", weight = ~pmax(0.5, as.numeric(r[[ord]]) / 2),
+               opacity = 0.8) |>
+  add_boundary_outline(kosovo_outline()) |>
+  addLayersControl(baseGroups = basemap_groups,
+                   options = layersControlOptions(collapsed = TRUE))
+```
+
+## What it adds for Natura 2000 in Kosovo
+
+A river network that does not stop at the border, which matters for
+transboundary rivers such as the White Drin and the Ibër, and a route to
+HydroBASINS catchments: the watershed lines the boundary workflow of
+[question 2](../natura2000.qmd#q2) says a site boundary may follow. Coarser
+than EU-Hydro, it suits national screening ([tier](../natura2000.qmd#q1)).
+
+## Caveats and sensitivity
+
+- Modelled from a 500 m grid: river positions can be hundreds of metres off
+  in flat terrain.
+- No sensitive content.
+
+## Integration into the pipeline
+
+Low effort; one download and a cut, as above. A proposed
+`kosovo_catchments(boundary, level = 8)` would be the more useful addition,
+for boundary work. `pipeline.R` is not changed.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+As HydroSHEDS requests: Lehner, B. & Grill, G. (2013). Global river
+hydrography and network routing: baseline data and new approaches to study the
+world's large river systems. *Hydrological Processes* 27(15): 2171–2186.
+[doi:10.1002/hyp.9740](https://doi.org/10.1002/hyp.9740).

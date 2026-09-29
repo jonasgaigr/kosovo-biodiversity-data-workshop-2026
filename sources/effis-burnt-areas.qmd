@@ -1,0 +1,221 @@
+---
+title: "EFFIS burnt areas"
+subtitle: "The European Forest Fire Information System's mapped burnt areas, served openly as a web feature service that codes Kosovo 'KS'."
+actions:
+  - kind: check
+    what: "Read the EFFIS terms of use shown at download and record the licence"
+    contact: "https://forest-fire.emergency.copernicus.eu/applications/data-and-services"
+  - kind: request
+    what: "Historical burnt-area perimeters before the years the web service exposes, if needed for a longer fire history"
+    contact: "EFFIS data request form, https://effis.jrc.ec.europa.eu/apps/data.request.form"
+todo:
+  doi: "No DOI seen; check the EFFIS documentation"
+  licence: "Terms shown at download on the EFFIS data page; not recorded in this check"
+  spatial_resolution: "MODIS-derived perimeters; EFFIS states a minimum mapped fire size in its documentation, to be read"
+  temporal_coverage: "Years present in the check below"
+  latest_version: "The service is updated continuously; record the LASTUPDATE range from the check"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+suppressPackageStartupMessages({
+  library(sf)
+  library(leaflet)
+})
+row <- source_row("effis-burnt-areas")
+cache <- file.path(cache_dir("effis-burnt-areas"), "effis_burnt_areas_kosovo.gpkg")
+wfs <- "https://maps.effis.emergency.copernicus.eu/effis"
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+The European Forest Fire Information System (EFFIS), part of the Copernicus
+emergency services, maps burnt areas across Europe, the Middle East and North
+Africa from MODIS and VIIRS satellite imagery. Each mapped fire comes with
+its dates, its area, and the share of it that was broadleaved, coniferous or
+mixed forest, scrub, agricultural or other land, and the share inside
+Natura 2000. EFFIS distributes the data through web map and web feature
+services, as downloads, and through a request form for historical extracts.
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(
+  try_access("https://forest-fire.emergency.copernicus.eu/applications/data-and-services"),
+  try_access(paste0(wfs, "?service=WMS&request=GetCapabilities"))
+))
+```
+
+The web map service lists yearly layers of burnt areas (`modis.ba.poly.2016`
+to `modis.ba.poly.2025` among them). The web feature service's capabilities
+request timed out, but a direct GetFeature request for a box around Kosovo
+returned every burnt area in it as GML, which the build step below uses.
+
+```{r}
+#| label: build
+#| echo: true
+#| code-fold: true
+#| code-summary: "Show the WFS request"
+build_error <- NULL
+if (!file.exists(cache)) {
+  build_error <- tryCatch({
+    ko <- st_union(kosovo_outline())
+    bb <- st_bbox(st_transform(ko, 3857))
+    # EPSG:3857 keeps x before y; with EPSG:4326, WFS 1.1 swaps the axes.
+    url <- sprintf(paste0(wfs, "?service=WFS&version=1.1.0&request=GetFeature",
+                          "&typename=ms:modis.ba.poly&srsName=EPSG:3857",
+                          "&bbox=%f,%f,%f,%f,EPSG:3857&maxFeatures=50000"),
+                   bb[1], bb[2], bb[3], bb[4])
+    gml <- tempfile(fileext = ".gml")
+    got <- try_access(url, gml, timeout = 300)
+    if (!got$success) stop(got$error %||% paste("HTTP", got$http_code))
+    x <- st_read(gml, quiet = TRUE) |> st_transform(3035) |> st_make_valid()
+    x <- x[, setdiff(names(x), "msGeometry")]
+    # Keep only the part of each fire inside Kosovo, as polygons: a fire that
+    # merely touches the border leaves lines or points, which carry no area.
+    x <- suppressWarnings(st_intersection(x, st_transform(ko, 3035)))
+    x <- suppressWarnings(st_collection_extract(x, "POLYGON"))
+    # Extraction can split one fire into several rows; put each back together.
+    parts <- split(seq_len(nrow(x)), x$id)
+    geom  <- do.call(c, lapply(parts, function(i) st_union(st_geometry(x)[i])))
+    attrs <- st_drop_geometry(x)[!duplicated(x$id), ]
+    attrs <- attrs[match(names(parts), as.character(attrs$id)), ]
+    x <- st_sf(attrs, geometry = st_cast(geom, "MULTIPOLYGON"))
+    x$in_kosovo_ha <- as.numeric(st_area(x)) / 1e4
+    x <- x[x$in_kosovo_ha > 0, ]
+    x$year <- as.integer(substr(x$FIREDATE, 1, 4))
+    # Areas are measured above, on the full geometry; the stored outlines are
+    # generalised to 25 m, well below MODIS's own resolution, to keep the
+    # cache small.
+    x <- st_simplify(x, dTolerance = 25, preserveTopology = TRUE)
+    st_write(x[, c("id", "FIREDATE", "FINALDATE", "LASTUPDATE", "COUNTRY", "AREA_HA",
+                   "BROADLEA", "CONIFER", "MIXED", "SCLEROPH", "TRANSIT", "OTHERNATLC",
+                   "AGRIAREAS", "ARTIFSURF", "OTHERLC", "year", "in_kosovo_ha")],
+             cache, delete_dsn = TRUE, quiet = TRUE)
+    NULL
+  }, error = function(e) conditionMessage(e))
+}
+have_cache <- file.exists(cache)
+```
+
+## Kosovo coverage check
+
+```{r}
+#| label: check
+#| eval: !expr have_cache
+b <- st_read(cache, quiet = TRUE)
+num <- function(v) suppressWarnings(as.numeric(v))
+forest_share <- (num(b$BROADLEA) + num(b$CONIFER) + num(b$MIXED)) / 100
+by_year <- aggregate(cbind(fires = 1, ha = b$in_kosovo_ha,
+                           forest_ha = b$in_kosovo_ha * forest_share) ~ year,
+                     data = transform(b, forest_share = forest_share), FUN = sum)
+knitr::kable(data.frame(Year = by_year$year, Fires = by_year$fires,
+                        `Burnt inside Kosovo (ha)` = fmt_int(by_year$ha),
+                        `Of which forest (ha)` = fmt_int(by_year$forest_ha),
+                        check.names = FALSE), align = "rrrr", row.names = FALSE)
+```
+
+```{r}
+#| label: check-text
+#| eval: !expr have_cache
+#| output: asis
+cc <- table(b$COUNTRY)
+share_in <- num(b$in_kosovo_ha) / num(b$AREA_HA)
+rs <- b$COUNTRY == "RS"
+cat(sprintf(paste(
+  "%d mapped fires between %d and %d (the last year to the date of the",
+  "check) burnt %s ha inside Kosovo. The country codes on those fires are:",
+  "%s. EFFIS codes Kosovo **KS**, a code used by none of the other sources",
+  "in this section."),
+  nrow(b), min(b$year), max(b$year), fmt_int(sum(b$in_kosovo_ha)),
+  paste(sprintf("%s %d", names(cc), as.integer(cc)), collapse = ", ")))
+if (any(rs)) cat(sprintf(paste(
+  " Of the %d fires coded RS, %d have more than 90 per cent of their mapped",
+  "area inside Kosovo, so they are Kosovo fires filed under Serbia rather",
+  "than fires straddling the border; they burnt %s ha. A query of EFFIS by",
+  "country code KS alone misses them."),
+  sum(rs), sum(rs & share_in > 0.9, na.rm = TRUE),
+  fmt_int(sum(b$in_kosovo_ha[rs & share_in > 0.9], na.rm = TRUE))))
+```
+
+```{r}
+#| label: map
+#| eval: !expr have_cache
+source("../R/functions.R", local = TRUE)
+pal <- colorNumeric(c("#FFCB00", "#D50A00"), domain = range(b$year))
+leaflet(st_transform(b, 4326)) |>
+  add_basemaps() |>
+  addPolygons(fillColor = ~pal(year), fillOpacity = 0.6, weight = 0.5,
+              color = ~pal(year),
+              label = ~sprintf("%s: %s ha in Kosovo (%s)", substr(FIREDATE, 1, 10),
+                               fmt_int(in_kosovo_ha), COUNTRY)) |>
+  add_boundary_outline(kosovo_outline()) |>
+  addLegend(pal = pal, values = ~year, title = "Fire year",
+            labFormat = labelFormat(big.mark = "")) |>
+  addLayersControl(baseGroups = basemap_groups,
+                   options = layersControlOptions(collapsed = TRUE))
+```
+
+```{r}
+#| label: no-cache
+#| eval: !expr "!have_cache"
+#| output: asis
+cat("::: {.callout-warning}\n## To be completed\nThe EFFIS web feature service did not answer at render time (",
+    build_error %||% "no message", "). Re-render when it does.\n:::\n", sep = "")
+```
+
+## What it adds for Natura 2000 in Kosovo
+
+Fire is a recurrent pressure on Kosovo's forests and grasslands; the NFI 2012
+abstract counts over 12,000 ha affected. EFFIS gives a consistent, dated
+record of where it happened, and how much of each fire was forest, which is
+what an SDF's pressure section and a habitat's "future prospects" need. It
+also shows which fires burnt inside existing protected areas. At the scale of
+MODIS mapping it serves the [national tier](../natura2000.qmd#q1), with the
+larger fires usable at site level.
+
+## Caveats and sensitivity
+
+- Small fires fall below the satellite's mapping threshold and are missing.
+- Perimeters are mapped from imagery at a coarse resolution, not surveyed.
+- No species locations; nothing sensitive.
+
+## Integration into the pipeline
+
+Low effort. A proposed `effis_burnt_areas(boundary)` in `R/functions.R` would
+run the request above and write `data/kosovo_burnt_areas.gpkg`; the report's
+protected-area section could then add burnt hectares per site. `pipeline.R`
+is not changed.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+::: {.callout-warning}
+## To be completed
+The citation EFFIS requests is shown with its terms at download and was not
+recorded. Until then: European Forest Fire Information System (EFFIS),
+burnt areas (`modis.ba.poly`), Copernicus Emergency Management Service,
+accessed 29 September 2026.
+:::

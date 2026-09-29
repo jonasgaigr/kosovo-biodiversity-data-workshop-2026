@@ -1,0 +1,179 @@
+---
+title: "Soil and geology layers (SoilGrids and others)"
+subtitle: "Soil properties from ISRIC's SoilGrids, cut to Kosovo; no open geological map was confirmed."
+actions:
+  - kind: check
+    what: "Find an open geological map covering Kosovo (a European 1:1M or 1:5M compilation, or the national geological map), with its licence"
+    contact: "European Geological Data Infrastructure (EGDI); ICMM, whose data shop sells Kosovo maps at 1:50,000–1:200,000"
+  - kind: check
+    what: "Map serpentine (ultramafic) outcrops, which carry several of Kosovo's endemic plants; neither SoilGrids nor land cover shows them"
+    contact: "A geological map, once found"
+  - kind: check
+    what: "Read SoilGrids' licence and citation on isric.org"
+    contact: "https://www.isric.org/explore/soilgrids"
+todo:
+  custodian: "ISRIC – World Soil Information, per the host name files.isric.org; confirm on isric.org"
+  doi: "SoilGrids 2.0 data paper DOI; read on isric.org"
+  licence: "SoilGrids licence; read on isric.org (not read in this check)"
+  temporal_coverage: "Not applicable: modelled soil properties"
+  latest_version: "Version behind the 'latest' folder on files.isric.org"
+  effort: "Low for SoilGrids; unknown for geology until a source is found"
+  sensitivity: "None"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+suppressPackageStartupMessages({
+  library(sf)
+  library(terra)
+  library(leaflet)
+})
+row <- source_row("soils-geology")
+cache <- file.path(cache_dir("soils-geology"), "soilgrids_soc_0-5cm_kosovo.tif")
+vrt <- "https://files.isric.org/soilgrids/latest/data/soc/soc_0-5cm_mean.vrt"
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+The desk review grouped soils and geology under one lead. The soil half has
+an obvious open source: SoilGrids, ISRIC's global maps of soil properties at
+250 m, served as cloud-optimised GeoTIFFs behind VRT files at
+`files.isric.org`. The layer used here is soil organic carbon in the top 5 cm.
+The geology half has none confirmed. Geology matters in Kosovo more than
+elsewhere, because several endemic plants grow only on serpentine, limestone
+or silicate (see [endemic plants](endemic-plants-hacquetia.qmd)).
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(try_access("https://files.isric.org/soilgrids/latest/data/"),
+                  try_access(vrt)))
+```
+
+```{r}
+#| label: build
+#| echo: true
+#| code-fold: true
+#| code-summary: "Show the remote crop"
+build_error <- NULL
+if (!file.exists(cache)) {
+  build_error <- tryCatch({
+    Sys.setenv(GDAL_DISABLE_READDIR_ON_OPEN = "EMPTY_DIR")
+    r  <- rast(paste0("/vsicurl/", vrt))          # Interrupted Goode Homolosine
+    ko <- project(vect(kosovo_outline()), crs(r))
+    k  <- mask(crop(r, ko, snap = "out"), ko)
+    writeRaster(k, cache, overwrite = TRUE, gdal = "COMPRESS=DEFLATE")
+    NULL
+  }, error = function(e) conditionMessage(e))
+}
+have_cache <- file.exists(cache)
+```
+
+```{r}
+#| label: build-failed
+#| eval: !expr "!have_cache"
+#| output: asis
+cat("::: {.callout-warning}\n## To be completed\nThe remote crop failed at render time (",
+    build_error %||% "no message", "). Re-render when files.isric.org answers.\n:::\n", sep = "")
+```
+
+## Kosovo coverage check
+
+```{r}
+#| label: check
+#| eval: !expr have_cache
+#| output: asis
+k <- rast(cache)
+inside <- !is.na(values(rasterize(project(vect(kosovo_outline()), crs(k)), k), mat = FALSE))
+v <- values(k, mat = FALSE)[inside]
+cat(sprintf(paste(
+  "Inside Kosovo: %s cells of 250 m, %d of them no-data (%.1f per cent). Soil",
+  "organic carbon in the top 5 cm ranges from %s to %s in the layer's stored",
+  "units (dg/kg per the SoilGrids convention, to be confirmed on isric.org).",
+  "No country attribute, so no country code applies."),
+  fmt_int(length(v)), sum(is.na(v)), 100 * mean(is.na(v)),
+  fmt_int(min(v, na.rm = TRUE)), fmt_int(max(v, na.rm = TRUE))))
+```
+
+```{r}
+#| label: map
+#| eval: !expr have_cache
+source("../R/functions.R", local = TRUE)
+k4 <- project(k, "EPSG:3857")
+pal <- colorNumeric(grDevices::hcl.colors(9, "YlOrBr", rev = TRUE), values(k4), na.color = NA)
+leaflet() |>
+  add_basemaps() |>
+  addRasterImage(k4, colors = pal, opacity = 0.75, project = FALSE) |>
+  add_boundary_outline(kosovo_outline()) |>
+  addLegend(pal = pal, values = values(k4), title = "SOC 0–5 cm<br>(stored units)") |>
+  addLayersControl(baseGroups = basemap_groups,
+                   options = layersControlOptions(collapsed = TRUE))
+```
+
+SoilGrids is stored in the Interrupted Goode Homolosine projection, an
+equal-area projection for the whole globe, unlike every other layer in this
+section. The build step therefore projects the Kosovo outline into the
+raster's projection and crops there, rather than reprojecting the raster to
+fit the outline: reprojecting a raster resamples every cell, and doing it
+before cropping would mean resampling far more of the globe than is needed.
+Only the map on this page reprojects, to Web Mercator for display.
+
+::: {.callout-warning}
+## To be completed
+Geology: no open layer was checked. Find one, crop it to Kosovo, and report
+the area of serpentine and limestone, which are the substrates Kosovo's
+endemic plants depend on.
+:::
+
+## What it adds for Natura 2000 in Kosovo
+
+Soil and substrate are covariates for habitat models, and substrate in
+particular separates Annex I types that land cover cannot: calcareous from
+siliceous grassland and rock, serpentine grassland from both. SoilGrids gives
+consistent soil properties; a geological map would give the substrate.
+National screening only ([tier](../natura2000.qmd#q1)). Of the two halves,
+the missing geology matters more for Kosovo: a serpentine outcrop is a
+candidate site for its endemic flora whatever its soil carbon, and no layer
+checked so far can show one.
+
+## Caveats and sensitivity
+
+- SoilGrids is a global model; local accuracy in Kosovo's mountains is
+  unknown.
+- The geology half of this page is unverified.
+- No sensitive content.
+
+## Integration into the pipeline
+
+Low effort for SoilGrids: a proposed `kosovo_soil(boundary, property = "soc")`
+as above. `pipeline.R` is not changed.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+::: {.callout-warning}
+## To be completed
+Use the citation ISRIC requests for SoilGrids, not read in this check.
+:::

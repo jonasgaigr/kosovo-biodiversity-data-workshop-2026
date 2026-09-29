@@ -1,0 +1,112 @@
+---
+title: "Hydropower projects on Balkan rivers"
+subtitle: "RiverWatch and EuroNatur's inventory of existing, planned and under-construction hydropower plants, updated for 2024."
+actions:
+  - kind: request
+    what: "Point data of hydropower plants in Kosovo (status, capacity, river), 2024 update, under stated terms of use"
+    contact: "RiverWatch: ulrich.eichelmann@riverwatch.eu or cornelia.wieser@riverwatch.eu (as given on the 2024 news page)"
+  - kind: check
+    what: "Kosovo's figures in the 2024 update (the 2022 update gave 89 planned and 10 under construction), and the country code the dataset uses for Kosovo; the desk review reported 'KV' in older versions"
+    contact: "Balkan HPP Update 2024 report, linked from the RiverWatch news page"
+todo:
+  doi: "No DOI; a report and online map"
+  licence: "Terms of use of the point data; ask RiverWatch with the request"
+  access_method: "How the point data would be delivered; ask RiverWatch"
+  spatial_resolution: "Point locations of plants; precision to be stated with the data"
+  temporal_coverage: "Inventory years 2012–2024 across the updates"
+  kosovo_codes_seen: "Country code for Kosovo in the dataset ('KV' in older versions, per the desk review)"
+  effort: "Low once points arrive: an overlay with NatDA and the river network"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+row <- source_row("balkan-hydropower")
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+Since 2012 RiverWatch and EuroNatur have mapped hydropower plants on Balkan
+rivers, with data compiled by Fluvius in Vienna. The 2024 update, announced
+on 14 March 2025, counts 3,188 projects planned, 94 under construction and
+1,836 in operation across the region, with 110 new installations since 2022.
+The 2022 update, prepared by Ulrich Schwarz, lists Kosovo separately: 89
+plants planned and 10 under construction at the time, and it names Kosovo
+among the countries where most new plants came into operation since 2020. It
+overlays the plants with protected areas, including Emerald and proposed
+Natura 2000 areas, and was delivered in GIS formats and as the online map at
+balkanrivers.net.
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(
+  try_access("https://riverwatch.eu/en/balkanrivers/news/10-years-hydropower-data-2024-update-reveals-ongoing-threats-and-wins-balkan"),
+  try_access("https://balkanrivers.net/uploads/files/3/Balkan_HPP_Update_2022.pdf"),
+  try_access("https://balkanrivers.net/")
+))
+```
+
+The reports and the map are public; the point data are not offered for
+download. The 2024 news page gives two contacts for questions. No request was
+sent.
+
+## Kosovo coverage check
+
+::: {.callout-warning}
+## To be completed
+The reports cover Kosovo, but the points were not available, so no overlay
+could be run. With the data: clip to `kosovo_outline()`, count plants by
+status, intersect with the NatDA sites and with the river network (EU-Hydro
+Strahler order), and list the rivers with the most planned plants. Record the
+country code the dataset gives Kosovo.
+:::
+
+## What it adds for Natura 2000 in Kosovo
+
+Small hydropower is one of the pressures most often cited for Balkan rivers.
+A site proposal for freshwater habitats and fish (Annex I 3260, Annex II fish)
+needs to know which rivers are dammed or about to be. The overlay would also
+show which planned plants fall inside existing protected areas, a question an
+appropriate assessment would ask. Point data would serve the
+[site tier](../natura2000.qmd#q1) for pressures.
+
+## Caveats and sensitivity
+
+- The inventory is compiled by NGOs from several sources; status and
+  location should be checked against official permits.
+- No species locations; nothing sensitive.
+
+## Integration into the pipeline
+
+Low effort once points arrive: a proposed `read_hydropower(path, boundary)`
+would clip them and add a pressure layer to the report's protected-area map.
+`pipeline.R` is not changed.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+For the 2022 report: Schwarz, U. (2022). *Hydropower Projects on Balkan
+Rivers – 2022 Update.* Fluvius, Vienna, for RiverWatch and EuroNatur; edited
+by A. Huber (EuroNatur).

@@ -1,0 +1,192 @@
+---
+title: "Ecosystem types of Europe 2012, version 3.1"
+subtitle: "The EEA's 100 m map of EUNIS level-2 habitat groups across the EEA39 countries, Kosovo included."
+actions:
+  - kind: check
+    what: "Compare the class areas with the CORINE-based habitat screen in the report, class by class, and note where the two disagree"
+    contact: "data/kosovo_clc2018.gpkg and the report's section on potential Natura 2000 habitats"
+  - kind: check
+    what: "Read the reliability map 2012 v3.1, the secondary product the README names, for Kosovo's pixels"
+    contact: "EEA catalogue, search 'Ecosystem types of Europe 2012 reliability'"
+todo: {}
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+suppressPackageStartupMessages({
+  library(sf)
+  library(terra)
+  library(leaflet)
+})
+row <- source_row("eea-ecosystem-types")
+dir <- cache_dir("eea-ecosystem-types")
+cache <- file.path(dir, "ecosystem_types_2012_v3_1_kosovo.tif")
+base <- "https://sdi.eea.europa.eu/datashare/s/fFmHEKnWo4Rt4dP/download?path=%2F&files="
+tif <- "eea_r_3035_100_m_etm-full_2012_v3-1_r00.tif"
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+The EEA's ecosystem-type map combines land cover with habitat information
+from the EUNIS classification to show, for every 100 m cell across the EEA39
+countries, the most probable EUNIS habitat at level 2 on land (level 3 at
+sea). Version 3.1, published in February 2019, describes 2012 and is licensed
+CC-BY 4.0. The EEA's own abstract is candid about its limits: because it is
+"partly based on non-spatial explicit mapping", its spatial and thematic
+accuracy is not that of a delineated habitat map.
+
+## Access
+
+Open, with no account. The 277 MB GeoTIFF is internally tiled, so GDAL reads
+only the tiles over Kosovo; the crop takes seconds and is cached here with
+the file's own class table.
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(
+  try_access("https://www.eea.europa.eu/en/datahub/datahubitem-view/573ff9d5-6889-407f-b3fc-cfe3f9e23941"),
+  try_access(paste0(base, tif))
+))
+```
+
+```{r}
+#| label: build
+#| echo: true
+#| code-fold: true
+#| code-summary: "Show the remote crop"
+build_error <- NULL
+if (!file.exists(cache)) {
+  build_error <- tryCatch({
+    Sys.setenv(GDAL_DISABLE_READDIR_ON_OPEN = "EMPTY_DIR")
+    r  <- rast(paste0("/vsicurl/", base, tif))
+    ko <- vect(st_transform(kosovo_outline(), 3035))
+    k  <- mask(crop(r, ko, snap = "out"), ko)
+    writeRaster(k, cache, overwrite = TRUE, gdal = "COMPRESS=DEFLATE")
+    write.csv(cats(k)[[1]], file.path(dir, "classes.csv"), row.names = FALSE)
+    NULL
+  }, error = function(e) conditionMessage(e))
+}
+have_cache <- file.exists(cache)
+```
+
+```{r}
+#| label: build-failed
+#| eval: !expr "!have_cache"
+#| output: asis
+cat("::: {.callout-warning}\n## To be completed\nThe remote crop failed at render time (",
+    build_error %||% "no message", "). Re-render when the EEA share answers.\n:::\n", sep = "")
+```
+
+## Kosovo coverage check
+
+```{r}
+#| label: check
+#| eval: !expr have_cache
+k   <- rast(cache)
+cls <- read.csv(file.path(dir, "classes.csv"))
+ko  <- vect(st_transform(kosovo_outline(), 3035))
+inside <- rasterize(ko, k)
+n_in   <- global(inside, "sum", na.rm = TRUE)[[1]]
+vals   <- values(k, mat = FALSE)[!is.na(values(inside, mat = FALSE))]
+n_na   <- sum(is.na(vals))
+f <- as.data.frame(table(value = vals))
+f$value <- as.integer(as.character(f$value))
+f <- merge(f, cls, by.x = "value", by.y = names(cls)[1])
+f$km2 <- f$Freq / 100
+f <- f[order(-f$km2), ]
+knitr::kable(data.frame(`EUNIS` = f$EUNIS, Class = f$EUNIS_L2, `Level 1` = f$EUNIS_L1,
+                        `Area (km²)` = format(round(f$km2, 1), big.mark = ","),
+                        `Share` = sprintf("%.1f %%", 100 * f$Freq / sum(f$Freq)),
+                        check.names = FALSE),
+             align = "lllrr", row.names = FALSE)
+```
+
+```{r}
+#| label: check-text
+#| eval: !expr have_cache
+#| output: asis
+cat(sprintf(paste(
+  "The OpenStreetMap outline covers %s cells of 100 m. %s of them (%.2f per",
+  "cent) are no-data. %d EUNIS level-2 classes occur; the largest is %s, at",
+  "%.0f per cent of the country. The raster carries no country attribute, so",
+  "no country code applies."),
+  fmt_int(n_in), fmt_int(n_na), 100 * n_na / n_in, nrow(f),
+  f$EUNIS_L2[1], 100 * f$Freq[1] / sum(f$Freq)))
+```
+
+```{r}
+#| label: map
+#| eval: !expr have_cache
+source("../R/functions.R", local = TRUE)
+k4  <- project(aggregate(k, 3, fun = "modal"), "EPSG:3857", method = "near")
+lvl <- sort(unique(values(k4, mat = FALSE)))
+lab <- cls$EUNIS[match(lvl, cls[[1]])]
+pal <- colorFactor(grDevices::hcl.colors(length(lvl), "Dark 3"), domain = lvl, na.color = NA)
+leaflet() |>
+  add_basemaps() |>
+  addRasterImage(k4, colors = pal, opacity = 0.75, project = FALSE) |>
+  add_boundary_outline(kosovo_outline()) |>
+  addLegend(colors = pal(lvl), labels = lab, title = "EUNIS level 2", opacity = 0.75) |>
+  addLayersControl(baseGroups = basemap_groups,
+                   options = layersControlOptions(collapsed = TRUE))
+```
+
+The map is aggregated to 300 m by the most frequent class, to keep the page
+light; the table is computed on the full 100 m grid.
+
+## What it adds for Natura 2000 in Kosovo
+
+The report's habitat screen reads CORINE Land Cover through a crosswalk to
+Annex I. This map is the EEA's own step from land cover towards habitats, at
+the same 100 m, done once for all of Europe. It offers an independent second
+opinion on where grasslands, heaths, forests and mires lie, and it is
+consistent with the maps neighbouring countries would use. At EUNIS level 2
+it does not name Annex I types, and it serves the
+[national screening tier](../natura2000.qmd#q1) only.
+
+## Caveats and sensitivity
+
+- It describes 2012 and is built on CORINE Land Cover of that period.
+- Level-2 classes are broad: "Broadleaved deciduous woodland" (G1) spans
+  most of Kosovo's Annex I forest types, and forest that qualifies as none.
+- The EEA estimates its reliability in a separate map that this page has not
+  yet read.
+- No species locations; nothing sensitive.
+
+## Integration into the pipeline
+
+Low effort. A proposed `kosovo_ecosystem_types(boundary)` in `R/functions.R`
+would do the crop above and cache `data/kosovo_ecosystem_types_2012.tif`, and
+the report could tabulate it beside the CORINE screen. `pipeline.R` is not
+changed here.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+The catalogue record gives the identifier
+`eea_r_3035_100_m_ecosystem-types-full_p_2012_v03_r01` and the licence
+CC-BY 4.0, copyright EEA; it gives no citation string. Cite as: *Ecosystem
+types of Europe 2012 – Full map (marine and terrestrial habitats) – version 3
+revision 1, February 2019.* European Environment Agency. Catalogue record
+faff2281-1fca-4548-89d8-c8ec0c507bc7.

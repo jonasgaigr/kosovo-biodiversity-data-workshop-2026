@@ -1,0 +1,155 @@
+---
+title: "Copernicus land monitoring: CORINE, High Resolution Layers, Riparian Zones"
+subtitle: "The Copernicus land products; CORINE Land Cover 2018 is already in the report, the others are not yet checked for Kosovo."
+actions:
+  - kind: check
+    what: "Whether the High Resolution Layers (forests and tree cover, grassland, water and wetness, imperviousness) cover Kosovo, and their latest reference year"
+    contact: "https://land.copernicus.eu/en/products/high-resolution-layer-forests-and-tree-cover"
+  - kind: check
+    what: "Whether Riparian Zones 2012/2018 cover Kosovo's rivers; the product page names the European continent without a country list"
+    contact: "https://land.copernicus.eu/en/products/riparian-zones, Technical Summary tab"
+  - kind: check
+    what: "Whether CLC2024 has been published, and switch config$clc_vintage in pipeline.R when it has"
+    contact: "https://land.copernicus.eu/en/products/corine-land-cover"
+todo:
+  doi: "CLC2018 has DOI 10.2909/71c95a07-e296-44fc-b22b-415f42acfdf0 per clc_sources in R/functions.R; re-open the CLMS page to confirm, and find the HRL and Riparian Zones DOIs"
+  licence: "The Copernicus data policy (full, free and open) per R/functions.R; confirm on each product page"
+  access: "CLC through the EEA map service needs no account; confirm whether HRL and Riparian Zones downloads need an EU Login"
+  format: "Read the distribution formats on each product page"
+  access_method: "Per product: CLC via ArcGIS REST in the pipeline; others to be checked"
+  spatial_resolution: "CLC has a 25 ha MMU and 100 m minimum width per R/functions.R; read the HRL and Riparian Zones resolutions on their product pages"
+  temporal_coverage: "CLC 2018 in use; HRL and Riparian reference years to be read"
+  latest_version: "CLC2018 V2020_20u1; latest HRL and Riparian versions to be read"
+  kosovo_codes_seen: "CLC and HRL carry no country attribute; confirm for Riparian Zones"
+  effort: "CLC already integrated; estimate for HRL once coverage is confirmed"
+  sensitivity: "None expected: land cover, no species"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+suppressPackageStartupMessages(library(sf))
+row <- source_row("copernicus-land")
+clc_cache <- file.path(sources_root(), "data", "kosovo_clc2018.gpkg")
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+The Copernicus Land Monitoring Service (CLMS), operated for this part by the
+European Environment Agency, produces the pan-European land products this
+page groups together. CORINE Land Cover (CLC) maps land cover every six years
+at a 25 ha minimum mapping unit, as `R/functions.R` records. The High
+Resolution Layers map single themes, such as tree cover and grassland, at a
+finer resolution. The Riparian Zones product maps land cover along rivers for
+2012 and 2018, with a change layer between them.
+
+One of these is already in the report. `pipeline.R` reads CLC2018 for Kosovo
+from the EEA's map service, clips it to the OpenStreetMap outline and uses it
+for the screen of potential Annex I habitats; its provenance is recorded in
+`clc_sources` in `R/functions.R`. The desk review listed CLC as a lead, so
+this page records that it is in fact in use.
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(
+  try_access("https://land.copernicus.eu/en/products/corine-land-cover/clc2018"),
+  try_access("https://land.copernicus.eu/en/products/high-resolution-layer-tree-cover-density"),
+  try_access("https://land.copernicus.eu/en/products/riparian-zones"),
+  try_access("https://image.discomap.eea.europa.eu/arcgis/rest/services/Corine/CLC2018_LAEA/MapServer/0?f=json")
+))
+```
+
+The old address of the tree-cover-density layer now redirects to a combined
+"forests and tree cover" product page. The Riparian Zones page names the
+European continent and the years 2012 and 2018, but not the countries covered.
+
+## Kosovo coverage check
+
+For CLC the check has already run: the pipeline's clipped extract is cached
+in `data/kosovo_clc2018.gpkg`, and this page reads it.
+
+```{r}
+#| label: check
+#| eval: !expr file.exists(clc_cache)
+clc <- st_read(clc_cache, quiet = TRUE)
+legend <- read.csv(file.path(sources_root(), "data", "clc_legend.csv"),
+                   colClasses = "character")
+a <- tapply(clc$area_ha, clc$clc_code, sum)
+lab_col <- intersect(c("label", "clc_label", "LABEL3"), names(legend))[1]
+code_col <- intersect(c("code", "clc_code", "CODE_18"), names(legend))[1]
+tab <- data.frame(Code = names(a),
+                  Class = legend[[lab_col]][match(names(a), legend[[code_col]])],
+                  `Area (km²)` = round(as.numeric(a) / 100, 1), check.names = FALSE)
+tab <- tab[order(-tab$`Area (km²)`), ]
+knitr::kable(head(tab, 12), row.names = FALSE, align = "llr",
+             caption = sprintf("CLC2018 in Kosovo: %s polygons, %s classes, %s km² (route: %s, read %s)",
+                               fmt_int(nrow(clc)), nrow(tab),
+                               fmt_int(sum(clc$area_ha) / 100),
+                               unique(clc$source)[1], unique(clc$accessed)[1]))
+```
+
+::: {.callout-warning}
+## To be completed
+The High Resolution Layers and Riparian Zones were not read for Kosovo. For
+each: confirm coverage on the product's technical summary, then crop the
+latest reference year to `kosovo_outline()` and report the share of no-data
+inside Kosovo, as the [ecosystem-type page](eea-ecosystem-types.qmd) does for
+its raster. The EU-Hydro metadata warn that no water-body data were
+available for Kosovo, so the riparian product in particular may be missing.
+:::
+
+## What it adds for Natura 2000 in Kosovo
+
+CLC is the basis of the report's national screen for potential Annex I
+habitats. The High Resolution Layers could sharpen it: a fine-grained grassland layer
+would separate meadows from arable land far better than a 25 ha polygon, which
+matters for grassland types such as 6210, 6510 and 6520. Riparian Zones would
+do the same for alluvial forests and river habitats, 91E0 and 92A0. All serve
+the [national screening tier](../natura2000.qmd#q1); the HRLs come closest to
+the site tier.
+
+## Caveats and sensitivity
+
+- CLC's 25 ha unit hides small habitats entirely; the report says so where it
+  uses it.
+- Coverage of the HRLs and Riparian Zones for Kosovo is unconfirmed.
+- No sensitive content.
+
+## Integration into the pipeline
+
+CLC is integrated (`kosovo_clc()` in `R/functions.R`). For an HRL, a proposed
+`kosovo_hrl(boundary, layer = "grassland")` would crop the raster the same
+way and feed a finer grassland mask into `assess_potential_habitats()`.
+`pipeline.R` is not changed here.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+::: {.callout-warning}
+## To be completed
+For CLC2018 the pipeline already records the CLMS attribution text in
+`clc_sources`. Add the citation forms for the HRLs and Riparian Zones from
+their product pages once they are used.
+:::

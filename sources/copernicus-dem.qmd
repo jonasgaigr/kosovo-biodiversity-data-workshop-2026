@@ -1,0 +1,183 @@
+---
+title: "Copernicus Digital Elevation Model"
+subtitle: "The Copernicus 90 m surface model, read as cloud-optimised tiles and cut to Kosovo in seconds."
+actions:
+  - kind: check
+    what: "Whether GLO-30 (30 m) tiles for Kosovo are public; the AWS readme says a subset of countries' 30 m tiles are not yet released"
+    contact: "https://copernicus-dem-30m.s3.amazonaws.com/ tileList.txt"
+  - kind: check
+    what: "Read the Copernicus DEM licence the readme links to, and record its attribution text"
+    contact: "https://copernicus-dem-90m.s3.amazonaws.com/readme.html"
+todo:
+  doi: "The source dataset (COP-DEM GLO-90-DGED) may carry a DOI; check the ESA/Copernicus product page the readme links to"
+  temporal_coverage: "Acquisition years of the source radar data; read in the product documentation"
+  latest_version: "Product version of COP-DEM GLO-90-DGED on AWS; read in the documentation"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+suppressPackageStartupMessages({
+  library(sf)
+  library(terra)
+  library(leaflet)
+})
+row <- source_row("copernicus-dem")
+cache <- file.path(cache_dir("copernicus-dem"), "cop_dem_glo90_kosovo.tif")
+tile_url <- function(lat, lon) sprintf(
+  "https://copernicus-dem-90m.s3.amazonaws.com/Copernicus_DSM_COG_30_N%02d_00_E%03d_00_DEM/Copernicus_DSM_COG_30_N%02d_00_E%03d_00_DEM.tif",
+  lat, lon, lat, lon)
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+The Copernicus DEM is a digital *surface* model: as its AWS readme puts it,
+it represents the surface of the Earth "including buildings, infrastructure
+and vegetation". It comes in two public instances, GLO-30 at 30 m, not yet
+released everywhere, and GLO-90 at 90 m, with worldwide coverage. The copy on
+Amazon's open-data registry is cut into 1° tiles as cloud-optimised GeoTIFFs
+and is free for the general public under the Copernicus DEM licence.
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(
+  try_access("https://copernicus-dem-90m.s3.amazonaws.com/readme.html"),
+  try_access(tile_url(42, 20))
+))
+```
+
+Kosovo spans six GLO-90 tiles. Because the files are cloud-optimised, GDAL
+reads only the blocks it needs, and the crop is cached here. The six tiles
+are combined into one virtual mosaic (`terra::vrt()`) before cropping, so the
+code does not need to know which tile holds which part of the country; the
+tile names follow a fixed pattern of latitude and longitude, which the helper
+`tile_url()` above writes out.
+
+```{r}
+#| label: build
+#| echo: true
+#| code-fold: true
+#| code-summary: "Show the remote crop"
+build_error <- NULL
+if (!file.exists(cache)) {
+  build_error <- tryCatch({
+    Sys.setenv(GDAL_DISABLE_READDIR_ON_OPEN = "EMPTY_DIR")
+    tiles <- expand.grid(lat = 41:43, lon = 20:21)
+    r  <- vrt(paste0("/vsicurl/", mapply(tile_url, tiles$lat, tiles$lon)))
+    ko <- vect(kosovo_outline())
+    k  <- round(mask(crop(r, ko, snap = "out"), ko))
+    writeRaster(k, cache, overwrite = TRUE, datatype = "INT2S",
+                gdal = "COMPRESS=DEFLATE")
+    NULL
+  }, error = function(e) conditionMessage(e))
+}
+have_cache <- file.exists(cache)
+```
+
+```{r}
+#| label: build-failed
+#| eval: !expr "!have_cache"
+#| output: asis
+cat("::: {.callout-warning}\n## To be completed\nThe remote crop failed at render time (",
+    build_error %||% "no message", "). Re-render when the AWS bucket answers.\n:::\n", sep = "")
+```
+
+## Kosovo coverage check
+
+```{r}
+#| label: check
+#| eval: !expr have_cache
+k <- rast(cache)
+inside <- !is.na(values(rasterize(vect(kosovo_outline()), k), mat = FALSE))
+v <- values(k, mat = FALSE)[inside]
+area <- values(cellSize(k, unit = "km"), mat = FALSE)[inside]
+belts <- cut(v, c(-Inf, 500, 1000, 1500, 2000, Inf),
+             labels = c("below 500 m", "500–1,000 m", "1,000–1,500 m",
+                        "1,500–2,000 m", "above 2,000 m"))
+tab <- tapply(area, belts, sum)
+knitr::kable(data.frame(`Altitude belt` = names(tab),
+                        `Area (km²)` = fmt_int(tab),
+                        Share = sprintf("%.1f %%", 100 * tab / sum(tab)),
+                        check.names = FALSE), align = "lrr", row.names = FALSE)
+```
+
+```{r}
+#| label: check-text
+#| eval: !expr have_cache
+#| output: asis
+cat(sprintf(paste(
+  "All %s cells inside Kosovo carry a value (%d no-data). Elevation runs from",
+  "%s m to %s m, with a mean of %s m. The raster carries no country",
+  "attribute, so no country code applies."),
+  fmt_int(length(v)), sum(is.na(v)), fmt_int(min(v, na.rm = TRUE)),
+  fmt_int(max(v, na.rm = TRUE)), fmt_int(mean(v, na.rm = TRUE))))
+```
+
+```{r}
+#| label: map
+#| eval: !expr have_cache
+source("../R/functions.R", local = TRUE)
+k3 <- aggregate(k, 3, fun = "mean", na.rm = TRUE)
+pal <- colorNumeric(grDevices::hcl.colors(9, "Terrain"), values(k3), na.color = NA)
+leaflet() |>
+  add_basemaps() |>
+  addRasterImage(k3, colors = pal, opacity = 0.75) |>
+  add_boundary_outline(kosovo_outline()) |>
+  addLegend(pal = pal, values = values(k3), title = "Elevation (m)") |>
+  addLayersControl(baseGroups = basemap_groups,
+                   options = layersControlOptions(collapsed = TRUE))
+```
+
+## What it adds for Natura 2000 in Kosovo
+
+Elevation separates habitats the land-cover data cannot: alpine grassland from
+lowland grassland, subalpine beech from thermophilous oak. The altitude belts
+above give the representation test of [question 4](../natura2000.qmd#q4) ("every
+altitude belt covered") its denominator, and a terrain model is one of the
+layers the boundary workflow of [question 2](../natura2000.qmd#q2) draws along
+(watersheds, ridges). GLO-90 serves the [national tier](../natura2000.qmd#q1);
+GLO-30, if available, would come closer to site work.
+
+## Caveats and sensitivity
+
+- A surface model: in forest it measures the canopy, not the ground.
+- At 90 m, narrow gorges and ridges are smoothed.
+- No sensitive content.
+
+## Integration into the pipeline
+
+Low effort. A proposed `kosovo_dem(boundary)` in `R/functions.R` would do the
+crop above and cache `data/kosovo_dem_glo90.tif`; the habitat screen could
+then split its classes by altitude belt, much as it splits them by
+biogeographical region today. `pipeline.R` is not changed.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+::: {.callout-warning}
+## To be completed
+Use the attribution text in the Copernicus DEM licence linked from the AWS
+readme; it was not read in this check.
+:::

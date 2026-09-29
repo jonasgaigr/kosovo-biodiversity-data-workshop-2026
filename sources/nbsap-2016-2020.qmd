@@ -1,0 +1,111 @@
+---
+title: "Biodiversity Strategy and Action Plan 2016–2020"
+subtitle: "Kosovo's action plan for biodiversity, in English, with the state's own account of its data gaps and its first steps towards Natura 2000."
+actions:
+  - kind: check
+    what: "Whether a successor biodiversity strategy or action plan after 2020 has been adopted or drafted; the EC Kosovo Report 2025 says the environment strategy for 2024–2033 is still pending"
+    contact: "Ministry of Environment, Spatial Planning and Infrastructure"
+  - kind: check
+    what: "Whether the action plan's Natura 2000 measures (ecological network, habitat mapping, inventories) were reported on at the end of 2020"
+    contact: "Ministry of Environment, Spatial Planning and Infrastructure; KEPA"
+todo:
+  doi: "No DOI; a government document"
+  licence: "No terms stated; a public government document"
+  spatial_resolution: "Not spatial: a strategy document"
+  effort: "Low: no data to integrate; cite as context"
+  sensitivity: "None"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+row <- source_row("nbsap-2016-2020")
+url <- "https://kryeministri.rks-gov.net/wp-content/uploads/2022/08/Eng-SAPB-2016-2020.pdf"
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+The Ministry of Environment and Spatial Planning's Action Plan for
+Biodiversity 2016–2020 revises the implementation part of Kosovo's Strategy
+and Action Plan for Biodiversity 2011–2020, which the Assembly approved on 7
+October 2011. The English PDF runs to 78 pages. It is interesting less for
+its measures than for its candour about the starting point. Among the main
+problems it lists are the lack of full inventories for flora, fauna and
+habitats (except the Red Book of Vascular Flora), the lack of a red list of
+fauna, and the lack of national biodiversity indicators.
+
+On Natura 2000 it records three facts that other pages in this section
+depend on. Kosovo "is not a Party to the Bern Convention", so no Emerald
+network was developed. A report of preliminary Natura 2000 sites was drafted
+in 2008 under the Sustainable Forest Management project. And an
+administrative instruction of 2013 on a national ecological network put the
+Kosovo Institute for Nature Protection in charge of establishing it.
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(try_access(url)))
+```
+
+Open PDF on the Office of the Prime Minister's site.
+
+## Kosovo coverage check
+
+The plan is national. There are no records to count; the useful check is
+whether its commitments have a successor.
+
+::: {.callout-warning}
+## To be completed
+No successor biodiversity strategy was found in this check. The European
+Commission's Kosovo Report 2025 notes that "the adoption of a strategy for
+environmental protection and sustainable development for 2024–2033 remains
+pending". Confirm with the Ministry whether biodiversity measures after 2020
+sit in that pending strategy or in a separate plan.
+:::
+
+## What it adds for Natura 2000 in Kosovo
+
+It is the state's own statement of where Natura 2000 preparation stood and
+who is responsible, which a proposal must build on and a reviewer will read.
+It also confirms from a primary source what the desk review expected about
+the Emerald Network (see [Emerald Network](emerald-network.qmd)). It serves
+the [national tier](../natura2000.qmd#q1) as context only.
+
+## Caveats and sensitivity
+
+- It covers 2016–2020; nothing here says what happened after.
+- A plan records intentions, not results.
+- No sensitive content.
+
+## Integration into the pipeline
+
+None; a document to cite. `pipeline.R` is not changed.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+Ministry of Environment and Spatial Planning. *Action Plan for Biodiversity
+2016–2020, Strategy and Action Plan for Biodiversity 2011–2020.* Department
+of Environment Protection, Prishtina. No publication date was seen on the
+cover; the PDF was produced in June 2018.

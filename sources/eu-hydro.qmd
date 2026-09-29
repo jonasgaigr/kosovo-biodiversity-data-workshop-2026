@@ -1,0 +1,190 @@
+---
+title: "EU-Hydro"
+subtitle: "The Copernicus river network of Europe at 1:50,000, whose own metadata say Kosovo has no water-body data, yet whose rivers run through it."
+actions:
+  - kind: check
+    what: "Ask the EEA or CLMS what 'no spatial data for any category of water bodies was available' means for Kosovo, given that the river network and inland-water layers do reach it"
+    contact: "Copernicus Land Monitoring Service helpdesk"
+  - kind: check
+    what: "Compare EU-Hydro's river lines with OpenStreetMap waterways and with HydroRIVERS in Kosovo, to judge positional accuracy"
+    contact: "The HydroSHEDS page in this section"
+todo: {}
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+suppressPackageStartupMessages({
+  library(sf)
+  library(leaflet)
+})
+row <- source_row("eu-hydro")
+cache <- file.path(cache_dir("eu-hydro"), "eu_hydro_kosovo.gpkg")
+svc <- "https://image.discomap.eea.europa.eu/arcgis/rest/services/EUHydro/EUHydro_RiverNetworkDatabase/MapServer"
+strahler_layers <- c(`3` = 7, `4` = 8, `5` = 9, `6` = 10, `7` = 11)
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+EU-Hydro is the Copernicus Land Monitoring Service's photo-interpreted river
+network for the EEA38 countries and the United Kingdom: river lines ordered by
+Strahler number, inland water polygons, and a drainage model derived from the
+EU-DEM. Version 1.3 (November 2020) is mapped at 1:50,000 with a 1 ha minimum
+mapping unit, has a DOI, and is free and open under the Copernicus data
+policy, with attribution.
+
+Its metadata contain a sentence that bears directly on Kosovo: for Türkiye,
+Albania, Bosnia-Herzegovina, North Macedonia, Montenegro, Kosovo and Serbia,
+"no spatial data for any category of water bodies was available". Taken at
+face value that would make the product useless here. The check below shows
+it is not.
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(
+  try_access("https://sdi.eea.europa.eu/catalogue/srv/api/records/393359a7-7ebd-4a52-80ac-1a18d5f3db9c"),
+  try_access(paste0(svc, "?f=json"))
+))
+```
+
+Downloads are per major basin as File Geodatabase or GeoPackage; the check
+uses the EEA's map service instead, which needs no download.
+
+```{r}
+#| label: build
+#| echo: true
+#| code-fold: true
+#| code-summary: "Show the map-service query"
+build_error <- NULL
+if (!file.exists(cache)) {
+  build_error <- tryCatch({
+    source("../R/functions.R", local = TRUE)
+    ko <- st_transform(st_union(kosovo_outline()), 3035)
+    bb <- st_bbox(st_transform(ko, 4326))
+    rivers <- do.call(rbind, lapply(names(strahler_layers), function(o) {
+      # A layer with nothing in the box, or nothing left after clipping, is
+      # skipped rather than allowed to stop the build.
+      x <- tryCatch(arcgis_query_sf(paste0(svc, "/", strahler_layers[[o]]), bb,
+                                    fields = "OBJECTID", verbose = FALSE),
+                    error = function(e) NULL)
+      if (is.null(x)) return(NULL)
+      x <- suppressWarnings(st_intersection(st_make_valid(x), ko))
+      x <- suppressWarnings(st_collection_extract(x, "LINESTRING"))
+      if (!nrow(x)) return(NULL)
+      st_sf(strahler = rep(as.integer(o), nrow(x)), geometry = st_geometry(x))
+    }))
+    water <- arcgis_query_sf(paste0(svc, "/2"), bb, fields = "OBJECTID", verbose = FALSE)
+    water <- suppressWarnings(st_intersection(st_make_valid(water), ko))
+    st_write(rivers, cache, layer = "rivers", delete_dsn = TRUE, quiet = TRUE)
+    st_write(st_sf(geometry = st_geometry(water)), cache, layer = "inland_water",
+             append = FALSE, quiet = TRUE)
+    NULL
+  }, error = function(e) conditionMessage(e))
+}
+have_cache <- file.exists(cache)
+```
+
+```{r}
+#| label: build-failed
+#| eval: !expr "!have_cache"
+#| output: asis
+cat("::: {.callout-warning}\n## To be completed\nThe map-service query failed at render time (",
+    build_error %||% "no message", "). Re-render when the EEA service answers.\n:::\n", sep = "")
+```
+
+## Kosovo coverage check
+
+```{r}
+#| label: check
+#| eval: !expr have_cache
+rivers <- st_read(cache, layer = "rivers", quiet = TRUE)
+water  <- st_read(cache, layer = "inland_water", quiet = TRUE)
+len <- tapply(as.numeric(st_length(rivers)) / 1000, rivers$strahler, sum)
+knitr::kable(data.frame(`Strahler order` = names(len),
+                        `River length inside Kosovo (km)` = fmt_int(len),
+                        check.names = FALSE), align = "rr", row.names = FALSE)
+```
+
+```{r}
+#| label: check-text
+#| eval: !expr have_cache
+#| output: asis
+cat(sprintf(paste(
+  "Inside Kosovo the network holds %s km of rivers of Strahler order 3 and",
+  "above, and %d inland-water polygons covering %s ha. Kosovo is therefore",
+  "partly covered: the river network and some water bodies are mapped,",
+  "whatever the metadata say. The service carries no country attribute on",
+  "these layers, so no country code was checked."),
+  fmt_int(sum(len)), nrow(water), fmt_int(sum(as.numeric(st_area(water))) / 1e4)))
+```
+
+```{r}
+#| label: map
+#| eval: !expr have_cache
+source("../R/functions.R", local = TRUE)
+pal <- colorNumeric(c("#9ECAE1", "#08306B"), domain = rivers$strahler)
+leaflet(st_transform(rivers, 4326)) |>
+  add_basemaps() |>
+  addPolylines(color = ~pal(strahler), weight = ~strahler / 1.5, opacity = 0.9,
+               label = ~paste("Strahler order", strahler)) |>
+  addPolygons(data = st_transform(water, 4326), color = "#0072B2", weight = 1,
+              fillOpacity = 0.5) |>
+  add_boundary_outline(kosovo_outline()) |>
+  addLegend(pal = pal, values = ~strahler, title = "Strahler order") |>
+  addLayersControl(baseGroups = basemap_groups,
+                   options = layersControlOptions(collapsed = TRUE))
+```
+
+## What it adds for Natura 2000 in Kosovo
+
+Freshwater habitats (3260 water courses, 91E0 alluvial forests, 92A0 willow
+and poplar galleries) and Annex II fish follow the river network, and a
+Strahler order separates headwater streams from the main rivers. River lines
+are also natural site boundaries. EU-Hydro is one network for all the EEA's
+member and cooperating countries, which makes it a natural choice for a Kosovo
+network meant to join its neighbours'. At 1:50,000
+it serves the [national tier](../natura2000.qmd#q1) and outlines for sites.
+
+## Caveats and sensitivity
+
+- The metadata's statement about Kosovo conflicts with what the service
+  returns; which parts were derived without national data is unknown.
+- Lines of Strahler order 1 and 2 were left out of this check to keep it
+  light; they are in the service.
+- No sensitive content.
+
+## Integration into the pipeline
+
+Low effort. A proposed `kosovo_rivers(boundary, min_strahler = 3)` in
+`R/functions.R`, using the existing `arcgis_query_sf()`, would cache the
+network for the report's maps and for the freshwater part of the habitat
+screen. `pipeline.R` is not changed.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+*EU-Hydro River Network Database 2006–2012 (vector), Europe – version 1.3,
+Nov. 2020.* European Environment Agency / Copernicus Land Monitoring Service.
+[doi:10.2909/393359a7-7ebd-4a52-80ac-1a18d5f3db9c](https://doi.org/10.2909/393359a7-7ebd-4a52-80ac-1a18d5f3db9c).

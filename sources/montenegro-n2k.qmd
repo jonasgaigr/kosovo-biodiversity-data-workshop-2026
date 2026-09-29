@@ -1,0 +1,127 @@
+---
+title: "Natura 2000 research in Montenegro: species reports"
+subtitle: "Montenegro's Environmental Protection Agency is finalising its first draft Natura 2000 network from eight years of habitat and species fieldwork."
+actions:
+  - kind: request
+    what: "The final species reports of the Natura 2000 research project, and the draft site proposal for areas bordering Kosovo (Prokletije, Hajla, Mokra Gora)"
+    contact: "Environmental Protection Agency of Montenegro, https://epa.org.me/"
+  - kind: check
+    what: "Whether EPA Montenegro publishes the species reports itself; the only copies found were uploads on academia.edu and ResearchGate, both HTTP 403"
+    contact: "https://epa.org.me/ publications section"
+todo:
+  doi: "No DOI found; the reports are known only from third-party uploads"
+  licence: "Terms of the species reports; ask EPA Montenegro"
+  access: "Not established: the uploads are blocked and EPA has not published the reports"
+  format: "Reports are PDFs according to the upload titles; the underlying data format is unknown"
+  access_method: "Unknown until EPA Montenegro says how data are shared"
+  spatial_resolution: "Resolution of the species survey data; ask EPA Montenegro"
+  temporal_coverage: "Years of fieldwork; EPA says eight years of research without giving the years"
+  kosovo_codes_seen: "Not applicable unless the Montenegrin data extend across the border; check once obtained"
+  tier: "Depends on the precision of the survey records"
+  effort: "Estimate once the data format is known"
+  sensitivity: "Ask EPA Montenegro which species it treats as sensitive (large carnivores, raptors)"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+row <- source_row("montenegro-n2k")
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+Montenegro is preparing its Natura 2000 network ahead of accession. On
+25 March 2026 its Environmental Protection Agency (EPA) reported two days of
+expert meetings to finalise the first draft proposal of Natura 2000 areas.
+The work brought together the EPA, the EU IPA project "Support for the
+establishment of the Natura 2000 network for Montenegro", run by Eptisa, and
+experts who had carried out eight years of field research mapping habitats
+and species. The EPA describes Natura 2000 as "one of the key requirements"
+of Montenegro's accession, and part of the closing benchmark for Chapter 27.
+
+The "species reports" named in the desk review come from that research. The
+only copies found are uploads by individuals on academia.edu and
+ResearchGate. Neither could be opened, so their content is not described here.
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(
+  try_access("https://www.academia.edu/39138586/Research_on_Natura_2000_network_Montenegro_Species_Reports"),
+  try_access("https://www.researchgate.net/publication/337448196_Natura_2000_network_Montenegro_Species_Reports_2019"),
+  try_access("https://epa.org.me/2026/03/25/natura-2000-kao-kljucni-korak-ka-eu-odrzani-ekspertski-sastanci/"),
+  try_access("https://www.eptisa.com/en/new-project-support-for-the-establishment-of-the-natura-2000-network-for-montenegro/")
+))
+```
+
+Both upload sites refused the request with HTTP 403, from the R client and
+from a second fetch tool alike. The EPA news item and Eptisa's project page
+answered; neither links to reports, data or maps. `natura2000.me`, a domain
+that suggests a dedicated portal, answered HTTP 401 (authentication required).
+
+## Kosovo coverage check
+
+::: {.callout-warning}
+## To be completed
+No data were accessible, so no check was run. By its nature the Montenegrin
+work stops at the border, but its fieldwork on Prokletije, Hajla and Mokra
+Gora is the nearest recent survey of the same mountains. Once reports or data
+are obtained: list the survey localities within 20 km of Kosovo and the
+species recorded there, and compare them with the Kosovo GBIF extract. The
+EEA's Emerald data already place Montenegrin candidate sites at Hajla and
+Plavsko-Gusinjske Prokletije next to Kosovo (see
+[Emerald Network](emerald-network.qmd)).
+:::
+
+## What it adds for Natura 2000 in Kosovo
+
+Bjeshkët e Nemuna/Prokletije is one massif across Kosovo, Montenegro and
+Albania. A Montenegrin site proposal there, with its species lists and
+population figures, gives Kosovo both a transboundary partner and an
+independent reference for what the mountain holds. It serves the
+[national screening tier](../natura2000.qmd#q1) at least, and possibly the
+site tier, depending on the precision of the survey data.
+
+## Caveats and sensitivity
+
+- Nothing about the reports' content was verified, only that the programme
+  exists and that a first draft network is being finalised.
+- Survey data for large carnivores and raptors may be restricted.
+- Uploads on academia.edu are not a primary source; the EPA is.
+
+## Integration into the pipeline
+
+Nothing to integrate until data are released. If the EPA supplies point data
+with a licence that permits use, a proposed `neighbour_survey_records()` step
+would read them beside the GBIF extract, clearly separated from Kosovo's own
+records. `pipeline.R` is not changed.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+::: {.callout-warning}
+## To be completed
+No citation guidance was found. Ask EPA Montenegro how the reports are to be
+cited.
+:::

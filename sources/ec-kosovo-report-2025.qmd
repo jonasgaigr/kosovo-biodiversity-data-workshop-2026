@@ -1,0 +1,113 @@
+---
+title: "European Commission Kosovo Report 2025"
+subtitle: "The Commission's annual assessment of Kosovo's progress towards the EU, whose Chapter 27 judges nature protection."
+actions:
+  - kind: check
+    what: "Read Chapter 27 in full for the nature-protection recommendations the Commission sets for the coming year, and record them as targets"
+    contact: "https://enlargement.ec.europa.eu/kosovo-report-2025_en"
+todo:
+  doi: "No DOI; cite as a Commission staff working document"
+  licence: "Reuse terms of Commission documents; read on the Commission page"
+  spatial_resolution: "Not spatial"
+  temporal_coverage: "The reporting period of the 2025 report; read in the introduction"
+  effort: "Low: a document to cite"
+  sensitivity: "None"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+row <- source_row("ec-kosovo-report-2025")
+pdf_url <- "https://enlargement.ec.europa.eu/document/download/127563ea-4c03-44a4-b56c-2d569afd86a5_en?filename=kosovo-report-2025.pdf"
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+Each year the European Commission assesses Kosovo's progress towards the EU
+across the chapters of the acquis. The 2025 report was published on 4
+November 2025. Its Chapter 27, on environment and climate change, finds
+Kosovo "at an early stage of preparation" with limited progress.
+
+On nature protection the report is short and specific. Kosovo made limited
+progress. The identification of potential Natura 2000 sites "is at a very
+early stage". Protected areas lack appropriate management and suffer from
+pollution, illegal activities and weak enforcement. There was no progress in
+aligning legislation on nature protection. The adoption of a strategy for
+environmental protection and sustainable development for 2024–2033 remains
+pending. On forests it notes that 40 per cent of public forests are subject
+to uncontrolled or illegal harvesting.
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(
+  try_access("https://enlargement.ec.europa.eu/kosovo-report-2025_en"),
+  try_access(pdf_url)
+))
+```
+
+Open; the report is a 2 MB PDF linked from the Commission's page.
+
+## Kosovo coverage check
+
+The report is about Kosovo alone; there are no data to check. The quotations
+above were read from the PDF on 29 September 2026.
+
+What can be checked is consistency with the other pages. The Commission's
+finding that identifying potential Natura 2000 sites is "at a very early
+stage" matches the absence of any candidate site list in this section (see
+[Mustafa 2009](mustafa-2009-potential-n2k.qmd) and the
+[data gaps](index.qmd#data-gaps)). Its note that the environment strategy for
+2024–2033 is still pending matches the lack of a successor to the
+[biodiversity action plan](nbsap-2016-2020.qmd).
+
+## What it adds for Natura 2000 in Kosovo
+
+It is the external benchmark. Whatever this site and the Ministry produce
+towards Natura 2000 will be read against the Commission's next assessment,
+and the phrases above are the ones it will want to see changed: the
+identification of potential sites, protected-area management and legal
+alignment. It serves the [national tier](../natura2000.qmd#q1) as context.
+The finding on illegal harvesting bears on the [forest-loss](forest-loss-hansen.qmd)
+and [NFI](kosovo-nfi-2012.qmd) pages.
+
+## Caveats and sensitivity
+
+- An assessment, not data; its judgements are the Commission's.
+- No sensitive content.
+
+## Integration into the pipeline
+
+None; a document to cite. `pipeline.R` is not changed.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+European Commission (2025). *Kosovo 2025 Report.* Brussels, 4 November
+2025.
+
+::: {.callout-warning}
+## To be completed
+The SWD document number was not read; add it from the PDF's cover page.
+:::

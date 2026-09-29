@@ -1,0 +1,195 @@
+---
+title: "Emerald Network sufficiency in neighbouring countries"
+subtitle: "How far Serbia, North Macedonia, Montenegro and Albania have got in proving their Emerald lists sufficient, and which of their sites border Kosovo."
+actions:
+  - kind: check
+    what: "Find the primary Bern Convention document with each country's sufficiency index (the Standing Committee's decisions and the conclusions of the biogeographical seminars); coe.int returned HTTP 403 to every request from this network"
+    contact: "https://www.coe.int/en/web/bern-convention/conclusions-of-the-biogeographical-seminars, from another connection"
+  - kind: check
+    what: "Whether Serbia's sufficiency figures count the candidate sites that lie inside Kosovo (see the Emerald Network page)"
+    contact: "Bern Convention Secretariat"
+todo:
+  url: "Primary page for the sufficiency figures on coe.int; blocked from this network"
+  doi: "No DOI expected for Standing Committee documents; confirm once the primary document is found"
+  licence: "Terms of Council of Europe documents; read on coe.int"
+  access: "Open according to the secondary source; confirm on coe.int"
+  format: "Likely PDF meeting documents; confirm on coe.int"
+  access_method: "Confirm on coe.int"
+  spatial_resolution: "Not spatial: the index is a share of features judged sufficient"
+  temporal_coverage: "Date of each country's latest biogeographical evaluation; read from the primary document"
+  latest_version: "The 44th Standing Committee meeting (December 2024) is the latest cited by the secondary source; check for later decisions"
+  kosovo_codes_seen: "Record whether any sufficiency statistic includes Kosovo territory under RS"
+  tier: "Not a spatial dataset; the tier applies to the site layer, which is on the Emerald Network page"
+  effort: "Low once the primary document is found: a four-row table"
+  sensitivity: "None expected"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+suppressPackageStartupMessages(library(sf))
+row <- source_row("neighbour-emerald-sufficiency")
+cache <- file.path(cache_dir("neighbour-emerald-sufficiency"), "neighbour_sites_50km.csv")
+service <- "https://bio.discomap.eea.europa.eu/arcgis/rest/services/ProtectedSites/EmeraldSites/MapServer/3"
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+Under the Bern Convention each Party proposes Emerald sites, and regional
+biogeographical seminars then judge, species by species and habitat by
+habitat, whether a country's list is sufficient. The share of features found
+sufficient is reported as a sufficiency index. For Kosovo's neighbours the
+index says how complete their networks are along the shared mountains, and
+therefore how much of a transboundary network already exists on the other
+side of the border.
+
+The figures below come from a secondary source only. CEE Bankwatch Network
+reported on 9 December 2024, after the 44th meeting of the Convention's
+Standing Committee, that all Western Balkan countries must reach a 35 per
+cent sufficiency target by 2030, and gave each country's current index. The
+primary Council of Europe documents could not be opened.
+
+| Country | Sufficiency index (Bankwatch, 9 December 2024) |
+|---|---|
+| Serbia | 13.5 % |
+| North Macedonia | 16 % |
+| Montenegro | 16.3 % |
+| Albania | 28.3 % |
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(
+  try_access("https://bankwatch.org/press_release/bern-convention-western-balkan-countries-need-to-propose-new-protected-natural-areas"),
+  try_access("https://www.coe.int/en/web/bern-convention/-/44th-standing-committee"),
+  try_access("https://rm.coe.int/16807466b6"),
+  try_access(paste0(service, "?f=json"))
+))
+```
+
+The Council of Europe's web pages returned HTTP 403 throughout. Its document
+server, `rm.coe.int`, did answer, so individual documents can be fetched once
+their addresses are known; the calendar for the implementation of the
+Emerald Network is one. The site layer itself is read from the EEA's copy of
+the Emerald data.
+
+## Kosovo coverage check
+
+The sufficiency index is a national figure and says nothing about Kosovo
+directly. What can be checked is what each neighbour has put on the ground
+near Kosovo.
+
+```{r}
+#| label: build
+#| echo: true
+#| code-fold: true
+#| code-summary: "Show how the neighbours' sites near Kosovo are counted"
+build_error <- NULL
+if (!file.exists(cache)) {
+  build_error <- tryCatch({
+    source("../R/functions.R", local = TRUE)
+    ko   <- st_transform(st_union(kosovo_outline()), 3035)
+    zone <- st_buffer(ko, 50000)
+    s <- arcgis_query_sf(service, st_bbox(st_transform(zone, 4326)),
+                         fields = "SITECODE,SITENAME,COUNTRY_CODE,SITESTATUS",
+                         verbose = FALSE) |> st_make_valid()
+    s <- s[lengths(st_intersects(s, zone)) > 0, ]
+    ring <- st_difference(zone, ko)
+    s$ha_in_ring <- vapply(seq_len(nrow(s)), function(i)
+      sum(as.numeric(st_area(st_intersection(st_geometry(s)[i], ring)))), 0) / 1e4
+    write.csv(st_drop_geometry(s), cache, row.names = FALSE)
+    NULL
+  }, error = function(e) conditionMessage(e))
+}
+have_cache <- file.exists(cache)
+```
+
+```{r}
+#| label: check
+#| eval: !expr have_cache
+s <- read.csv(cache)
+tab <- do.call(rbind, lapply(split(s, s$COUNTRY_CODE), function(x) data.frame(
+  `Country code` = x$COUNTRY_CODE[1], Sites = nrow(x),
+  `Status` = paste(sort(unique(x$SITESTATUS)), collapse = ", "),
+  `Area in the 50 km ring outside Kosovo (km²)` = fmt_int(round(sum(x$ha_in_ring) / 100)),
+  check.names = FALSE)))
+knitr::kable(tab, align = "lrlr", row.names = FALSE)
+```
+
+```{r}
+#| label: no-cache
+#| eval: !expr "!have_cache"
+#| output: asis
+cat("::: {.callout-warning}\n## To be completed\nThe EEA map service did not answer at render time (",
+    build_error %||% "no message", "). Re-render when it does.\n:::\n", sep = "")
+```
+
+```{r}
+#| label: check-text
+#| eval: !expr have_cache
+#| output: asis
+st <- table(s$SITESTATUS)
+cat(sprintf("Status of the %d sites within 50 km of Kosovo: %s.", nrow(s),
+            paste(sprintf("%s %d", names(st), as.integer(st)), collapse = ", ")))
+if (all(s$SITESTATUS == "Candidate")) {
+  cat(" None has been adopted. Read with the sufficiency figures, the",
+      "transboundary network Kosovo would join is itself unfinished on every side.")
+}
+```
+
+## What it adds for Natura 2000 in Kosovo
+
+It sets expectations. If the neighbours have proved between 13 and 28 per
+cent of their features sufficient, as the secondary source reports, a Kosovo
+network will be judged in a region where few boundaries are settled. It also
+flags a practical risk: the Serbian candidate sites inside Kosovo (see
+[Emerald Network](emerald-network.qmd)) may enter Serbia's statistics, and a
+Kosovo sufficiency ledger ([question 4](../natura2000.qmd#q4)) should not
+count the same ground twice.
+
+## Caveats and sensitivity
+
+- The four percentages are secondary. Until the Council of Europe document
+  is read, treat them as reported, not verified.
+- Sufficiency is judged per biogeographical region; a single national
+  figure hides regional differences.
+- The index is a share of features, not of territory.
+
+## Integration into the pipeline
+
+No pipeline step is needed for the index itself: it belongs in the report as
+a small table with its source and date. The site layer is covered by the
+proposed `emerald_sites_near()` on the Emerald Network page. `pipeline.R` is
+not changed.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+::: {.callout-warning}
+## To be completed
+Cite the Bern Convention document that gives the indices once it is found.
+Until then the source is: CEE Bankwatch Network (2024). *Bern Convention:
+Western Balkan countries need to propose new protected natural areas.* Press
+release, 9 December 2024 (secondary source).
+:::

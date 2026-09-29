@@ -1,0 +1,180 @@
+---
+title: "Global Forest Change (Hansen et al.)"
+subtitle: "The University of Maryland's 30 m global map of tree-cover loss, version 1.13, now running from 2001 to 2025."
+actions:
+  - kind: check
+    what: "Separate stand-replacing loss from harvest: set the loss pixels against the NFI and Forest Agency cutting records, and against EFFIS burnt areas"
+    contact: "Kosovo Forest Agency; the EFFIS page in this section"
+  - kind: check
+    what: "Add treecover2000 (406 MB tile, read remotely) to express loss as a share of the forest present in 2000"
+    contact: "https://storage.googleapis.com/earthenginepartners-hansen/GFC-2025-v1.13/download.html"
+todo: {}
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+suppressPackageStartupMessages({
+  library(sf)
+  library(terra)
+  library(leaflet)
+})
+row <- source_row("forest-loss-hansen")
+cache <- file.path(cache_dir("forest-loss-hansen"), "gfc_v1_13_lossyear_kosovo.tif")
+tile <- "https://storage.googleapis.com/earthenginepartners-hansen/GFC-2025-v1.13/Hansen_GFC-2025-v1.13_lossyear_50N_020E.tif"
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+Hansen and colleagues at the University of Maryland map, for every 30 m pixel
+of the world's land, the tree cover in 2000 and the year in which any
+stand-replacing loss of it was detected. The data behind their 2013 paper in
+*Science* have been extended every year since. Version 1.13, covering
+2000–2025, is the latest on the download page and replaces version 1.12
+(2000–2024); both are licensed CC BY 4.0. The desk review named the product
+without a version; v1.13 is the one used here.
+
+## Access
+
+Open, as 10 × 10 degree GeoTIFF tiles. All of Kosovo falls in the tile
+`50N_020E`; its loss-year layer is 37 MB, and the Kosovo window is read
+remotely and cached.
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(
+  try_access("https://storage.googleapis.com/earthenginepartners-hansen/GFC-2025-v1.13/download.html"),
+  try_access(tile)
+))
+```
+
+```{r}
+#| label: build
+#| echo: true
+#| code-fold: true
+#| code-summary: "Show the remote crop"
+build_error <- NULL
+if (!file.exists(cache)) {
+  build_error <- tryCatch({
+    Sys.setenv(GDAL_DISABLE_READDIR_ON_OPEN = "EMPTY_DIR")
+    ko <- vect(kosovo_outline())
+    k  <- mask(crop(rast(paste0("/vsicurl/", tile)), ko, snap = "out"), ko)
+    writeRaster(k, cache, overwrite = TRUE, datatype = "INT1U",
+                gdal = "COMPRESS=DEFLATE")
+    NULL
+  }, error = function(e) conditionMessage(e))
+}
+have_cache <- file.exists(cache)
+```
+
+```{r}
+#| label: build-failed
+#| eval: !expr "!have_cache"
+#| output: asis
+cat("::: {.callout-warning}\n## To be completed\nThe remote crop failed at render time (",
+    build_error %||% "no message", "). Re-render when the tile server answers.\n:::\n", sep = "")
+```
+
+## Kosovo coverage check
+
+```{r}
+#| label: check
+#| eval: !expr have_cache
+k <- rast(cache)
+area_km2 <- cellSize(k, unit = "km")
+z <- zonal(area_km2, k, fun = "sum")
+names(z) <- c("code", "km2")
+n_na <- global(is.na(k) & !is.na(rasterize(vect(kosovo_outline()), k)), "sum")[[1]]
+loss <- z[z$code > 0, ]
+loss$year <- 2000 + loss$code
+knitr::kable(data.frame(Year = loss$year, `Tree-cover loss (km²)` = round(loss$km2, 1),
+                        check.names = FALSE), align = "rr", row.names = FALSE)
+```
+
+```{r}
+#| label: check-text
+#| eval: !expr have_cache
+#| output: asis
+top <- loss[order(-loss$km2), ][1:3, ]
+cat(sprintf(paste(
+  "Between 2001 and %d, %s km² of tree cover was lost inside Kosovo. The",
+  "largest years were %s. %s pixels inside the outline are no-data. The",
+  "raster has no country attribute, so no country code applies."),
+  max(loss$year), format(round(sum(loss$km2)), big.mark = ","),
+  paste(sprintf("%d (%.1f km²)", top$year, top$km2), collapse = ", "),
+  fmt_int(n_na)))
+```
+
+```{r}
+#| label: map
+#| eval: !expr have_cache
+source("../R/functions.R", local = TRUE)
+lost <- k > 0
+share <- aggregate(lost, 10, fun = "mean", na.rm = TRUE)   # about 300 m
+share[share == 0] <- NA
+pal <- colorNumeric(map_palette$density, c(0, 1), na.color = NA)
+leaflet() |>
+  add_basemaps() |>
+  addRasterImage(share, colors = pal, opacity = 0.8) |>
+  add_boundary_outline(kosovo_outline()) |>
+  addLegend(pal = pal, values = c(0, 1), title = "Share of pixels<br>lost 2001–2025",
+            labFormat = labelFormat(transform = function(x) 100 * x, suffix = " %")) |>
+  addLayersControl(baseGroups = basemap_groups,
+                   options = layersControlOptions(collapsed = TRUE))
+```
+
+The map shows the share of 30 m pixels lost in each cell of about 300 m.
+
+## What it adds for Natura 2000 in Kosovo
+
+Forest habitat types will make up much of a Kosovo network, and the European
+Commission's 2025 report says that 40 per cent of public forests are subject
+to uncontrolled or illegal harvesting. Loss mapped year by year shows where
+that pressure lands, whether inside existing protected areas, and whether it
+is increasing. That is evidence for the pressures section of an SDF and for
+the trend in a forest habitat's area. At 30 m it serves the
+[national tier](../natura2000.qmd#q1), and the site tier as a first screen.
+
+## Caveats and sensitivity
+
+- "Loss" is stand-replacing removal of tree cover; it includes legal
+  harvesting, fire and windthrow, and cannot tell them apart.
+- Read the usage notes on the download page before comparing early years
+  with late ones; this check reports the years as the layer gives them.
+- No species locations; nothing sensitive.
+
+## Integration into the pipeline
+
+Low effort. A proposed `kosovo_forest_loss(boundary)` in `R/functions.R`
+would do the crop above; the report could add loss per protected area and per
+municipality beside its habitat screen. `pipeline.R` is not changed.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+As the download page asks: Hansen, M. C., P. V. Potapov, R. Moore, M. Hancher,
+S. A. Turubanova, A. Tyukavina, D. Thau, S. V. Stehman, S. J. Goetz, T. R.
+Loveland, A. Kommareddy, A. Egorov, L. Chini, C. O. Justice, and J. R. G.
+Townshend. 2013. High-Resolution Global Maps of 21st-Century Forest Cover
+Change. *Science* 342 (15 November): 850–53. Data available on-line from:
+https://glad.earthengine.app/view/global-forest-change.

@@ -1,0 +1,119 @@
+---
+title: "Biodiversiteti i Kosovës"
+subtitle: "A 22-page KEPA overview of Kosovo's biodiversity from 2012, with approximate species counts per group."
+actions:
+  - kind: check
+    what: "Whether KEPA's later State of Nature reports (a 2018–2021 report is listed on its publications page) update the species counts"
+    contact: "https://www.ammk-rks.net/al/drejtorite/38/raporte-studime-publikime"
+todo:
+  doi: "No DOI; an agency document"
+  licence: "No terms stated; ask KEPA before reproducing tables"
+  spatial_resolution: "Not spatial: a narrative overview with a table of counts"
+  temporal_coverage: "The counts' reference period is not stated; the PDF dates from July 2012"
+  effort: "Low: a table of approximate counts, if wanted at all"
+  sensitivity: "None"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+row <- source_row("biodiversity-of-kosovo-overview")
+url <- "https://www.ammk-rks.net/assets/cms/uploads/files/Biodiversiteti%20IK/Biodiversiteti_i_Kosoves.pdf"
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+*Biodiversiteti i Kosovës* ("Kosovo's biodiversity") is a 22-page overview
+in Albanian, prepared by Qenan Maxhuni, biodiversity officer at KEPA and the
+Kosovo Institute for Nature Protection. The PDF dates from July 2012. It
+describes the country's flora, vegetation, fauna and main natural areas and
+names the Sharr mountains and Bjeshkët e Nemuna as the richest in plants and
+animals. Its Table 7 gives approximate species numbers per group, many marked
+as likely underestimates: about 1,800 flowering plants, 180 birds, 45
+mammals, 14 amphibians, 14 reptiles and 30 freshwater fish. It states plainly
+that Kosovo does not yet have a complete inventory of its biodiversity, and,
+at the time, that it had no red list.
+
+## Access
+
+The file is on KEPA's server, whose certificate had expired; the second
+request below skips verification.
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(try_access(url), try_access(url, ssl_verify = FALSE)))
+```
+
+## Kosovo coverage check
+
+The document is national and narrative; there are no records or cells to
+count and no country codes. What can be compared is its counts with the GBIF
+extract.
+
+```{r}
+#| label: check
+meta <- readRDS(file.path(sources_root(), "data", "run_metadata.rds"))
+b <- read.csv(file.path(sources_root(), "data_exports", "kosovo_birds.csv"))
+o <- read.csv(file.path(sources_root(), "data_exports", "kosovo_overall_biodiversity.csv"))
+cnt <- function(d, cls) length(unique(d$species[d$class %in% cls & nzchar(d$species)]))
+knitr::kable(data.frame(
+  Group = c("Birds", "Mammals", "Amphibians", "Reptiles"),
+  `KEPA 2012 (approximate)` = c("180*", "45*", "14", "14"),
+  `Species in the GBIF extract` = c(cnt(o, "Aves"), cnt(o, "Mammalia"),
+                                    cnt(o, "Amphibia"),
+                                    cnt(o, c("Squamata", "Testudines", "Reptilia"))),
+  check.names = FALSE), align = "lrr", row.names = FALSE,
+  caption = sprintf("\\* likely more, according to KEPA. GBIF download %s.", meta$download$doi))
+```
+
+The comparison is rough: the 2012 counts are approximate, and GBIF species
+counts include vagrants and misidentifications. Where GBIF already exceeds the
+2012 figure, the old figure was an underestimate, as its authors expected.
+
+## What it adds for Natura 2000 in Kosovo
+
+Little new data, but a useful statement of the baseline problem in the
+agency's own words: no complete inventory, no red list in 2012, and the two
+mountain massifs singled out as the richest areas. It frames the data gaps
+listed on the [hub page](index.qmd#data-gaps) and serves the
+[national tier](../natura2000.qmd#q1) only.
+
+## Caveats and sensitivity
+
+- Approximate counts with no stated reference period or method.
+- Superseded in part by the two red books (2013, 2018).
+- No sensitive content.
+
+## Integration into the pipeline
+
+None needed. The counts could appear in the report as context, with their
+date and source. `pipeline.R` is not changed.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+::: {.callout-warning}
+## To be completed
+The document gives no citation. Cite as Maxhuni, Q. (2012), *Biodiversiteti i
+Kosovës*, KEPA/IKMN, and confirm the preferred form with KEPA.
+:::

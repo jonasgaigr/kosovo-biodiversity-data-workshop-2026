@@ -1,0 +1,303 @@
+---
+title: "Article 17 reporting under the Habitats Directive, 2013–2018"
+subtitle: "The EU Member States' own 10 km distribution maps of Annex I habitats and Annex II, IV and V species, read here for the ground just across Kosovo's border."
+actions:
+  - kind: check
+    what: "Whether the EEA has published the 2019–2024 spatial dataset; the Article 17 web tool already offers a 2019–2024 period, the datahub does not"
+    contact: "EEA datahub, https://www.eea.europa.eu/en/datahub/datahubitem-view/d8b47719-9213-485a-845b-db1bfe93598d"
+  - kind: check
+    what: "Rebuild the border-zone lists from the 2019–2024 distribution layer once it is published, and compare the two rounds"
+    contact: "Re-run this page's build chunk against the new file"
+todo:
+  doi: "The catalogue record shows no DOI and DataCite returns none for the record identifier; ask the EEA helpdesk whether one exists"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+suppressPackageStartupMessages({
+  library(sf)
+  library(leaflet)
+})
+row <- source_row("art17-2013-2018")
+cache <- file.path(cache_dir("art17-2013-2018"), "art17_border_cells.gpkg")
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+Every six years each EU Member State reports, under Article 17 of the Habitats
+Directive, on the conservation status of the habitat types and species listed
+in the Directive's annexes. The European Environment Agency (EEA) publishes the
+reports as two linked products: tabular assessments of status and trend for each
+country and biogeographical region, and a spatial layer in which each country
+maps where every habitat and species occurs on the 10 km ETRS89 grid. The
+public version for the 2013–2018 round was released in August 2020, for the
+EU of 28 countries, and is licensed CC-BY 4.0 to the EEA and the Commission's
+Directorate-General for Environment.
+
+The EEA describes the spatial part as habitat and species distribution data in
+10 km grid cells "as reported by Member States". That wording matters here: the
+maps are what each country chose to report, compiled rather than harmonised,
+and a country boundary is also the edge of the data.
+
+## Access
+
+The dataset is open and needs no account. The GeoPackage is 151,576,576 bytes
+(about 145 MB), so it is not copied into this repository: GDAL reads it over HTTP range requests
+(`/vsicurl/`) and fetches only the pages that cover a box around Kosovo, as the
+pipeline already does for the protected-area inventory. The result, about a
+thousand distribution features, is cut to the 10 km cells within 100 km of
+Kosovo and cached as a small GeoPackage.
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+landing <- "https://www.eea.europa.eu/en/datahub/datahubitem-view/d8b47719-9213-485a-845b-db1bfe93598d"
+share   <- "https://sdi.eea.europa.eu/datashare/s/FsDQnwDBiqf2f88/download?path=%2FArt17-2013-2018_GPKG&files=art17_2013_2018_public.gpkg"
+access_table(list(try_access(landing), try_access(share)))
+```
+
+The share token in that address is not part of the dataset's identifier and
+may change when the EEA republishes the file. The stable address is the
+catalogue record, `https://sdi.eea.europa.eu/data/9f71b3e3-f8ec-442b-a2d5-c3c190605ac4`,
+which redirects to the current share.
+
+```{r}
+#| label: build
+#| echo: true
+#| code-fold: true
+#| code-summary: "Show how the border-zone extract is built"
+# Runs only when the cache is missing. Any failure is caught and reported below.
+build_error <- NULL
+if (!file.exists(cache)) {
+  build_error <- tryCatch({
+    Sys.setenv(GDAL_DISABLE_READDIR_ON_OPEN = "EMPTY_DIR",
+               CPL_VSIL_CURL_CHUNK_SIZE = "1048576",
+               CPL_VSIL_CURL_CACHE_SIZE = "524288000")
+    src <- paste0("/vsicurl/", share)
+    ko   <- st_transform(st_union(kosovo_outline()), 3035)
+    zone <- st_buffer(ko, 100000)
+    box  <- st_as_text(st_as_sfc(st_bbox(zone)))
+
+    sp <- st_read(src, layer = "Art17_species_distribution_2013_2018_MS",
+                  wkt_filter = box, quiet = TRUE)
+    hb <- st_read(src, layer = "Art17_habitats_distribution_2013_2018_MS",
+                  wkt_filter = box, quiet = TRUE)
+    sp_names <- unique(st_read(src, layer = "speciesMSassessment",
+                               quiet = TRUE)[, c("speciescode", "speciesname")])
+
+    # Each feature is one species (or habitat) in one country and region, its
+    # 10 km cells dissolved into one shape. The cells are rebuilt from the EEA
+    # grid, whose corners sit on round 10 km multiples of EPSG:3035.
+    bb <- st_bbox(zone)
+    bb[c("xmin", "ymin")] <- floor(bb[c("xmin", "ymin")] / 1e4) * 1e4
+    bb[c("xmax", "ymax")] <- ceiling(bb[c("xmax", "ymax")] / 1e4) * 1e4
+    grid <- st_sf(geometry = st_make_grid(st_as_sfc(bb), cellsize = 1e4))
+    grid <- grid[lengths(st_intersects(grid, zone)) > 0, ]
+    grid$cell_id <- sprintf("10kmE%dN%d",
+      floor(st_coordinates(st_centroid(grid))[, 1] / 1e4),
+      floor(st_coordinates(st_centroid(grid))[, 2] / 1e4))
+    grid$dist_km <- round(as.numeric(st_distance(grid, ko)) / 1000, 1)
+
+    centres <- st_centroid(st_geometry(grid))
+    explode <- function(x, code_col, kind) {
+      hit <- st_intersects(centres, x)
+      do.call(rbind, lapply(seq_along(hit), function(i) {
+        if (!length(hit[[i]])) return(NULL)
+        f <- st_drop_geometry(x)[hit[[i]], ]
+        data.frame(cell_id = grid$cell_id[i], kind = kind,
+                   code = as.character(f[[code_col]]), country = f$country,
+                   region = f$region,
+                   sensitive = if ("sensitive" %in% names(f)) f$sensitive
+                               else NA_character_)
+      }))
+    }
+    long <- rbind(explode(sp, "speciescode", "species"),
+                  explode(hb, "habitatcode", "habitat"))
+    long$name <- sp_names$speciesname[match(long$code, sp_names$speciescode)]
+    long$name[long$kind == "habitat"] <- NA
+
+    grid <- grid[grid$cell_id %in% long$cell_id, ]
+    st_write(grid, cache, layer = "cells", delete_dsn = TRUE, quiet = TRUE)
+    st_write(long, cache, layer = "features", append = FALSE, quiet = TRUE)
+    NULL
+  }, error = function(e) conditionMessage(e))
+}
+have_cache <- file.exists(cache)
+```
+
+```{r}
+#| label: build-outcome
+#| output: asis
+if (have_cache) {
+  fp <- file_fingerprint(cache)
+  cat(sprintf("The extract `%s` (%s, SHA-256 `%s`) was written on %s and is committed with the site.\n",
+              fp$file, fp$size, substr(fp$sha256, 1, 16), fp$downloaded))
+} else {
+  cat("::: {.callout-warning}\n## To be completed\nThe remote read of the EEA GeoPackage failed at render time (",
+      build_error %||% "no message", "). Re-render when sdi.eea.europa.eu answers; ",
+      "the check below is skipped until then.\n:::\n", sep = "")
+}
+```
+
+## Kosovo coverage check
+
+Kosovo is not an EU Member State and reported nothing, so the dataset has no
+cells inside it by design. The useful question is a different one: which habitats and species the neighbouring Member States report
+within 50 km and 100 km of the border. Those are the features a future Kosovo
+network would share with the EU's own, and the lists a reviewer in the
+biogeographical process would expect to see answered.
+
+```{r}
+#| label: check
+#| eval: !expr have_cache
+cells <- st_read(cache, layer = "cells", quiet = TRUE)
+feat  <- st_read(cache, layer = "features", quiet = TRUE)
+feat$band <- ifelse(cells$dist_km[match(feat$cell_id, cells$cell_id)] <= 50,
+                    "within 50 km", "50–100 km")
+
+source("../R/functions.R", local = TRUE)
+annex1 <- annex1_habitat_types("../data/eurlex/habitats_directive.html")
+feat$name[feat$kind == "habitat"] <-
+  annex1$name[match(feat$code[feat$kind == "habitat"], annex1$code)]
+
+n_cells <- table(ifelse(cells$dist_km <= 50, "within 50 km", "50–100 km"))
+by_band <- function(b) {
+  f <- feat[feat$band == b | (b == "within 100 km"), ]
+  c(cells     = length(unique(f$cell_id)),
+    countries = paste(sort(unique(f$country)), collapse = ", "),
+    species   = length(unique(f$code[f$kind == "species"])),
+    habitats  = length(unique(f$code[f$kind == "habitat"])))
+}
+summary_tab <- rbind(`Within 50 km` = by_band("within 50 km"),
+                     `Within 100 km` = by_band("within 100 km"))
+knitr::kable(data.frame(Zone = rownames(summary_tab), summary_tab,
+                        check.names = FALSE, row.names = NULL),
+             col.names = c("Zone", "10 km cells with a record", "Countries",
+                           "Species", "Annex I habitat types"),
+             align = "lrlrr")
+```
+
+```{r}
+#| label: check-text
+#| eval: !expr have_cache
+#| output: asis
+near <- feat[feat$band == "within 50 km", ]
+cat(sprintf(paste(
+  "Within 50 km of Kosovo, %d cells carry at least one reported feature, all",
+  "of them in %s. Nothing lies closer than %s km: the nearest reported cell",
+  "is that far from the border, because Kosovo is ringed by four countries",
+  "that are not in the EU. Features flagged sensitive in the extract: %d of %d."),
+  length(unique(near$cell_id)), paste(sort(unique(near$country)), collapse = " and "),
+  format(min(cells$dist_km)), sum(feat$sensitive %in% "sensitive"), nrow(feat)))
+```
+
+```{r}
+#| label: map
+#| eval: !expr have_cache
+ko <- kosovo_outline()
+cells$features <- as.integer(table(feat$cell_id)[cells$cell_id])
+rings <- st_transform(st_sf(ring = c("50 km", "100 km"),
+                            geometry = st_buffer(st_transform(st_union(ko), 3035),
+                                                 c(50000, 100000))), 4326)
+pal <- colorBin(map_palette$density, cells$features, bins = 5)
+leaflet(st_transform(cells, 4326)) |>
+  add_basemaps() |>
+  addPolygons(fillColor = ~pal(features), fillOpacity = 0.75, weight = 0.5,
+              color = "#666666",
+              label = ~sprintf("%s: %d features, %s km from Kosovo",
+                               cell_id, features, dist_km)) |>
+  addPolylines(data = rings, color = "#175CA1", weight = 1.5, dashArray = "4 4",
+               label = ~ring) |>
+  add_boundary_outline(ko) |>
+  addLegend(pal = pal, values = ~features,
+            title = "Reported features<br>per 10 km cell") |>
+  addLayersControl(baseGroups = basemap_groups,
+                   options = layersControlOptions(collapsed = TRUE))
+```
+
+::: {.callout-note collapse="true"}
+## Every habitat and species reported within 100 km
+
+```{r}
+#| label: lists
+#| eval: !expr have_cache
+lst <- aggregate(cell_id ~ kind + code + name + band, data = feat,
+                 FUN = function(x) length(unique(x)))
+lst <- lst[order(lst$band != "within 50 km", lst$kind, -lst$cell_id), ]
+knitr::kable(
+  data.frame(Zone = lst$band, Kind = lst$kind, Code = lst$code,
+             Name = ifelse(lst$kind == "species", paste0("*", lst$name, "*"),
+                           lst$name),
+             Cells = lst$cell_id),
+  align = "lllr", row.names = FALSE)
+```
+
+:::
+
+The list is a cross-border reference, not a Kosovo checklist. A species
+reported in a Bulgarian cell 60 km away may or may not cross the
+border, and the absence of a feature says only that those countries did not
+report it there.
+
+## What it adds for Natura 2000 in Kosovo
+
+It answers a question none of the report's current sources can: which Annex I
+habitats and Annex II species the EU's own reporting places closest to Kosovo.
+The assessment tables in the same file add each feature's status in the
+reporting country and region, joined on `CO_MS_RE`. That is a starting list for the
+[sufficiency ledger](../natura2000.qmd#q4) and a plausibility check for the
+directive-listed species the GBIF extract finds. At 10 km it serves the
+[national screening tier](../natura2000.qmd#q1) only.
+
+## Caveats and sensitivity
+
+- The countries that surround Kosovo (Serbia, Montenegro, Albania, North
+  Macedonia) are outside the EU and absent, so the nearest data lie about
+  50 km away, and most lie beyond it.
+- The public version leaves out sensitive species altogether: the EEA's
+  README describes it as "the public dataset, without sensitive species". A
+  persecuted raptor or a collected orchid can therefore be missing from these
+  lists even where a neighbour reported it. The extract keeps the `sensitive`
+  column the file carries.
+- The data are ten years old by the end of the next round; see the open check
+  below on 2019–2024.
+
+## Integration into the pipeline
+
+Low effort. The remote read above is the same pattern as
+`kosovo_protected_areas()`. A proposed `art17_border_features(boundary,
+radius_km = c(50, 100))` in `R/functions.R`, called from a new section after
+7b of `pipeline.R`, would write the long table to `data/` for the report to
+read. This page does not change `pipeline.R`.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+Neither the catalogue record nor the README gives a citation string. The
+CC-BY 4.0 licence requires attribution to the copyright holders it names, the
+Commission's DG Environment and the EEA, so the dataset is cited here by its
+own title: *Conservation status of
+habitat types and species: datasets from Article 17, Habitats Directive
+92/43/EEC reporting (2013–2018), public version, August 2020.* European
+Environment Agency and European Commission DG Environment, CC-BY 4.0.
+Catalogue record 9f71b3e3-f8ec-442b-a2d5-c3c190605ac4.

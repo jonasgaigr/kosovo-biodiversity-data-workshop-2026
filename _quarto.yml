@@ -53,6 +53,8 @@ website:
         text: Report
       - href: natura2000.qmd
         text: Natura 2000 questions
+      - href: sources/index.qmd
+        text: Data sources
     right:
       - href: https://www.gbif.org
         text: GBIF

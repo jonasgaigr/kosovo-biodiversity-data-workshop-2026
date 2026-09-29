@@ -1,0 +1,129 @@
+---
+title: "Red Book of Fauna of the Republic of Kosovo"
+subtitle: "The national red book of animals (Ibrahimi et al. 2018), published by the Ministry with KEPA and the Kosovo Institute for Nature Protection."
+actions:
+  - kind: request
+    what: "The species list with national IUCN categories as a table, and permission to use the localities behind the maps at no finer than 10 km for threatened species"
+    contact: "Kosovo Institute for Nature Protection (KEPA/AMMK), and the Ministry of Environment, Spatial Planning and Infrastructure, which holds the rights"
+  - kind: check
+    what: "Count the taxa per national category and per group from the PDF, and match the names to the GBIF backbone with rgbif, without redistributing the book"
+    contact: "The PDF on ammk-rks.net"
+  - kind: check
+    what: "Report the expired TLS certificate on ammk-rks.net to KEPA"
+    contact: "KEPA web administration"
+todo:
+  doi: "The colophon's ISBN field is empty and no DOI was found; ask the Ministry"
+  temporal_coverage: "Years of the field data behind the assessments; read in the methods chapter"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+row <- source_row("red-book-fauna")
+url <- "https://www.ammk-rks.net/assets/cms/uploads/files/Publikime-raporte/Libri_i_kuq.pdf"
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+*Libri i Kuq i Faunës së Republikës së Kosovës* is Kosovo's red book of
+animals. It was published in Prishtinë in 2018 by the Ministry of Environment
+and Spatial Planning, with the Kosovo Environmental Protection Agency (KEPA)
+and the Kosovo Institute for Nature Protection, edited by Halil Ibrahimi with
+nine co-authors from Kosovo and the region. The desk review cited it as
+Ibrahimi et al. 2019, which matches the PDF's date of July 2019 rather than
+the imprint year of 2018. It runs to 203 pages in Albanian, with chapters by
+group (molluscs, oligochaetes, insects, fish, reptiles, birds and others),
+national IUCN categories, and a species account for each listed animal. Those
+accounts name the localities where each species is known in Kosovo and carry
+distribution maps.
+
+## Access
+
+The book was found, not at the address the desk review expected, but in
+KEPA's listing of reports and publications. The server's certificate had
+expired, so the first request below fails; the second repeats it without
+certificate verification, which is how the file was read.
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(
+  try_access("https://www.ammk-rks.net/al/drejtorite/38/raporte-studime-publikime"),
+  try_access(url),
+  try_access(url, ssl_verify = FALSE)
+))
+```
+
+The colophon reserves all rights: reproduction and republication without
+the Ministry's permission are prohibited. The PDF is therefore not copied
+into this repository, and nothing is extracted from it here beyond what this
+page describes.
+
+## Kosovo coverage check
+
+The book is national by definition. The check that matters is whether its
+locality data exist as data. They do not in public: localities appear as
+place names in the text and as printed maps, and no table of records or
+coordinates is released. The desk review's note that "locality data are not
+published" holds, with that nuance.
+
+::: {.callout-warning}
+## To be completed
+Count the species per national category and group from the PDF, and match
+the names to the GBIF backbone, to see how many red-book animals the GBIF
+extract already records in Kosovo. Keep the result as counts and names, not
+as a copy of the book's content.
+:::
+
+## What it adds for Natura 2000 in Kosovo
+
+A national red list says which animals are at risk in Kosovo itself, which
+neither the EU annexes nor the global IUCN list (both already in the report)
+can. Species that are nationally threatened and also on Annex II are obvious
+priorities for site selection; species threatened nationally but absent from
+the annexes point to where national protection must do what Natura 2000
+will not. It serves the [national tier](../natura2000.qmd#q1).
+
+## Caveats and sensitivity
+
+- All rights reserved; the book can be cited and read, not republished.
+- Maps and named localities of threatened species are sensitive. Any use in
+  this site must stay at 10 km or coarser for persecuted or collected species
+  and state what was generalised.
+- Categories follow IUCN regional guidelines as applied by the authors; they
+  are not comparable one-to-one with global categories.
+
+## Integration into the pipeline
+
+Medium effort. A proposed `data/kosovo_red_list_fauna.csv`, holding species,
+national category and GBIF key only, built by an `R/build_red_list.R` like the
+existing `R/build_directive_list.R`, would let `pipeline.R` add a
+`nationalRedList` column to every record. That needs either the Ministry's
+agreement or a table it publishes. `pipeline.R` is not changed here.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+As the title page gives it: Ibrahimi, H., Gashi, A., Rexhepaj, D., Zhushi
+Etemi, F., Grapci Kotori, L., Fehér, Z., Bino, T., Šerić Jelaska, L.,
+Mesaroš, G. & Théou, P. (2018). *Libri i Kuq i Faunës së Republikës së
+Kosovës.* Ministria e Mjedisit dhe Planifikimit Hapësinor, Prishtinë.

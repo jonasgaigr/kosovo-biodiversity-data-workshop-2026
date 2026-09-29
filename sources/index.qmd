@@ -1,0 +1,230 @@
+---
+title: "Data sources"
+subtitle: "Candidate datasets for identifying Natura 2000 sites in Kosovo, each checked against its custodian and, where the data could be reached, against Kosovo itself."
+toc-depth: 2
+code-tools: false
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+reg <- read_registry()
+reg$completeness <- vapply(seq_len(nrow(reg)), function(i)
+  completeness(as.list(reg[i, ])), numeric(1))
+dash <- function(x) ifelse(nzchar(x), md_cell(x), "&mdash;")
+actions <- do.call(rbind, lapply(reg$slug, page_actions))
+```
+
+The [report](../report.qmd) is built on one GBIF download, cleaned against an
+OpenStreetMap outline, and set against the EEA's register of Kosovo's
+protected areas, the EU annex lists, the global Red List and the Union list
+of invasive species. This section looks beyond them. Each page below takes
+one candidate dataset from a desk review of what else could inform Natura 2000
+site identification in Kosovo[\*]{.designation-mark}, checks what its
+custodian actually publishes, and, where the data could be reached, runs a
+check against Kosovo's territory. The pages are written so that each can be
+read, re-run and completed on its own.
+
+The rule throughout is that a value is shown only if it was verified. Every
+filled field in the registry has a row in `sources/registry_evidence.csv`
+naming the page it was checked against and the date; a field without one is
+blanked automatically and appears as "— to be completed". A gap is not an
+error; a guess would be. The precision tiers named below (national screening,
+site-level delineation, Standard Data Form) are those defined on the
+[Natura 2000 page](../natura2000.qmd#q1).
+
+::: {.designation-note}
+\* This designation is without prejudice to positions on status, and is in line
+with UNSCR 1244/1999 and the ICJ Opinion on the Kosovo declaration of
+independence.
+:::
+
+## Status
+
+| Status | Meaning |
+|---|---|
+| `r status_badge("Complete")` | Every registry field verified, and the Kosovo check run. |
+| `r status_badge("Partial")` | Some fields verified, or the Kosovo check only partly run. |
+| `r status_badge("Documented only")` | The dataset is described in a report or paper, but not published as data. |
+| `r status_badge("Awaiting request")` | The data exist but are released on request or after registration only. |
+| `r status_badge("Lead, not verified")` | Named in the desk review; no primary source confirmed yet. |
+| `r status_badge("Not applicable to Kosovo")` | The product exists but leaves Kosovo out by design; the page is kept because the reason is itself evidence. |
+
+```{r}
+#| label: status-counts
+#| output: asis
+st <- table(factor(reg$status, levels = status_levels))
+cat(sprintf("The %d datasets stand as follows: %s. Across all of them, %d per cent of the verifiable registry fields are filled.\n",
+            nrow(reg),
+            paste(sprintf("%s: %d", names(st), as.integer(st)), collapse = "; "),
+            round(mean(reg$completeness))))
+```
+
+## What the checks found
+
+Four findings cut across the pages and are worth knowing before reading any
+one of them.
+
+- **Kosovo hides under other codes.** The same territory appears as XK
+  (GBIF), XKO (GADM and `geodata`), KS (EFFIS) and Ko (Euro+Med), and inside
+  RS where European data were compiled with Serbia: Serbia's candidate
+  [Emerald sites](emerald-network.qmd) cover about a fifth of Kosovo,
+  [BirdLife](iba-kba.qmd) holds Kosovo's IBAs in its Serbia inventory,
+  [GISCO](r-access-toolkit.qmd) has no Kosovo feature at all, and
+  [EFFIS](effis-burnt-areas.qmd) files some Kosovo fires under RS. Any query
+  by a single country code undercounts.
+- **The EU's own reporting stops about 50 km away.** Kosovo's four neighbours
+  are outside the EU, so the nearest [Article 17](art17-2013-2018.qmd) and
+  [Article 12](art12-birds.qmd) cells are in Bulgaria.
+- **European habitat models do cover Kosovo.** The
+  [EUNIS level-3 maps](eunis-habitat-maps.qmd) and the
+  [ecosystem-type map](eea-ecosystem-types.qmd) have no gaps inside the
+  outline, which makes them the closest thing to the Annex I map Kosovo lacks.
+- **Much of what Kosovo knows is in PDFs.** The red books, the protected-area
+  table and the park plans are published, but not as data; and the national
+  [protected-area table](kepa-protected-areas-2020.qmd) and the EEA register
+  use different code prefixes, so they cannot be joined without translation.
+
+## The registry
+
+Completeness is the share of the sixteen verifiable fields that are filled.
+
+```{r}
+#| label: registry
+#| output: asis
+for (cat_id in names(category_labels)) {
+  sub <- reg[reg$category == cat_id, ]
+  if (!nrow(sub)) next
+  cat(sprintf("\n### %s. %s\n\n", cat_id, category_labels[[cat_id]]))
+  tab <- data.frame(
+    Dataset = sprintf("[%s](%s.qmd)", md_cell(sub$title), sub$slug),
+    Custodian = dash(sub$custodian),
+    Status = vapply(sub$status, status_badge, ""),
+    `Kosovo coverage` = dash(sub$kosovo_coverage),
+    Tier = dash(sub$tier),
+    Effort = dash(sub$effort),
+    Complete = sprintf("%d %%", sub$completeness),
+    check.names = FALSE)
+  cat("::: {.sources-table}\n\n")
+  print(knitr::kable(tab, format = "pipe", escape = FALSE, align = "lllllll",
+                     row.names = FALSE))
+  cat("\n:::\n")
+}
+```
+
+## Data gaps {#data-gaps}
+
+Some of what a Natura 2000 proposal needs does not exist in any of the
+sources above. Each gap is stated with why it matters for the Standard Data
+Form (SDF) and who could close it.
+
+### 1. No Annex I habitat map or inventory
+
+**Missing:** a map of Annex I habitat types for Kosovo. The
+[EUNIS model](eunis-habitat-maps.qmd) and the report's CORINE screen say
+where to look, not what is there. **For the SDF:** section 3.1 needs each
+habitat's cover, representativity and conservation, which only mapped
+polygons provide ([question 3](../natura2000.qmd#q3)). **Who:** the Kosovo
+Institute for Nature Protection with University of Prishtina botanists, by
+field mapping at 1:10,000, starting in the pilot sites.
+
+### 2. No official or draft Natura 2000 or Emerald site list with boundaries
+
+**Missing:** any candidate site list for Kosovo. The 2008 identification
+([Mustafa](mustafa-2009-potential-n2k.qmd)) is known only from citations, and
+Kosovo is not a Bern Convention Party, so it has no Emerald list of its own.
+**For the SDF:** there is nothing yet to fill one for. **Who:** the Ministry
+and KINP, which the NBSAP makes responsible for the ecological network.
+
+### 3. No confirmed IBA or KBA boundaries
+
+**Missing:** the digital boundaries of the four [IBAs](iba-kba.qmd) that
+concern Kosovo; only centroids are public. **For the SDF:** SPA proposals
+start from the IBA inventory, and how much of each IBA lies in Kosovo is
+unknown. **Who:** a request to the World Database of KBAs, whose terms come with the
+request form.
+
+### 4. No published national species monitoring data
+
+**Missing:** surveillance data with method and effort. The red books of
+[fauna](red-book-fauna.qmd) and [flora](red-book-flora.qmd) assess species
+but do not release their localities as data. **For the SDF:** section 3.2's
+population and data-quality fields need surveyed records, not casual ones.
+**Who:** KEPA and KINP, with the red-book authors; a data-use agreement could
+release localities at a generalised resolution.
+
+### 5. No population-size data for SDF section 3.2
+
+**Missing:** population estimates with units (pairs, individuals, localities)
+for Annex II species and Annex I birds. The IBA factsheets give a few, several
+from 2008–2013 or earlier. **For the SDF:** section 3.2 requires minimum and
+maximum population with a unit and a data-quality code. **Who:** standardised
+counts in the pilot sites ([question 6](../natura2000.qmd#q6)); the
+[eBird Basic Dataset](ebird-observation-org.qmd) for effort-based bird data.
+
+### 6. No wetland, peatland, cave or grassland inventories
+
+**Missing:** national inventories of the habitat groups most likely to hold
+priority Annex I types: wetlands and mires, caves, dry and mountain grasslands.
+**For the SDF:** these are small or scattered habitats that land-cover data
+miss at a 25 ha minimum unit. **Who:** KINP with specialists; the natural
+monuments in the [national table](kepa-protected-areas-2020.qmd), many of them
+springs and caves, are a starting list.
+
+### 7. No Article 17-style range assessments, and no delineation of biogeographical regions within Kosovo
+
+**Missing:** national range and distribution maps on the 10 km grid, as EU
+countries report under [Article 17](art17-2013-2018.qmd), and a Kosovo
+delineation of the [biogeographical regions](eea-biogeographical-regions.qmd)
+finer than the European 1:1,000,000 line. **For the SDF:** a site's
+contribution is judged against the national population and range in its
+region. **Who:** KINP, as the NBSAP foresees; the European layer is the
+starting point.
+
+### 8. Scattered evidence for Annex II invertebrates and freshwater fish
+
+**Missing:** systematic data for the Annex II groups least covered by casual
+recording. The [data papers](kosovo-data-papers.qmd) add caddisflies and
+plants but no Annex II list; the [taxon atlases](european-taxon-atlases.qmd)
+are unverified. **For the SDF:** without them, sites cannot be proposed for
+these species at all. **Who:** university specialists, with targeted surveys
+in the rivers the [hydropower inventory](balkan-hydropower.qmd) shows under
+pressure.
+
+## Data requests
+
+Every request listed on the dataset pages, in one place. Each is also on its
+own page, under "To be completed".
+
+```{r}
+#| label: requests
+#| output: asis
+req <- actions[actions$kind == "request", ]
+req$title <- reg$title[match(req$slug, reg$slug)]
+knitr::kable(data.frame(Dataset = sprintf("[%s](%s.qmd)", md_cell(req$title), req$slug),
+                        Request = md_cell(req$what), Route = md_cell(req$contact),
+                        check.names = FALSE),
+             format = "pipe", escape = FALSE, row.names = FALSE) |> print()
+cat(sprintf("\n%d requests on %d pages; the pages list a further %d checks that need no one's permission.\n",
+            nrow(req), length(unique(req$slug)), sum(actions$kind == "check")))
+```
+
+## How this section is maintained
+
+- `sources/registry.csv` holds one row per dataset;
+  `sources/registry_evidence.csv` one row per verified value. Edit both
+  together.
+- `R/sources_helpers.R` reads them, blanks unverified values, and draws the
+  tables, badges and checklists.
+- Pages cache what they download under `data/sources/<slug>/`. Small open
+  extracts are committed; PDFs and anything over 50 MB are not.
+- This folder renders with `freeze: auto`. After editing the registry or the
+  helpers, run `quarto render sources/` so every page picks up the change.
+
+```{r}
+#| label: dropped
+#| output: asis
+u <- attr(reg, "unverified")
+if (length(u)) cat(sprintf("\n::: {.callout-warning}\n## Values blanked for lack of evidence\n%s\n:::\n",
+                           paste(u, collapse = "; ")))
+```

@@ -1,0 +1,124 @@
+---
+title: "Red Book of Vascular Flora of the Republic of Kosovo"
+subtitle: "The 2013 national red book of plants: 237 taxa assessed against IUCN criteria, 61 of them Critically Endangered."
+actions:
+  - kind: request
+    what: "The full species list with national categories as a table (the English summary has none), and the field coordinates recorded for each assessed taxon, at no finer than 10 km for collected species"
+    contact: "Ministry of Environment, Spatial Planning and Infrastructure; the book's editors (the summary says the herbarium samples are kept at the University of Prishtina, Faculty of Natural and Mathematical Sciences)"
+  - kind: check
+    what: "Find the full Albanian edition online, parse the species list and match it to the GBIF backbone with rgbif"
+    contact: "KEPA publications page, https://www.ammk-rks.net/al/drejtorite/38/raporte-studime-publikime"
+  - kind: check
+    what: "Whether the 'Atlas of the Plants of Kosovo' listed on KEPA's publications page carries distribution data for the same taxa"
+    contact: "KEPA publications page"
+todo:
+  doi: "No DOI or ISBN seen in the summary; ask the Ministry"
+  licence: "No terms stated in the summary; ask the Ministry before redistributing any part"
+  temporal_coverage: "Years of the fieldwork behind the assessments; not stated in the summary"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+row <- source_row("red-book-flora")
+url <- "https://www.ammk-rks.net/assets/cms/uploads/files/Publikime-raporte/The_Red_Book_of_Vascular_Flora_of_Republic_of_Kosovo-_English_(Summary).pdf"
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+*The Red Book of Vascular Flora of the Republic of Kosovo* was prepared by a
+team led by Fadil Millaku (editor-in-chief) with Ferat Rexhepi, Elez
+Krasniqi, Qazim Pajazitaj, Xhavit Mala and Naim Berisha, published by the
+Ministry of Environment and Spatial Planning in 2013 with support from German
+development cooperation (GIZ). Its English summary states that 237 taxa were
+assessed against the IUCN criteria: 1 Extinct, 1 Extinct in the Wild, 61
+Critically Endangered, 86 Endangered, 19 Vulnerable, 34 Near Threatened and
+35 Least Concern. The selection drew on the literature, on Administrative
+Instruction No. 18/2012 on protected species, and on the state of each
+species in the field.
+
+The methods are worth noting for what they imply about data. For every
+species assessed, the team took herbarium samples, photographs and GPS
+coordinates, counted mature individuals where possible, and measured area of
+occupancy and extent of occurrence on the UTM grid. The locality data
+therefore exist, but they are not in the summary.
+
+## Access
+
+The summary sits on KEPA's server, whose TLS certificate had expired; the
+second request repeats the first without verifying it.
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(try_access(url), try_access(url, ssl_verify = FALSE)))
+```
+
+The 17-page English summary contains the preface, the methodology, the
+category counts and the IUCN criteria. It does not contain the species list
+or any species account, so the desk review's suggested step, parsing the list and
+matching it to the GBIF backbone, is not feasible from this file.
+
+## Kosovo coverage check
+
+::: {.callout-warning}
+## To be completed
+The red book covers Kosovo alone, so coverage is not in question. What cannot
+yet be checked is overlap with the GBIF extract: which of the 237 taxa GBIF
+records in Kosovo, and where. That needs the species list from the full book.
+Once it is available, match the names with
+`rgbif::name_backbone_checklist()` and count records per taxon in
+`data_exports/kosovo_overall_biodiversity.csv`, keeping any locality output at
+10 km for collected species.
+:::
+
+## What it adds for Natura 2000 in Kosovo
+
+The report already flags species on the EU annexes and on the global Red
+List. Neither captures what is threatened in Kosovo itself. A national list of
+148 Critically Endangered or Endangered plants would let the report mark
+records of nationally threatened species, and let site selection favour
+candidate sites that hold them. The field coordinates behind the assessments
+would, if shared, be among the most precise plant data for the country. The
+list serves the [national tier](../natura2000.qmd#q1).
+
+## Caveats and sensitivity
+
+- The summary alone gives counts, not species.
+- National categories apply regional IUCN guidelines and cannot be compared
+  one-to-one with global ones.
+- Several of the Critically Endangered taxa are small populations of
+  endemics; their coordinates must never be published precisely.
+
+## Integration into the pipeline
+
+Medium effort once a table exists: a proposed `R/build_red_list.R`, modelled
+on `R/build_directive_list.R`, would resolve the names and write
+`data/kosovo_red_list_flora.csv`; `pipeline.R` would then add a national
+category column to every plant record. `pipeline.R` is not changed here.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+From the title page: Millaku, F. (ed.), Rexhepi, F., Krasniqi, E., Pajazitaj,
+Q., Mala, X. & Berisha, N. (2013). *The Red Book of Vascular Flora of the
+Republic of Kosovo.* Ministry of Environment and Spatial Planning, Prishtinë.

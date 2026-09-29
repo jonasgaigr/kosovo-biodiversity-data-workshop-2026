@@ -1,0 +1,166 @@
+---
+title: "Atlas of European Mammals, second edition"
+subtitle: "The EMMA2 atlas and its database of European mammal records, due for publication a week after this check."
+actions:
+  - kind: check
+    what: "After publication (6 October 2026), confirm whether Kosovo is mapped in EMMA2 and at what grid"
+    contact: "https://www.european-mammals.org/"
+  - kind: check
+    what: "Whether the EMMA2 grid database is, or will be, published on GBIF; if so, compare it with the existing download to avoid counting records twice"
+    contact: "https://www.gbif.org/dataset/search?q=European%20mammals"
+  - kind: check
+    what: "Whether the GBIF dataset 'Small mammals of Yugoslavia 1992 atlas' holds records inside Kosovo, under which country code, and whether the report's download includes them"
+    contact: "https://www.gbif.org/dataset/search?q=Small%20mammals%20of%20Yugoslavia"
+  - kind: request
+    what: "EMMA2 grid records for the squares covering Kosovo, if the database is not published"
+    contact: "EMMA2 project, https://www.european-mammals.org/"
+todo:
+  doi: "No DOI for the database; check after publication"
+  licence: "Terms of the EMMA2 database; not stated on the project site"
+  access: "How the database can be obtained; not stated on the project site"
+  format: "Grid records; format unknown until released"
+  access_method: "Unknown until released"
+  spatial_resolution: "Grid size used by EMMA2; not stated on the pages opened (the desk review said 50 km)"
+  temporal_coverage: "Years of records compiled for EMMA2; read in the book or project documentation"
+  kosovo_coverage: "The desk review reported Kosovo included for the first time; not stated on the pages opened"
+  kosovo_codes_seen: "How EMMA2 labels Kosovo's squares"
+  tier: "National at a 50 km grid, if that grid is confirmed"
+  effort: "Low if the data reach GBIF; estimate otherwise"
+  sensitivity: "Whether EMMA2 generalises bat roosts or large carnivores; read the data policy"
+---
+
+```{r}
+#| label: setup
+source("../R/sources_helpers.R")
+row <- source_row("emma2")
+cache <- file.path(cache_dir("emma2"), "gbif_dataset_search.csv")
+```
+
+::: {.source-status}
+`r status_line(row)`
+:::
+
+## At a glance
+
+```{r}
+#| label: glance
+metadata_table(row)
+```
+
+## What it is
+
+EMMA2, the second *Atlas of European Mammals*, maps the distribution of
+Europe's mammals on a common grid. Its website gives the book's publication
+date as 6 October 2026, one week after this check, with CRC Press, edited by
+Mitchell-Jones, Amori, Kryštufek and colleagues. It covers the area of the
+first atlas plus Moldova, Belarus and Ukraine, with Russia excluded. As of
+June 2024 the project database held 142,965 records of 245 species.
+
+The desk review reported that Kosovo is included for the first time. The
+pages opened in this check do not say so, and that remains to be confirmed
+from the published atlas.
+
+## Access
+
+```{r}
+#| label: access
+#| echo: true
+#| code-fold: show
+access_table(list(try_access("https://european-mammals.org/")))
+```
+
+The project site describes the atlas and its database but gives no route to
+the data: no download, no GBIF link and no request form.
+
+## Kosovo coverage check
+
+The executable part of the check is whether EMMA2 records are already on
+GBIF, which would mean the report's GBIF extract might contain them.
+
+```{r}
+#| label: build
+#| echo: true
+#| code-fold: true
+#| code-summary: "Show the GBIF dataset search"
+#| output: asis
+if (!file.exists(cache)) {
+  q <- c("EMMA2", "Atlas of European Mammals", "European Mammal Foundation")
+  hits <- do.call(rbind, lapply(q, function(x) {
+    r <- tryCatch(jsonlite::fromJSON(paste0(
+      "https://api.gbif.org/v1/dataset/search?limit=20&q=", utils::URLencode(x))),
+      error = function(e) NULL)
+    if (is.null(r) || !r$count) return(data.frame(query = x, title = NA, publisher = NA))
+    data.frame(query = x, title = r$results$title,
+               publisher = r$results$publishingOrganizationTitle)
+  }))
+  write.csv(hits, cache, row.names = FALSE)
+}
+hits <- read.csv(cache)
+hits <- hits[!is.na(hits$title), ]
+mammal <- hits[grepl("mammal", hits$title, ignore.case = TRUE), ]
+is_emma2 <- grepl("EMMA2|Atlas of European Mammals", mammal$title)
+cat(sprintf(paste("The three searches returned %d dataset titles. %d of them",
+                  "concern mammals, and %s.\n\n"),
+            nrow(hits), nrow(mammal),
+            if (any(is_emma2)) "one of those is the EMMA2 atlas" else "none of those is the EMMA2 atlas"))
+if (nrow(mammal)) print(knitr::kable(unique(mammal[, c("title", "publisher")]),
+                                     col.names = c("Mammal dataset returned", "Publisher"),
+                                     row.names = FALSE))
+```
+
+No EMMA2 dataset was found on GBIF on 29 September 2026. Besides the
+mammal datasets listed, the searches return unrelated datasets that merely
+share the name, such as French observers' personal datasets and a Madrid
+herbarium called EMMA.
+
+One of the mammal datasets deserves a second look for a different reason:
+"Small mammals of Yugoslavia 1992 atlas", published to GBIF by the National
+Museum of Natural History in Sofia. An atlas of Yugoslavia from 1992 would
+have covered Kosovo, and its records may carry a Yugoslav or Serbian country
+code rather than XK. Whether they fall inside Kosovo's outline, and whether
+the report's download already holds them, is listed below as an open check.
+
+::: {.callout-warning}
+## To be completed
+After 6 October 2026: confirm from the atlas whether Kosovo's squares are
+mapped, and if the database is released, list the species per square
+intersecting `kosovo_outline()`, set them against the Annex II and IV mammals
+in the GBIF extract, and check for records already present through GBIF.
+:::
+
+## What it adds for Natura 2000 in Kosovo
+
+Mammals on Annexes II and IV, bats above all, are thinly recorded in Kosovo's
+GBIF data. A systematic atlas grid gives a presence baseline against which
+gaps can be judged, and a cross-check for species reported from only a
+handful of records. At the atlas grid it serves the [national screening
+tier](../natura2000.qmd#q1).
+
+## Caveats and sensitivity
+
+- The atlas is not yet published, and its data route is unknown.
+- Kosovo's inclusion is reported by the desk review, not confirmed here.
+- Bat roosts and large carnivores need generalisation if finer data are ever
+  supplied.
+
+## Integration into the pipeline
+
+If EMMA2 appears on GBIF, nothing new is needed beyond deduplicating against
+the existing download. If it arrives as a grid table, the proposed
+`read_atlas_squares()` on the [EBBA2 page](ebba2.qmd) applies. `pipeline.R`
+is not changed.
+
+## To be completed
+
+```{r}
+#| label: todo
+#| output: asis
+todo_list(row)
+```
+
+## Citation
+
+As the project site gives it: Mitchell-Jones, A. J., Amori, G., Kryštufek,
+B., Marnell, F., Miteva, S., Sallay, A., Schley, L., Thissen, J. &
+Vohralík, V. (eds) (2026). *Atlas of European Mammals, 2nd edition.* CRC
+Press, Boca Raton, FL.
