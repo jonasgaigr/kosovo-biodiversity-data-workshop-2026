@@ -1,0 +1,100 @@
+# Build check for the report page, report.html.
+#
+# Like the deck workflow, this does NOT publish. GitHub Pages serves `docs/`
+# from the branch, and `docs/` is built locally, because building it from
+# scratch means running `pipeline.R` against GBIF. This job does the part that
+# can go wrong without anybody noticing: it renders report.qmd from the
+# committed pipeline outputs (data/run_metadata.rds, data_exports/ and the map
+# layers under data/) and fails if the page no longer builds.
+#
+# It also reports the size of the page it built against the size of the page
+# committed in docs/. The report is already some tens of megabytes, almost all
+# of it map data, and a new map layer can add several more without anything
+# in the render saying so.
+#
+# Only report.qmd is rendered. natura2000.qmd reads the pilot site reports in
+# outputs/, which are git-ignored and exist only where `site_reports.R` has
+# been run, so a full site render cannot run here.
+
+name: Render report
+
+on:
+  push:
+    paths:
+      - "report.qmd"
+      - "R/functions.R"
+      - "custom.scss"
+      - "_quarto.yml"
+      - "data/**"
+      - "data_exports/**"
+      - ".github/workflows/render-report.yml"
+  pull_request:
+    paths:
+      - "report.qmd"
+      - "R/functions.R"
+      - "custom.scss"
+      - "_quarto.yml"
+      - "data/**"
+      - "data_exports/**"
+      - ".github/workflows/render-report.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: quarto-dev/quarto-actions/setup@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      # Only what rendering needs. The acquisition packages (rgbif,
+      # CoordinateCleaner, rmapshaper) belong to pipeline.R, which does not run
+      # here. pak installs the system libraries sf needs (GDAL, GEOS, PROJ).
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            any::knitr
+            any::rmarkdown
+            any::dplyr
+            any::tibble
+            any::sf
+            any::DT
+            any::leaflet
+            any::leaflet.extras
+            any::leafem
+            any::crosstalk
+            any::htmltools
+            any::htmlwidgets
+
+      - name: Render report.qmd
+        run: quarto render report.qmd
+
+      - name: Report the page size
+        run: |
+          built=$(stat -c %s docs/report.html)
+          committed=$(git show HEAD:docs/report.html | wc -c)
+          mb() { awk -v b="$1" 'BEGIN { printf "%.2f MB", b / 1e6 }'; }
+          {
+            echo "### report.html"
+            echo ""
+            echo "| | Size |"
+            echo "|---|---|"
+            echo "| Built in this run | $(mb "$built") |"
+            echo "| Committed in docs/ | $(mb "$committed") |"
+            echo "| Difference | $(mb $((built - committed))) |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: report
+          path: docs/report.html
+          retention-days: 7
+          if-no-files-found: error

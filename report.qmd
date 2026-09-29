@@ -64,6 +64,28 @@ report_table <- function(x, caption = NULL, page_length = 10,
 swatch <- function(colour, label) {
   sprintf("<span class='swatch' style='background:%s'></span>%s", colour, label)
 }
+
+sentence_case <- function(x) {
+  ifelse(is.na(x), NA_character_,
+         paste0(toupper(substr(x, 1, 1)), substring(x, 2)))
+}
+
+# Small counts read better as words in running text, and a sentence should not
+# open with a numeral.
+number_word <- function(n, capital = FALSE) {
+  words <- c("one", "two", "three", "four", "five", "six", "seven", "eight",
+             "nine", "ten", "eleven", "twelve", "thirteen", "fourteen",
+             "fifteen", "sixteen", "seventeen", "eighteen", "nineteen",
+             "twenty")
+  out <- if (n >= 1 && n <= 20) words[n] else fmt_int(n)
+  if (capital) sentence_case(out) else out
+}
+
+# "a, b and c", for a sentence rather than a table.
+and_list <- function(x) {
+  if (length(x) <= 1) return(paste(x))
+  paste(paste(head(x, -1), collapse = ", "), "and", tail(x, 1))
+}
 ```
 
 ```{r}
@@ -246,6 +268,10 @@ cat(
   "</div>", sep = "\n"
 )
 ```
+
+The [land-cover screen](#potential-natura-2000-habitats-a-land-cover-screen)
+further down adds two more layers, CORINE Land Cover and the EEA's
+biogeographical regions, and cites them where they are used.
 
 ::: {.callout-note collapse="true"}
 ## A note on the spatial filter
@@ -916,6 +942,448 @@ They appear on the maps above, and in the published register, but they are
 absent from this table by construction rather than for want of evidence.
 :::
 
+## Potential Natura 2000 habitats: a land-cover screen
+
+The sections above ask where species have been recorded. A Natura 2000
+network is judged as much on its habitats: whether it holds enough of each
+natural habitat type listed in Annex I of the Habitats Directive. A gap
+analysis starts with two questions. Where could those habitats occur? And how
+much of that ground already lies inside a designated site? Kosovo has no
+habitat map to answer them with yet ([question 3](natura2000.qmd#q3) on the
+Natura 2000 page sets out what one would take), so this section answers them
+from land cover instead.
+
+```{r}
+#| label: habitats-setup
+
+ph <- meta$potential_habitats
+hn <- ph$national
+
+hab_map_path <- "data/kosovo_potential_habitats_map.gpkg"
+hab_display <- sf::st_read(hab_map_path, layer = "habitats", quiet = TRUE)
+gap_display <- sf::st_read(hab_map_path, layer = "gap", quiet = TRUE)
+mun_display <- sf::st_read(hab_map_path, layer = "municipalities", quiet = TRUE)
+
+hkm <- function(x, digits = 0) {
+  formatC(x, format = "f", digits = digits, big.mark = ",")
+}
+hpct <- function(x, digits = 0) formatC(x, format = "f", digits = digits)
+
+by_region <- ph$by_region |>
+  group_by(biogeo_region) |>
+  summarise(area_km2 = sum(area_km2), inside_km2 = sum(inside_km2),
+            .groups = "drop") |>
+  mutate(pct_inside = 100 * inside_km2 / area_km2) |>
+  left_join(ph$regions |> select(biogeo_region = region, region_km2 = area_km2),
+            by = "biogeo_region")
+alp <- by_region[by_region$biogeo_region == "Alpine", ]
+con <- by_region[by_region$biogeo_region == "Continental", ]
+
+conf <- ph$by_confidence
+water <- ph$all_classes[ph$all_classes$clc_code == "512", ]
+```
+
+```{r}
+#| label: habitats-key-figures
+#| output: asis
+
+cat("<div class='keyfigures'>",
+    kf(sprintf("%s km&sup2;", hkm(hn$total_km2)), "Potential habitat"),
+    kf(sprintf("%s%%", hpct(100 * hn$total_km2 / hn$country_km2)),
+       "Of the national territory"),
+    kf(sprintf("%s%%", hpct(hn$pct_inside, 1)), "Inside a designated site"),
+    kf(sprintf("%s km&sup2;", hkm(hn$gap_km2)), "Outside every site"),
+    kf(sprintf("%s / %s", fmt_int(ph$sites$n_mapped), fmt_int(ph$sites$n_sites)),
+       "Sites with an area to count"),
+    "</div>", sep = "\n")
+```
+
+CORINE Land Cover 2018 maps `r hkm(hn$total_km2)` km² of Kosovo, or
+`r hpct(100 * hn$total_km2 / hn$country_km2)` per cent of the country, as
+natural or semi-natural cover that could hold an Annex I habitat. Of that,
+`r hpct(hn$pct_inside, 1)` per cent lies inside a designated site. The other
+`r hkm(hn$gap_km2)` km² does not, and that is the gap the map below draws
+hatched.
+
+The gap is not spread evenly, and the reason is where the network lies. The
+**Alpine** biogeographical region covers the mountain rim along the western and
+southern borders: Bjeshkët e Nemuna, the Šar Mountains and Pashtrik. It is
+`r hpct(100 * alp$region_km2 / hn$country_km2)` per cent of Kosovo, and
+`r hpct(alp$pct_inside)` per cent of its potential habitat is already
+designated. The **Continental** region is the other
+`r hpct(100 * con$region_km2 / hn$country_km2)` per cent, and there the
+figure is `r hpct(con$pct_inside)` per cent. Kosovo's network is, in effect, a
+mountain network. The lowland and hill forests, the grasslands and the scrub
+make up most of the potential habitat by area, and almost all of them lie
+outside it.
+
+The same pattern shows in the crosswalk's confidence levels, because the
+confident classes are the mountain ones: alpine grassland, heath and bare
+rock. Of the high-confidence potential habitat,
+`r hpct(conf$pct_inside[conf$confidence == "high"])` per cent is designated,
+against
+`r hpct(conf$pct_inside[conf$confidence == "medium"])` per cent of the
+medium-confidence classes (almost all forest) and
+`r hpct(conf$pct_inside[conf$confidence == "low"])` per cent of the
+low-confidence ones.
+
+### Why land cover is only a proxy
+
+CORINE Land Cover (CLC) is a European inventory of land cover, interpreted
+from satellite imagery by national teams to a common 44-class nomenclature. It
+is the best consistent layer available for the whole country, and it is the
+wrong kind of layer for this question in five ways:
+
+- **Small habitats disappear.** CLC maps nothing smaller than 25 hectares or
+  narrower than 100 metres. Springs, fens, small mires, riparian strips and
+  rock outcrops are absorbed into whatever surrounds them, and several of the
+  Annex I types most in need of site protection are exactly these. The
+  `r hkm(ph$by_group$area_km2[ph$by_group$habitat_group == "Wetlands & mires"], 1)`
+  km² of wetland on this map is what a 25 ha unit can see. It is a floor, not
+  an estimate.
+- **Land cover is not vegetation type.** "Broad-leaved forest" is one class
+  whether it is a montane beech wood, a thermophilous oak coppice or an
+  alluvial alder stand. Those are different Annex I types, or no Annex I type
+  at all. The crosswalk therefore offers several candidates for each class and
+  never picks one.
+- **Forest classes include plantations.** A conifer plantation and a natural
+  spruce forest are the same class, 312.
+- **Pastures cannot be told apart by how they are managed.** Class 231 holds
+  fertilised, reseeded grassland as well as the species-rich hay meadows of
+  types 6510 and 6520, and only the second kind qualifies. Class 243, a mosaic
+  of fields with fragments of natural vegetation, is the same problem at a
+  finer grain.
+- **Some water bodies are reservoirs.** CLC files a reservoir under the same
+  class as a natural lake. `r number_word(nrow(ph$overrides), capital = TRUE)`
+  of Kosovo's `r number_word(sum(water$polygons))` mapped water bodies are
+  reservoirs, among them Gazivoda/Ujmani, Radoniq, Batllava and
+  Badovc, and they are left out. The other
+  `r number_word(sum(water$polygons[water$potential]))` could not be identified either way and stay in at low confidence.
+
+The areas themselves are sound. Every figure in this section is measured on
+the full CLC geometry in EPSG:3035, the equal-area projection CLC is produced
+in. The totals by habitat group, by confidence and by municipality all
+reconcile to within a hundredth of a per cent. What needs the field is the
+interpretation, not the arithmetic.
+
+### The map
+
+The map has the same toolbar and the same layer control as the maps above,
+and five overlays of its own, listed here in the order they are drawn:
+
+- **CORINE Land Cover 2018 (all classes)**: every class, in the official CLC
+  colours, as the EEA's own map service draws it. Off by default. Unlike the
+  other layers it is not cut at the border.
+- **Potential natural habitats**: the land cover the crosswalk keeps,
+  coloured by habitat group. Confidence shows as strength of fill: a solid
+  colour is a class the crosswalk is sure of, and a faint one a class it
+  doubts. Hover over a polygon for its class, its size and which site it is
+  in. Click it for the candidate Annex I types.
+- **Protected areas**: the designated sites, drawn here as outlines so the
+  habitat colours beneath them stay true.
+- **Gap: potential habitat outside designated sites**: hatched. This is the
+  layer the section is about.
+- **Municipalities**: each with its own gap on hover. Switch it off again to
+  get back to the habitat polygons underneath.
+
+```{r}
+#| label: habitats-map
+
+present_codes <- ph$all_classes$clc_code
+clc_legend_present <- ph$legend[ph$legend$clc_code %in% present_codes, ]
+
+build_habitat_gap_map(
+  habitats   = hab_display,
+  gap        = gap_display,
+  crosswalk  = ph$crosswalk,
+  annex1     = ph$annex1,
+  clc        = ph$source,
+  clc_legend = clc_legend_present,
+  municipalities   = mun_display,
+  protected_areas  = protected_areas,
+  protected_points = protected_points,
+  boundary   = boundary,
+  caption    = sprintf(
+    paste0("Land cover, not habitat: every polygon is a candidate for field ",
+           "verification. Shapes are simplified to %s m for display; areas ",
+           "are measured on the full CLC polygons."),
+    ph$params$tolerance_m)
+)
+```
+
+### How much of each habitat group is designated
+
+```{r}
+#| label: habitats-by-group
+
+band_label <- c(
+  "below 20 %"   = "below 20 % (likely insufficient)",
+  "20 to 60 %"   = "20 to 60 % (case by case)",
+  "60 % or more" = "60 % or more (likely sufficient)"
+)
+
+ph$by_group |>
+  transmute(
+    `Habitat group` = swatch(unname(map_palette$habitat[habitat_group]),
+                             habitat_group),
+    `Potential (km²)` = round(area_km2, 1),
+    `High confidence` = round(km2_high, 1),
+    `Medium` = round(km2_medium, 1),
+    `Low` = round(km2_low, 1),
+    `Inside a site (km²)` = round(inside_km2, 1),
+    `Gap (km²)` = round(gap_km2, 1),
+    `Inside (%)` = round(pct_inside, 1),
+    `Indicative band` = unname(band_label[indicative_band])
+  ) |>
+  report_table(
+    caption = htmltools::tags$caption(
+      style = "caption-side: bottom; text-align: left; padding-top: 8px;
+               font-size: 0.85rem; color: #666666;",
+      sprintf(paste0("Potential Annex I habitat by habitat group, ",
+                     "from CORINE Land Cover %s, and the share inside ",
+                     "Kosovo's designated sites. The three confidence columns ",
+                     "split the potential area. Areas in km², measured in ",
+                     "EPSG:3035. The band is an orientation, not an ",
+                     "assessment: see the text."),
+              ph$source$vintage)
+    ),
+    page_length = 10, buttons = TRUE, escape = FALSE
+  )
+```
+
+The biogeographical seminars that review Natura 2000 proposals have long used
+rough reference values. A network holding 60 per cent or more of a habitat
+type's national area is taken as likely sufficient, and one holding less than
+20 per cent as likely insufficient. The table sets each group against those
+values **as an orientation only**, for two reasons. First, the thresholds
+apply to Annex I habitat types, one at a time, against a mapped national
+total. A habitat group here is several land-cover classes, each standing for
+several Annex I types or none, so a group's share cannot show that any one
+habitat type is well or badly covered. Second, the seminars themselves never
+used the values on their own. What the table can show is where the network's
+hold on natural land is thin enough that a type-by-type analysis will probably
+find gaps. On forest and grassland, the two groups that make up most of the
+potential habitat, it is. [Question 4](natura2000.qmd#q4) on the Natura 2000
+page sets out how to do the type-by-type analysis before a national habitat
+map exists.
+
+### Where the gap is, by municipality
+
+```{r}
+#| label: habitats-by-municipality
+
+ph$by_municipality |>
+  transmute(
+    Municipality = municipality,
+    District     = district,
+    `Potential (km²)` = round(potential_km2, 1),
+    `Of the municipality (%)` = round(pct_potential, 0),
+    `Inside a site (km²)` = round(inside_km2, 1),
+    `Inside (%)` = round(pct_inside, 1),
+    `Gap (km²)` = round(gap_km2, 1)
+  ) |>
+  report_table(
+    caption = htmltools::tags$caption(
+      style = "caption-side: bottom; text-align: left; padding-top: 8px;
+               font-size: 0.85rem; color: #666666;",
+      "Potential Annex I habitat and the gap in each municipality, ",
+      "largest gap first. Municipal totals add up to the national figures ",
+      "above. The same numbers show on the map when the Municipalities layer ",
+      "is switched on."
+    ),
+    page_length = 10
+  )
+```
+
+::: {.callout-note collapse="true"}
+## The crosswalk from land cover to Annex I, and how to correct it
+
+Everything on this map that is a judgement rather than a measurement sits in
+one file, [`data/crosswalk_clc_annex1.csv`](https://github.com/jonasgaigr/kosovo-biodiversity-data-workshop-2026/blob/main/data/crosswalk_clc_annex1.csv),
+with one row per CLC class. It is a **draft for specialist review**. The table
+below shows the rows that keep land cover, with the Directive's own name for
+each candidate type, read from the legal text so that a mistyped code is
+caught rather than published. An asterisk marks a priority habitat type.
+
+```{r}
+#| label: habitats-crosswalk
+
+annex_names <- function(x) {
+  codes <- trimws(unlist(strsplit(x, ";")))
+  codes <- codes[nzchar(codes)]
+  if (!length(codes)) return("&mdash;")
+  nm <- ph$annex1$name[match(sub("\\*$", "", codes), ph$annex1$code)]
+  paste0("<b>", codes, "</b> ", nm, collapse = "<br>")
+}
+
+ph$crosswalk |>
+  filter(natural_status != "not natural") |>
+  rowwise() |>
+  transmute(
+    CLC = clc_code, Class = clc_label, Status = natural_status,
+    Group = habitat_group,
+    `Candidate Annex I types` = annex_names(candidate_annex1),
+    Confidence = confidence,
+    Note = ifelse(nzchar(note), note, "&mdash;")
+  ) |>
+  ungroup() |>
+  report_table(page_length = 20, buttons = TRUE, escape = FALSE)
+```
+
+**Confidence** is the crosswalk's view of how often a class holds any of its
+candidate types:
+
+- **high**: most of the class is one of the candidates. Examples are natural
+  grassland and bare rock in the mountains.
+- **medium**: the candidates are likely, but mixed with cover that qualifies
+  as none of them, as with managed and plantation forest.
+- **low**: the class holds a qualifying habitat only in part, or only under a
+  particular kind of management that CLC cannot see. Pastures, farm mosaics,
+  transitional scrub and open water are here.
+
+Confidence is shown on the map as strength of colour rather than used as a
+filter. `potential_habitat_min_confidence` in `pipeline.R` is set to
+"`r ph$params$min_confidence`", which keeps every class, so a reader sees the
+doubtful ground rather than being spared it.
+
+**The status column was added for this report.** The draft crosswalk named
+classes, groups, candidates and confidence levels. Whether a class is
+*natural* (not maintained by use) or *semi-natural* (shaped by forestry,
+grazing or abandonment) was assigned here, so it is a reviewable choice like
+the rest.
+
+**Four doubts are recorded in the notes rather than acted on.** Annex I holds
+types specific to the central Balkans that the draft does not list:
+Moesian beech forests (91W0), Moesian silver fir forests (91BA), Oro-Moesian
+acidophilous grasslands (62D0), and species-rich *Nardus* grasslands (6230\*).
+Whether any of them belongs in a row is for a specialist to decide, so the
+notes flag them and no code has been added.
+
+```{r}
+#| label: habitats-left-out
+#| output: asis
+
+unhandled <- ph$all_classes |>
+  filter(!potential, substr(clc_code, 1, 1) %in% c("3", "4", "5"),
+         !clc_code %in% ph$overrides$clc_code)
+slivers <- ph$all_classes[ph$all_classes$clc_code == "323", ]
+
+if (nrow(unhandled)) {
+  cat(sprintf(
+    paste0("**%s of natural land cover in Kosovo %s not handled by the ",
+           "draft:** %s. %s left out of the potential habitat, and the note ",
+           "on the row asks for a decision. Burnt ground may well be forest ",
+           "or grassland that will grow back.\n\n"),
+    number_word(nrow(unhandled), capital = TRUE),
+    if (nrow(unhandled) == 1) "class is" else "classes are",
+    and_list(sprintf("*%s* (%s), %s km² in %s polygons",
+                     unhandled$clc_label, unhandled$clc_code,
+                     hkm(unhandled$area_km2, 1), unhandled$polygons)),
+    if (nrow(unhandled) == 1) "It is" else "They are"))
+}
+
+if (nrow(slivers)) {
+  cat(sprintf(
+    paste0("**Sclerophyllous vegetation (323) turns up, but it is not real.** ",
+           "The draft asks for any occurrence to be reported. There are %s ",
+           "polygons with %s hectares between them, all along the southern ",
+           "border. They are the edges of polygons mapped on the Albanian and ",
+           "North Macedonian side, clipped a few metres inside the ",
+           "OpenStreetMap outline where the two borders disagree. The widest ",
+           "of them is 22 m across.\n\n"),
+    number_word(sum(slivers$polygons)), hkm(sum(slivers$area_km2) * 100, 1)))
+}
+```
+
+**`r number_word(nrow(ph$overrides), capital = TRUE)` polygons are reclassified by name.** They are the reservoirs CLC files
+as water bodies. Each is listed in
+[`data/clc_polygon_overrides.csv`](https://github.com/jonasgaigr/kosovo-biodiversity-data-workshop-2026/blob/main/data/clc_polygon_overrides.csv)
+with the OpenStreetMap feature or dam that identifies it:
+
+```{r}
+#| label: habitats-overrides
+
+ph$overrides |>
+  transmute(`CLC polygon` = clc_id, Name = name,
+            `Area (ha)` = round(area_ha), Evidence = evidence) |>
+  report_table(page_length = 10, buttons = FALSE)
+```
+
+**How to correct it.** Edit a row of the CSV, or
+[open an issue](https://github.com/jonasgaigr/kosovo-biodiversity-data-workshop-2026/issues)
+saying which row is wrong and why. The next run of `pipeline.R` redraws the
+map and recomputes every figure in this section. Where a class stands for
+different habitat types in the two regions, add a second row for the class
+with `biogeo_region` set to `Alpine` or `Continental`. That row then applies
+in that region and the general row everywhere else, so a different list of
+candidates for alpine grassland needs no code.
+:::
+
+### What this is evidence for, and what comes next
+
+This is **national-screening evidence**, the first of the three tiers set out
+under [question 1](natura2000.qmd#q1) on the Natura 2000 page. It is good
+enough to decide where to look, and not good enough to draw a boundary or to
+fill in a Standard Data Form. Nothing on this map is an Annex I habitat until
+somebody has stood in it. Three steps would move it on:
+
+- **Verify the high-confidence gap in the field.** Of the high-confidence
+  potential habitat, `r hkm(conf$gap_km2[conf$confidence == "high"])` km² lies
+  outside every site. Those classes are the ones most
+  likely to be what they seem, so a sample of those polygons, visited and
+  recorded to the mapping standard under
+  [question 3](natura2000.qmd#q3), would test the crosswalk where it claims
+  most.
+- **Split the classes by elevation.** A terrain model such as the Copernicus
+  DEM would separate montane beech from thermophilous oak, and alpine
+  grassland from lowland pasture. Most classes could then carry one or two
+  candidate types instead of up to seven, and the crosswalk would gain the
+  elevation bands it now leaves in its notes.
+- **Lay the directive-listed records over the gap.** The Annex II species and
+  Annex I birds recorded in this report can be intersected with the gap
+  polygons to rank them. A gap polygon holding a listed species is a stronger
+  candidate for designation than one that holds none.
+
+```{r}
+#| label: habitats-citation
+#| output: asis
+
+src <- ph$source
+bio <- ph$biogeo
+
+cat(
+  "<div class='citation-box'>",
+  sprintf("<strong>Land cover:</strong> %s, version %s<br>", src$title,
+          src$version),
+  sprintf("<strong>DOI:</strong> <a href='https://doi.org/%s'>https://doi.org/%s</a><br>",
+          src$doi, src$doi),
+  sprintf("<strong>Licence:</strong> %s<br>", src$licence),
+  sprintf("<strong>Attribution:</strong> %s; https://doi.org/%s<br>",
+          src$attribution, src$doi),
+  sprintf(paste0("<strong>Accessed:</strong> %s, through the %s. Clipped to ",
+                 "the national outline, reclassified through the crosswalk ",
+                 "and simplified for display. The screen is not endorsed by ",
+                 "the European Union or the EEA.<br><br>"),
+          fmt_date_en(as.Date(src$accessed)),
+          if (identical(src$route, "EEA map service")) {
+            sprintf("<a href='%s'>EEA map service</a>", src$service)
+          } else {
+            sprintf("CLMS download (%s)", src$route)
+          }),
+  sprintf("<strong>Biogeographical regions:</strong> EEA, %s (%s)<br>",
+          bio$title, bio$version),
+  sprintf(paste0("<strong>Identifier:</strong> <a href='%s'>EEA catalogue ",
+                 "record %s</a>; no DOI has been registered for this dataset<br>"),
+          bio$catalogue, bio$identifier),
+  sprintf("<strong>Licence:</strong> %s, &copy; %s<br>", bio$licence,
+          bio$copyright),
+  sprintf("<strong>In Kosovo:</strong> %s<br>",
+          and_list(sprintf("%s %s km&sup2;", ph$regions$region,
+                           hkm(ph$regions$area_km2)))),
+  "</div>", sep = "\n"
+)
+```
+
 ## Species protected under the EU Nature Directives
 
 The annex lists were taken directly from the consolidated legal texts on
@@ -1155,11 +1623,8 @@ ias_occ <- sf::st_drop_geometry(subsets[["kosovo_invasive_alien_species"]]) |>
 
 # The names people use differ from country to country, so the English name
 # comes from the Union-list checklist on GBIF, which follows the EU's own
-# usage, rather than from the most-published name the other tables carry.
-sentence_case <- function(x) {
-  ifelse(is.na(x), NA_character_,
-         paste0(toupper(substr(x, 1, 1)), substring(x, 2)))
-}
+# usage, rather than from the most-published name the other tables carry;
+# `sentence_case()` (in the setup chunk) tidies its capitalisation.
 
 # Records across the border, one row per listed species. Live API counts, not
 # part of the download: see the note under the watch list.
@@ -1197,17 +1662,6 @@ gbif_species_link <- function(key, name) {
   sprintf("<a href='https://www.gbif.org/species/%s' target='_blank' rel='noopener'><i>%s</i></a>",
           key, name)
 }
-
-# Small counts read better as words in running text, and a sentence should not
-# open with a numeral.
-number_word <- function(n, capital = FALSE) {
-  words <- c("one", "two", "three", "four", "five", "six", "seven", "eight",
-             "nine", "ten", "eleven", "twelve", "thirteen", "fourteen",
-             "fifteen", "sixteen", "seventeen", "eighteen", "nineteen",
-             "twenty")
-  out <- if (n >= 1 && n <= 20) words[n] else fmt_int(n)
-  if (capital) sentence_case(out) else out
-}
 ```
 
 ```{r}
@@ -1229,12 +1683,6 @@ cat("<div class='keyfigures'>",
 
 recent <- ias_occ |> filter(!is.na(year), year >= 2015)
 old    <- ias_occ |> filter(is.na(year) | year < 2000)
-
-# "a, b and c", for a sentence rather than a table.
-and_list <- function(x) {
-  if (length(x) <= 1) return(paste(x))
-  paste(paste(head(x, -1), collapse = ", "), "and", tail(x, 1))
-}
 
 publishers_of <- function(d) {
   unique(stats::na.omit(meta$datasets$publisher[
@@ -1722,6 +2170,46 @@ cat("<div class='download-grid'>",
     "</div>", sep = "\n")
 ```
 
+The land-cover screen is published as a GeoPackage and three tables. The
+GeoPackage has two layers: the potential-habitat polygons with their
+crosswalk attributes and the share of each inside a site, and the gap, cut
+from the same polygons and carrying the same attributes so that it can be
+filtered by class and confidence before a field visit is planned. Both are in
+EPSG:3035, the equal-area projection every area in that section was measured
+in. The tables give the figures by habitat group, by municipality and by CLC
+class. The crosswalk they were all built from is
+[`data/crosswalk_clc_annex1.csv`](https://github.com/jonasgaigr/kosovo-biodiversity-data-workshop-2026/blob/main/data/crosswalk_clc_annex1.csv)
+in the repository.
+
+```{r}
+#| label: downloads-habitats
+#| output: asis
+
+hab_btn <- function(file, label, class) {
+  size <- ph$exports$size[ph$exports$file == file]
+  if (!length(size) || !file.exists(file.path("data_exports", file))) return("")
+  sprintf("<a class='btn %s' href='data_exports/%s' download>%s (%s)</a>",
+          class, file, label, fmt_bytes(size))
+}
+
+cat("<div class='download-grid'>",
+    sprintf(paste0("<div class='download-card'><h4>Potential Natura 2000 ",
+                   "habitats</h4><div class='meta'>%s km&sup2; &middot; %s ",
+                   "km&sup2; outside every site &middot; CLC%s</div>",
+                   "%s%s%s%s</div>"),
+            hkm(ph$national$total_km2), hkm(ph$national$gap_km2),
+            ph$source$vintage,
+            hab_btn("kosovo_potential_habitats.gpkg", "GeoPackage",
+                    "btn-primary"),
+            hab_btn("kosovo_potential_habitats_by_group.csv",
+                    "CSV by habitat group", "btn-outline-secondary"),
+            hab_btn("kosovo_potential_habitats_by_municipality.csv",
+                    "CSV by municipality", "btn-outline-secondary"),
+            hab_btn("kosovo_potential_habitats_by_class.csv",
+                    "CSV by CLC class", "btn-outline-secondary")),
+    "</div>", sep = "\n")
+```
+
 ::: {.callout-tip}
 ## Conditions of use
 
@@ -1734,6 +2222,14 @@ The protected-area boundaries are © `r pa$source$copyright` and are
 redistributed here under **`r pa$source$licence`**, which requires attribution
 and permits reuse for any purpose. Cite them as
 `r sprintf("<https://doi.org/%s>", pa$source$doi)`.
+
+The land-cover screen is a derivative of CORINE Land Cover, which the
+Copernicus data policy makes free to reuse on three conditions: say where it
+came from, say that it has been changed, and do not suggest that the EU
+endorses the result. Any reuse should carry the line
+"`r ph$source$attribution`; <https://doi.org/`r ph$source$doi`>", state that
+it was clipped to Kosovo and reclassified through the crosswalk, and cite the
+biogeographical regions, © EEA, under `r ph$biogeo$licence`.
 :::
 
 ## Methods and reproducibility
@@ -1759,13 +2255,37 @@ The two species lists are built from the legal texts, by
 Both write a CSV that is kept in the repository, so neither needs running
 again until the legislation changes.
 
+The land-cover screen needs no account. By default `pipeline.R` reads CORINE
+Land Cover `r ph$source$vintage` for Kosovo from the EEA's map service, clips
+it to the national outline, and caches the extract as
+`r sprintf("<code>data/kosovo_clc%s.gpkg</code>", ph$source$vintage)`. Delete
+that file to read it again. To use a file from the Copernicus portal instead:
+
+1. Sign in at [land.copernicus.eu](`r ph$source$product_page`) with an EU
+   Login and download the **vector** product of the vintage (GeoPackage or
+   File Geodatabase). The raster will not do.
+2. Unzip it anywhere outside the repository. The file is large and only the
+   Kosovo extract is ever written back.
+3. Point `CLC_PATH` in `.Renviron` at the `.gpkg` or `.gdb`, or set
+   `clc_path` in `pipeline.R`, delete the cached extract, and run the
+   pipeline. It reads only the part of the file that covers Kosovo. If the
+   path is set and nothing is there, it stops and says what to download.
+
+Three more parameters in `pipeline.R` control the screen. `clc_vintage`
+chooses the CLC edition, and is refused unless its DOI, version and licence
+are recorded in `R/functions.R`. `clc_simplify_tolerance` sets the display
+generalisation, `r ph$params$tolerance_m` m here. `potential_habitat_min_confidence`
+sets the lowest crosswalk confidence kept, "`r ph$params$min_confidence`"
+here. The judgements themselves are not parameters: they are the rows of
+`data/crosswalk_clc_annex1.csv` and `data/clc_polygon_overrides.csv`.
+
 ```{r}
 #| label: session
 #| output: asis
 
 pkgs <- c("rgbif", "sf", "CoordinateCleaner", "leaflet", "leaflet.extras",
           "leafem", "crosstalk", "dplyr", "readr", "DT", "writexl",
-          "rnaturalearth")
+          "rnaturalearth", "rmapshaper")
 versions <- vapply(pkgs, function(p) {
   tryCatch(as.character(utils::packageVersion(p)), error = function(e) "not installed")
 }, character(1))

@@ -405,3 +405,113 @@ h2 {
 .dataTables_wrapper {
   overflow-x: auto;
 }
+
+/* --- Potential Natura 2000 habitat map ------------------------------------
+   `build_habitat_gap_map()` in R/functions.R. Each pop-up carries only what
+   differs between polygons of a class; the class name, candidate Annex I
+   types and note are filled into `.hab-class` and `.hab-cand` when it opens.
+   ------------------------------------------------------------------------- */
+
+.hab-popup {
+  font-size: 13px;
+  line-height: 1.45;
+  min-width: 220px;
+  max-width: 320px;
+}
+
+.hab-popup .hab-class b {
+  display: block;
+  font-size: 14px;
+  color: $primary-ink;
+}
+
+.hab-popup .hab-class small {
+  display: block;
+  color: #4e565f;
+}
+
+.hab-popup p {
+  margin: 0.3rem 0 0.35rem;
+}
+
+.hab-popup .hab-cand {
+  border-top: 1px solid #dbe3e7;
+  padding-top: 0.3rem;
+}
+
+.hab-popup .hab-cand span {
+  color: #666666;
+  font-size: 0.82em;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.hab-popup .hab-cand ul {
+  margin: 0.15rem 0 0.3rem;
+  padding-left: 1.1rem;
+}
+
+.hab-popup .hab-cand em {
+  display: block;
+  color: #4e565f;
+  font-size: 0.9em;
+}
+
+.habitat-legend {
+  background: rgba(255, 255, 255, 0.92);
+  padding: 6px 8px;
+  border-radius: 4px;
+  max-width: 230px;
+}
+
+.habitat-legend summary {
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 3px;
+}
+
+.habitat-legend .row {
+  display: flex;
+  align-items: center;
+  margin: 0;
+}
+
+.habitat-legend i,
+.habitat-legend svg.hatch {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin-right: 6px;
+}
+
+.habitat-legend .key {
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+.habitat-legend .conf {
+  display: flex;
+  gap: 8px;
+}
+
+.habitat-legend .conf span {
+  display: flex;
+  align-items: center;
+}
+
+.habitat-legend .conf i {
+  margin-right: 3px;
+}
+
+.habitat-legend .caveat {
+  margin: 5px 0 0;
+  font-style: italic;
+  color: #4e565f;
+}
+
+/* Twenty-odd CLC classes are taller than a phone's map, so the legend for the
+   all-classes layer scrolls within itself instead of running off the map. */
+.info.legend.clc-legend {
+  max-height: 45vh;
+  overflow-y: auto;
+}

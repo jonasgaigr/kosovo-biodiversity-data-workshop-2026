@@ -15,3 +15,14 @@
 GBIF_USER=your_gbif_username
 GBIF_PWD=your_gbif_password
 GBIF_EMAIL=your.address@example.org
+
+# ------------------------------------------------------------------------------
+# CORINE Land Cover — OPTIONAL
+#
+# Leave unset to read CLC from the EEA's map service, which needs no account.
+# To use the vector product downloaded from land.copernicus.eu instead (it
+# needs an EU Login), give the full path to the unzipped .gpkg or .gdb. Keep
+# the file outside this repository; only the Kosovo extract is written here.
+# ------------------------------------------------------------------------------
+
+# CLC_PATH=D:/data/clc/U2018_CLC2018_V2020_20u1.gpkg

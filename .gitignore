@@ -38,6 +38,19 @@ render.log
 /data/*.zip
 
 # ------------------------------------------------------------------------------
+# Raw CORINE Land Cover downloads
+#
+# The European vector product is gigabytes and is read, never stored: the
+# pipeline writes only the Kosovo extract (data/kosovo_clc<year>.gpkg, tracked
+# below). `clc_path` should point outside the repository, but in case a copy
+# lands here anyway, none of its usual forms can be committed.
+# ------------------------------------------------------------------------------
+/data/clc/
+*.gdb/
+U20*_CLC20*
+CLC20*_*.zip
+
+# ------------------------------------------------------------------------------
 # Deliberately NOT ignored
 #
 # data/eu_directives_species.csv  — the annex list is a project input
@@ -69,6 +82,20 @@ render.log
 #                                   1.7 GB European file over the network; the
 #                                   cache is 700 kB and takes a minute to
 #                                   regenerate if deleted
+# data/kosovo_clc2018.gpkg        — CORINE Land Cover 2018 clipped to the
+#                                   OpenStreetMap outline, EPSG:3035. Cached
+#                                   because the EEA may revise CLC2018 when it
+#                                   publishes CLC2024, and a published figure
+#                                   should not move with it
+# data/kosovo_biogeo_regions.gpkg — the biogeographical regions, clipped
+# data/crosswalk_clc_annex1.csv   — the CLC to Annex I crosswalk, a project
+#                                   input for specialist review
+# data/clc_polygon_overrides.csv  — CLC polygons reclassified by name (the
+#                                   reservoirs), with their evidence
+# data/clc_legend.csv             — the official CLC labels and colours
+# data/kosovo_potential_habitats_map.gpkg
+#                                 — the simplified layers the report's habitat
+#                                   map is drawn from; required to render it
 # data/run_metadata.rds           — required to render the report
 # data_exports/                   — published outputs, served by GitHub Pages
 # docs/                           — the rendered website itself

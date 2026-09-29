@@ -478,6 +478,132 @@ check("a map built without a protected-area layer offers no such control",
         !("Protected areas" %in% unlist(ctl$args[[2]]))
       })
 
+# --- The land-cover screen ------------------------------------------------------
+#
+# Four 1 km squares in EPSG:3035, side by side: a broad-leaved forest whose
+# western half lies in a site, arable land, a reservoir the overrides take out,
+# and bare rock outside every site. Every figure the screen should produce can
+# be worked out by hand: 2 km² of potential habitat, 0.5 km² of it inside.
+# The crosswalk and Annex I are the tracked files, read and never written.
+
+cat("\nLand-cover screen\n")
+
+check("the sufficiency bands split at 20 and 60 per cent",
+      identical(sufficiency_band(c(0, 19.9, 20, 59.9, 60, 100)),
+                c("below 20 %", "below 20 %", "20 to 60 %", "20 to 60 %",
+                  "60 % or more", "60 % or more")))
+
+annex1 <- annex1_habitat_types()
+check("Annex I is read from the legal text, priority types marked",
+      nrow(annex1) > 200 && annex1$priority[annex1$code == "9180"] &&
+        !annex1$priority[annex1$code == "91K0"])
+
+clc_legend <- readr::read_csv("data/clc_legend.csv",
+                              col_types = readr::cols(.default = "c"))
+cw <- read_clc_crosswalk("data/crosswalk_clc_annex1.csv", clc_legend, annex1)
+
+check("the crosswalk lists every CLC class exactly once",
+      setequal(cw$clc_code, clc_legend$clc_code) && !anyDuplicated(cw$clc_code))
+
+check("a code that is not in Annex I stops the run",
+      {
+        bad <- cw
+        bad$candidate_annex1[bad$clc_code == "321"] <- "6170; 9999"
+        f <- tempfile(fileext = ".csv")
+        readr::write_csv(bad, f)
+        inherits(try(read_clc_crosswalk(f, clc_legend, annex1), silent = TRUE),
+                 "try-error")
+      })
+
+x0 <- 5e6; y0 <- 2e6
+box <- function(xmin, xmax) {
+  sf::st_polygon(list(cbind(x0 + c(xmin, xmax, xmax, xmin, xmin),
+                            y0 + c(0, 0, 1000, 1000, 0))))
+}
+clc_fx <- sf::st_sf(
+  clc_id   = c("A", "B", "C", "D"),
+  clc_code = c("311", "211", "512", "332"),
+  geometry = sf::st_sfc(box(0, 1000), box(1000, 2000), box(2000, 3000),
+                        box(3000, 4000), crs = 3035)
+)
+clc_fx$area_ha <- as.numeric(sf::st_area(clc_fx)) / 1e4
+site_fx <- sf::st_sf(site_name = "Test site",
+                     geometry = sf::st_sfc(box(0, 500), crs = 3035))
+region_fx <- sf::st_sf(region = "Continental",
+                       geometry = sf::st_sfc(box(-1000, 5000), crs = 3035))
+mun_fx <- sf::st_sf(municipality = c("West", "East"), district = "D",
+                    geometry = sf::st_sfc(box(0, 1500), box(1500, 4000),
+                                          crs = 3035))
+ov_fx <- dplyr::tibble(clc_vintage = "2018", clc_id = "C", clc_code = "512",
+                       name = "Test reservoir", natural_status = "not natural",
+                       reason = "reservoir", evidence = "test")
+
+screen <- function(...) {
+  assess_potential_habitats(clc_fx, cw, ov_fx, region_fx, site_fx, mun_fx,
+                            vintage = "2018", ...)
+}
+res <- screen()
+
+check("arable land and an overridden reservoir are not potential habitat",
+      identical(sort(res$polygons$clc_id), c("A", "D")))
+
+check("half the forest is inside the site, and the rest of it is the gap",
+      abs(res$national$total_km2 - 2) < 1e-9 &&
+        abs(res$national$inside_km2 - 0.5) < 1e-9 &&
+        abs(res$national$gap_km2 - 1.5) < 1e-9)
+
+check("the municipal figures add up to the national ones",
+      abs(sum(res$by_municipality$potential_km2) - res$national$total_km2) < 1e-9 &&
+        abs(sum(res$by_municipality$gap_km2) - res$national$gap_km2) < 1e-9)
+
+check("the site is named on the polygon it overlaps, and only there",
+      identical(res$polygons$sites[res$polygons$clc_id == "A"], "Test site") &&
+        is.na(res$polygons$sites[res$polygons$clc_id == "D"]))
+
+check("a region-specific crosswalk row takes precedence over the general one",
+      {
+        cw2 <- dplyr::bind_rows(
+          cw, dplyr::mutate(cw[cw$clc_code == "311", ],
+                            biogeo_region = "Continental",
+                            candidate_annex1 = "91M0", confidence = "high"))
+        r2 <- assess_potential_habitats(clc_fx, cw2, ov_fx, region_fx, site_fx,
+                                        mun_fx, vintage = "2018")
+        a <- r2$polygons[r2$polygons$clc_id == "A", ]
+        identical(a$confidence, "high") && identical(a$cw_key, "311-Continental")
+      })
+
+check("a confidence floor keeps only the classes at or above it",
+      identical(screen(min_confidence = "high")$polygons$clc_id, "D"))
+
+check("the display simplification keeps every polygon",
+      nrow(simplify_for_map(res$polygons, 50)) == nrow(res$polygons))
+
+hab_map <- build_habitat_gap_map(
+  sf::st_transform(res$polygons, 4326), sf::st_transform(res$gap, 4326),
+  crosswalk = cw, annex1 = annex1,
+  clc = c(clc_sources[["2018"]], vintage = "2018"),
+  protected_areas = pa, protected_points = pa_points
+)
+builds("the habitat map builds", hab_map)
+
+check("the habitat map starts with the gap on and the all-classes layer off",
+      {
+        hidden <- unlist(lapply(hab_map$x$calls, function(c) {
+          if (identical(c$method, "hideGroup")) unlist(c$args) else NULL
+        }))
+        "CORINE Land Cover 2018 (all classes)" %in% hidden &&
+          !"Gap: potential habitat outside designated sites" %in% hidden &&
+          !"Potential natural habitats" %in% hidden
+      })
+
+check("the protected areas are drawn as outlines on the habitat map",
+      {
+        sites <- Find(function(c) identical(c$method, "addPolygons") &&
+                        identical(c$args[[3]], "Protected areas"),
+                      hab_map$x$calls)
+        isFALSE(sites$args[[4]]$fill)
+      })
+
 # --- Result -------------------------------------------------------------------
 
 cat("\n")
