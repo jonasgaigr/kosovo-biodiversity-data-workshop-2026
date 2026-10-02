@@ -1,0 +1,50 @@
+name: R smoke tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke-test:
+    name: Offline helper smoke tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up R
+        uses: r-lib/actions/setup-r@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2.14.0
+        with:
+          use-public-rspm: true
+
+      - name: Install test dependencies
+        uses: r-lib/actions/setup-r-dependencies@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2.14.0
+        with:
+          extra-packages: |
+            any::CoordinateCleaner
+            any::crosstalk
+            any::curl
+            any::dplyr
+            any::DT
+            any::htmltools
+            any::htmlwidgets
+            any::jsonlite
+            any::leafem
+            any::leaflet
+            any::leaflet.extras
+            any::readr
+            any::rgbif
+            any::rnaturalearth
+            any::sf
+            any::units
+            any::writexl
+          cache-version: 1
+
+      - name: Run offline smoke tests
+        run: Rscript run_test.R
